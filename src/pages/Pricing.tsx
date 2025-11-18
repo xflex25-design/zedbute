@@ -19,18 +19,19 @@ const Pricing = () => {
   const plans = [
     {
       name: "Starter",
-      price: "$19.99",
+      price: "K399",
       period: "/year",
       features: [
         "Distribute to 10+ platforms",
         "Keep 100% of your royalties",
         "Basic analytics",
         "Email support",
+        "Pay via mobile money",
       ],
     },
     {
       name: "Pro",
-      price: "$39.99",
+      price: "K799",
       period: "/year",
       popular: true,
       features: [
@@ -40,11 +41,12 @@ const Pricing = () => {
         "Priority support",
         "Custom label name",
         "Split payments",
+        "Pay via mobile money",
       ],
     },
     {
       name: "Label",
-      price: "$99.99",
+      price: "K1999",
       period: "/year",
       features: [
         "Unlimited artist accounts",
@@ -53,6 +55,7 @@ const Pricing = () => {
         "Dedicated account manager",
         "API access",
         "Team collaboration",
+        "Pay via mobile money",
       ],
     },
   ];
@@ -115,8 +118,11 @@ const Pricing = () => {
         </div>
 
         <div className="mt-16 text-center">
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mb-4">
             All plans include unlimited releases and keep 100% of your royalties.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Payment accepted via Airtel Money, Zamtel Kwacha, and MTN Mobile Money
           </p>
         </div>
       </div>

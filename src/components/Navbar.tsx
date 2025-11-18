@@ -36,8 +36,10 @@ export const Navbar = ({ user }: NavbarProps) => {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Music2 className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              MusicFlow
+            <span className="text-xl font-bold">
+              <span className="text-green-500">zed</span>
+              <span className="text-red-500">B</span>
+              <span className="text-foreground">ute</span>
             </span>
           </Link>
 
