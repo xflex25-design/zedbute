@@ -24,7 +24,7 @@ const verificationSchema = z.object({
   websiteUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
 });
 
-const VERIFICATION_DEPOSIT = 250; // K250 deposit (Zambian Kwacha)
+const VERIFICATION_DEPOSIT = 250; // K250 deposit
 
 const Verify = () => {
   const [user, setUser] = useState<any>(null);
@@ -109,7 +109,7 @@ const Verify = () => {
 
       toast({
         title: "Application submitted!",
-        description: `Please complete the K${VERIFICATION_DEPOSIT} verification deposit via mobile money to proceed.`,
+        description: `Please complete the K${VERIFICATION_DEPOSIT} deposit via mobile money to proceed.`,
       });
 
       // In a real app, redirect to payment page
@@ -176,8 +176,8 @@ const Verify = () => {
             <CardHeader>
               <CardTitle>Verification Fee</CardTitle>
               <CardDescription>
-                A one-time deposit of K{VERIFICATION_DEPOSIT} is required to process your verification. 
-                Pay via mobile money: Airtel Money, Zamtel Kwacha, or MTN Mobile Money.
+                A one-time deposit of K{VERIFICATION_DEPOSIT} is required. 
+                Pay via Airtel Money, Zamtel Kwacha, or MTN Mobile Money.
               </CardDescription>
             </CardHeader>
           </Card>
