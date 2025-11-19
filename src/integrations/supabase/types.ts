@@ -99,7 +99,10 @@ export type Database = {
           distribution_platforms: Json | null
           genre: string | null
           id: string
+          language: string[] | null
           release_date: string | null
+          release_type: string | null
+          rights_confirmed: boolean | null
           status: string | null
           title: string
           updated_at: string
@@ -112,7 +115,10 @@ export type Database = {
           distribution_platforms?: Json | null
           genre?: string | null
           id?: string
+          language?: string[] | null
           release_date?: string | null
+          release_type?: string | null
+          rights_confirmed?: boolean | null
           status?: string | null
           title: string
           updated_at?: string
@@ -125,7 +131,10 @@ export type Database = {
           distribution_platforms?: Json | null
           genre?: string | null
           id?: string
+          language?: string[] | null
           release_date?: string | null
+          release_type?: string | null
+          rights_confirmed?: boolean | null
           status?: string | null
           title?: string
           updated_at?: string
