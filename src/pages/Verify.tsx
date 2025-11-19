@@ -13,15 +13,10 @@ import { z } from "zod";
 
 const verificationSchema = z.object({
   artistName: z.string().trim().min(1, "Artist name is required").max(100),
-  bio: z.string().trim().max(1000).optional(),
-  youtubeUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  instagramUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  tiktokUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  spotifyUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  soundcloudUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  twitterUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  facebookUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
-  websiteUrl: z.string().url("Invalid URL").max(500).optional().or(z.literal("")),
+  bio: z.string().trim().min(10, "Bio must be at least 10 characters").max(1000),
+  boomplayUrl: z.string().url("Invalid Boomplay URL").min(1, "Boomplay URL is required").max(500),
+  spotifyUrl: z.string().url("Invalid Spotify URL").min(1, "Spotify URL is required").max(500),
+  youtubeUrl: z.string().url("Invalid YouTube URL").max(500).optional().or(z.literal("")),
 });
 
 const VERIFICATION_DEPOSIT = 250; // K250 deposit
@@ -36,14 +31,9 @@ const Verify = () => {
   const [formData, setFormData] = useState({
     artistName: "",
     bio: "",
-    youtubeUrl: "",
-    instagramUrl: "",
-    tiktokUrl: "",
+    boomplayUrl: "",
     spotifyUrl: "",
-    soundcloudUrl: "",
-    twitterUrl: "",
-    facebookUrl: "",
-    websiteUrl: "",
+    youtubeUrl: "",
   });
 
   useEffect(() => {
@@ -91,15 +81,9 @@ const Verify = () => {
         .insert({
           user_id: user.id,
           artist_name: formData.artistName,
-          bio: formData.bio || null,
+          bio: formData.bio,
           youtube_url: formData.youtubeUrl || null,
-          instagram_url: formData.instagramUrl || null,
-          tiktok_url: formData.tiktokUrl || null,
-          spotify_url: formData.spotifyUrl || null,
-          soundcloud_url: formData.soundcloudUrl || null,
-          twitter_url: formData.twitterUrl || null,
-          facebook_url: formData.facebookUrl || null,
-          website_url: formData.websiteUrl || null,
+          spotify_url: formData.spotifyUrl,
           deposit_amount: VERIFICATION_DEPOSIT,
           payment_status: "unpaid",
           status: "pending",
@@ -109,7 +93,7 @@ const Verify = () => {
 
       toast({
         title: "Application submitted!",
-        description: `Please complete the K${VERIFICATION_DEPOSIT} deposit via mobile money to proceed.`,
+        description: `Please complete the K${VERIFICATION_DEPOSIT} deposit via mobile money. Your verification will be processed within 2 weeks.`,
       });
 
       // In a real app, redirect to payment page
@@ -176,7 +160,7 @@ const Verify = () => {
             <CardHeader>
               <CardTitle>Verification Fee</CardTitle>
               <CardDescription>
-                A one-time deposit of K{VERIFICATION_DEPOSIT} is required. 
+                A one-time deposit of K{VERIFICATION_DEPOSIT} is required. Processing takes approximately 2 weeks.
                 Pay via Airtel Money, Zamtel Kwacha, or MTN Mobile Money.
               </CardDescription>
             </CardHeader>
@@ -184,9 +168,9 @@ const Verify = () => {
 
           <Card className="shadow-card">
             <CardHeader>
-              <CardTitle>Artist Information</CardTitle>
+              <CardTitle>Artist Verification</CardTitle>
               <CardDescription>
-                Provide your social media links and artist details
+                Get verified on Boomplay and Spotify. We'll process your verification within 2 weeks.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -204,110 +188,55 @@ const Verify = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio">Bio *</Label>
                   <Textarea
                     id="bio"
                     value={formData.bio}
                     onChange={(e) => handleChange("bio", e.target.value)}
-                    placeholder="Tell us about yourself..."
+                    placeholder="Tell us about your music and journey (minimum 10 characters)"
                     rows={4}
+                    required
                     maxLength={1000}
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold">Platform Links</h3>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="youtube">YouTube</Label>
+                    <Label htmlFor="boomplay">Boomplay URL *</Label>
                     <Input
-                      id="youtube"
+                      id="boomplay"
                       type="url"
-                      value={formData.youtubeUrl}
-                      onChange={(e) => handleChange("youtubeUrl", e.target.value)}
-                      placeholder="https://youtube.com/@channel"
+                      value={formData.boomplayUrl}
+                      onChange={(e) => handleChange("boomplayUrl", e.target.value)}
+                      placeholder="https://www.boomplay.com/artists/..."
+                      required
                       maxLength={500}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="instagram">Instagram</Label>
-                    <Input
-                      id="instagram"
-                      type="url"
-                      value={formData.instagramUrl}
-                      onChange={(e) => handleChange("instagramUrl", e.target.value)}
-                      placeholder="https://instagram.com/username"
-                      maxLength={500}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tiktok">TikTok</Label>
-                    <Input
-                      id="tiktok"
-                      type="url"
-                      value={formData.tiktokUrl}
-                      onChange={(e) => handleChange("tiktokUrl", e.target.value)}
-                      placeholder="https://tiktok.com/@username"
-                      maxLength={500}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="spotify">Spotify</Label>
+                    <Label htmlFor="spotify">Spotify URL *</Label>
                     <Input
                       id="spotify"
                       type="url"
                       value={formData.spotifyUrl}
                       onChange={(e) => handleChange("spotifyUrl", e.target.value)}
                       placeholder="https://open.spotify.com/artist/..."
+                      required
                       maxLength={500}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="soundcloud">SoundCloud</Label>
+                    <Label htmlFor="youtube">YouTube (Optional)</Label>
                     <Input
-                      id="soundcloud"
+                      id="youtube"
                       type="url"
-                      value={formData.soundcloudUrl}
-                      onChange={(e) => handleChange("soundcloudUrl", e.target.value)}
-                      placeholder="https://soundcloud.com/username"
-                      maxLength={500}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="twitter">X (Twitter)</Label>
-                    <Input
-                      id="twitter"
-                      type="url"
-                      value={formData.twitterUrl}
-                      onChange={(e) => handleChange("twitterUrl", e.target.value)}
-                      placeholder="https://x.com/username"
-                      maxLength={500}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="facebook">Facebook</Label>
-                    <Input
-                      id="facebook"
-                      type="url"
-                      value={formData.facebookUrl}
-                      onChange={(e) => handleChange("facebookUrl", e.target.value)}
-                      placeholder="https://facebook.com/page"
-                      maxLength={500}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      type="url"
-                      value={formData.websiteUrl}
-                      onChange={(e) => handleChange("websiteUrl", e.target.value)}
-                      placeholder="https://yourwebsite.com"
+                      value={formData.youtubeUrl}
+                      onChange={(e) => handleChange("youtubeUrl", e.target.value)}
+                      placeholder="https://youtube.com/@channel"
                       maxLength={500}
                     />
                   </div>
