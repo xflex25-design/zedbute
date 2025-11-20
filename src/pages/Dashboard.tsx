@@ -145,7 +145,7 @@ const Dashboard = () => {
               <CardDescription>Manage your music</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/upload-release")}>
                 <Upload className="mr-2 h-4 w-4" />
                 Upload New Release
               </Button>
@@ -190,7 +190,7 @@ const Dashboard = () => {
                 <p className="text-muted-foreground mb-4">
                   You haven't uploaded any releases yet
                 </p>
-                <Button variant="hero">
+                <Button variant="hero" onClick={() => navigate("/upload-release")}>
                   Upload Your First Release
                 </Button>
               </div>

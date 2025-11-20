@@ -53,6 +53,9 @@ export const Navbar = ({ user }: NavbarProps) => {
                 <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
                   Dashboard
                 </Link>
+                <Link to="/upload-release" className="text-foreground hover:text-primary transition-colors">
+                  Upload Release
+                </Link>
                 <Link to="/verify" className="text-foreground hover:text-primary transition-colors">
                   Get Verified
                 </Link>
@@ -105,6 +108,13 @@ export const Navbar = ({ user }: NavbarProps) => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/upload-release"
+                  className="block text-foreground hover:text-primary transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Upload Release
                 </Link>
                 <Link
                   to="/verify"
