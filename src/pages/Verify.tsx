@@ -19,7 +19,7 @@ const verificationSchema = z.object({
   youtubeUrl: z.string().url("Invalid YouTube URL").max(500).optional().or(z.literal("")),
 });
 
-const VERIFICATION_DEPOSIT = 250; // K250 deposit
+const VERIFICATION_DEPOSIT = 30; // K30 deposit
 
 const Verify = () => {
   const [user, setUser] = useState<any>(null);
@@ -244,7 +244,7 @@ const Verify = () => {
 
                 <div className="pt-4">
                   <Button type="submit" variant="hero" className="w-full" disabled={loading}>
-                    {loading ? "Submitting..." : `Submit & Pay $${VERIFICATION_DEPOSIT}`}
+                    {loading ? "Submitting..." : `Submit & Pay K${VERIFICATION_DEPOSIT}`}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
                     By submitting, you agree to pay the verification deposit
