@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Music, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const LANGUAGES = [
   "English",
@@ -42,10 +43,13 @@ const UploadRelease = () => {
   const [user, setUser] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     releaseType: "single",
     genre: "",
+    phoneNumber: "",
     coverArt: null as File | null,
     audioFile: null as File | null,
     rightsConfirmed: false,
@@ -141,6 +145,15 @@ const UploadRelease = () => {
       return;
     }
 
+    if (!formData.phoneNumber.trim()) {
+      toast({
+        title: "Missing Phone Number",
+        description: "Please enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedLanguages.length === 0) {
       toast({
         title: "No Language Selected",
@@ -187,9 +200,21 @@ const UploadRelease = () => {
     }
 
     setLoading(true);
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
-      // Upload cover art to storage (you'll need to create a bucket first)
+      // Update user profile with phone number
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ phone_number: formData.phoneNumber })
+        .eq("id", user.id);
+
+      if (profileError) throw profileError;
+
+      setUploadProgress(10);
+
+      // Upload cover art to storage
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       
@@ -203,7 +228,9 @@ const UploadRelease = () => {
         .from("cover-art")
         .getPublicUrl(fileName);
 
-      // Upload audio file to storage
+      setUploadProgress(40);
+
+      // Upload audio file to storage with progress tracking
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
       
@@ -216,6 +243,8 @@ const UploadRelease = () => {
       const { data: { publicUrl: audioUrl } } = supabase.storage
         .from("audio-files")
         .getPublicUrl(audioFileName);
+
+      setUploadProgress(80);
 
       // Insert release data
       const { error: insertError } = await supabase
@@ -235,12 +264,16 @@ const UploadRelease = () => {
 
       if (insertError) throw insertError;
 
+      setUploadProgress(100);
+
       toast({
         title: "Release Submitted Successfully",
         description: "Your release is now pending review. This will take up to 2 weeks.",
       });
 
-      navigate("/dashboard");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
     } catch (error: any) {
       console.error("Error submitting release:", error);
       toast({
@@ -250,6 +283,8 @@ const UploadRelease = () => {
       });
     } finally {
       setLoading(false);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -284,6 +319,19 @@ const UploadRelease = () => {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter your release title"
+                  required
+                />
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number *</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={formData.phoneNumber}
+                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                  placeholder="+260 XXX XXX XXX"
                   required
                 />
               </div>
@@ -469,6 +517,17 @@ const UploadRelease = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Upload Progress */}
+              {isUploading && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Uploading...</span>
+                    <span className="font-medium">{uploadProgress}%</span>
+                  </div>
+                  <Progress value={uploadProgress} className="h-2" />
+                </div>
+              )}
 
               {/* Submit Button */}
               <Button type="submit" className="w-full" disabled={loading}>
