@@ -47,6 +47,7 @@ const UploadRelease = () => {
     releaseType: "single",
     genre: "",
     coverArt: null as File | null,
+    audioFile: null as File | null,
     rightsConfirmed: false,
   });
 
@@ -103,6 +104,23 @@ const UploadRelease = () => {
     }
   };
 
+  const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("audio/")) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload an audio file (MP3, WAV, etc.)",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    setFormData({ ...formData, audioFile: file });
+  };
+
   const handleLanguageToggle = (language: string) => {
     setSelectedLanguages((prev) =>
       prev.includes(language)
@@ -150,6 +168,15 @@ const UploadRelease = () => {
       return;
     }
 
+    if (!formData.audioFile) {
+      toast({
+        title: "No Audio File",
+        description: "Please upload your music audio file",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.rightsConfirmed) {
       toast({
         title: "Rights Confirmation Required",
@@ -176,6 +203,20 @@ const UploadRelease = () => {
         .from("cover-art")
         .getPublicUrl(fileName);
 
+      // Upload audio file to storage
+      const audioExt = formData.audioFile!.name.split(".").pop();
+      const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
+      
+      const { error: audioUploadError } = await supabase.storage
+        .from("audio-files")
+        .upload(audioFileName, formData.audioFile!);
+
+      if (audioUploadError) throw audioUploadError;
+
+      const { data: { publicUrl: audioUrl } } = supabase.storage
+        .from("audio-files")
+        .getPublicUrl(audioFileName);
+
       // Insert release data
       const { error: insertError } = await supabase
         .from("music_releases")
@@ -187,6 +228,7 @@ const UploadRelease = () => {
           release_type: formData.releaseType,
           genre: formData.genre,
           cover_art_url: publicUrl,
+          audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
           status: "pending",
         } as any);
@@ -355,6 +397,53 @@ const UploadRelease = () => {
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Audio File */}
+              <div className="space-y-3">
+                <Label htmlFor="audioFile">Music Audio File *</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                  {formData.audioFile ? (
+                    <div className="space-y-4">
+                      <Music className="mx-auto h-12 w-12 text-primary" />
+                      <p className="text-sm font-medium">{formData.audioFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setFormData({ ...formData, audioFile: null });
+                        }}
+                      >
+                        Remove File
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                      <div className="text-sm text-muted-foreground">
+                        <Label
+                          htmlFor="audioFile"
+                          className="cursor-pointer text-primary hover:underline"
+                        >
+                          Click to upload
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Upload MP3, WAV, or other audio formats
+                      </p>
+                    </div>
+                  )}
+                  <Input
+                    id="audioFile"
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleAudioChange}
                     className="hidden"
                   />
                 </div>

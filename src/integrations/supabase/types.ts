@@ -94,6 +94,7 @@ export type Database = {
       music_releases: {
         Row: {
           artist_name: string
+          audio_url: string | null
           cover_art_url: string | null
           created_at: string
           distribution_platforms: Json | null
@@ -110,6 +111,7 @@ export type Database = {
         }
         Insert: {
           artist_name: string
+          audio_url?: string | null
           cover_art_url?: string | null
           created_at?: string
           distribution_platforms?: Json | null
@@ -126,6 +128,7 @@ export type Database = {
         }
         Update: {
           artist_name?: string
+          audio_url?: string | null
           cover_art_url?: string | null
           created_at?: string
           distribution_platforms?: Json | null
