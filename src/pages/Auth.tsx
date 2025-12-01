@@ -10,14 +10,19 @@ import { Music2 } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }).max(255),
+  email: z.string().email({ message: "Invalid email address" }).max(255).optional(),
+  phone: z.string().regex(/^\+260\d{9}$/, { message: "Phone must be in format +260XXXXXXXXX" }).optional(),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
   fullName: z.string().trim().max(100).optional(),
+}).refine(data => data.email || data.phone, {
+  message: "Either email or phone number is required"
 });
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [usePhone, setUsePhone] = useState(false);
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
@@ -39,71 +44,133 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const validationData = isLogin
-        ? { email, password }
-        : { email, password, fullName };
+      const validationData = {
+        email: usePhone ? undefined : email,
+        phone: usePhone ? phone : undefined,
+        password,
+        fullName: !isLogin ? fullName : undefined,
+      };
       
       authSchema.parse(validationData);
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        if (usePhone) {
+          const { error } = await supabase.auth.signInWithPassword({
+            phone,
+            password,
+          });
 
-        if (error) {
-          if (error.message.includes("Invalid login credentials")) {
+          if (error) {
             toast({
               title: "Login failed",
-              description: "Invalid email or password. Please try again.",
+              description: error.message.includes("Invalid") 
+                ? "Invalid phone number or password. Please try again."
+                : error.message,
               variant: "destructive",
             });
           } else {
             toast({
-              title: "Error",
-              description: error.message,
-              variant: "destructive",
+              title: "Welcome back!",
+              description: "You've successfully logged in.",
             });
+            navigate("/dashboard");
           }
         } else {
-          toast({
-            title: "Welcome back!",
-            description: "You've successfully logged in.",
+          const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
           });
-          navigate("/dashboard");
+
+          if (error) {
+            if (error.message.includes("Invalid login credentials")) {
+              toast({
+                title: "Login failed",
+                description: "Invalid email or password. Please try again.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+              });
+            }
+          } else {
+            toast({
+              title: "Welcome back!",
+              description: "You've successfully logged in.",
+            });
+            navigate("/dashboard");
+          }
         }
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: fullName,
+        if (usePhone) {
+          const { error, data } = await supabase.auth.signUp({
+            phone,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+              },
             },
-          },
-        });
+          });
 
-        if (error) {
-          if (error.message.includes("already registered")) {
+          if (error) {
             toast({
-              title: "Account exists",
-              description: "This email is already registered. Please login instead.",
+              title: "Error",
+              description: error.message.includes("already registered")
+                ? "This phone number is already registered. Please login instead."
+                : error.message,
               variant: "destructive",
             });
           } else {
+            // Update profile with phone number
+            if (data.user) {
+              await supabase
+                .from("profiles")
+                .update({ phone_number: phone })
+                .eq("id", data.user.id);
+            }
+            
             toast({
-              title: "Error",
-              description: error.message,
-              variant: "destructive",
+              title: "Account created!",
+              description: "You can now login with your phone number.",
             });
+            setIsLogin(true);
           }
         } else {
-          toast({
-            title: "Account created!",
-            description: "You can now login with your credentials.",
+          const { error, data } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/`,
+              data: {
+                full_name: fullName,
+              },
+            },
           });
-          setIsLogin(true);
+
+          if (error) {
+            if (error.message.includes("already registered")) {
+              toast({
+                title: "Account exists",
+                description: "This email is already registered. Please login instead.",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive",
+              });
+            }
+          } else {
+            toast({
+              title: "Account created!",
+              description: "You can now login with your credentials.",
+            });
+            setIsLogin(true);
+          }
         }
       }
     } catch (error) {
@@ -151,18 +218,60 @@ const Auth = () => {
                 />
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                maxLength={255}
-              />
+            
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => setUsePhone(false)}
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  !usePhone 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Email
+              </button>
+              <span className="text-muted-foreground">or</span>
+              <button
+                type="button"
+                onClick={() => setUsePhone(true)}
+                className={`px-3 py-1 rounded-md transition-colors ${
+                  usePhone 
+                    ? "bg-primary text-primary-foreground" 
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Phone
+              </button>
             </div>
+
+            {usePhone ? (
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="+260 XXX XXX XXX"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  maxLength={13}
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  maxLength={255}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input

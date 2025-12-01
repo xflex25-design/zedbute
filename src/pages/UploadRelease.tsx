@@ -49,7 +49,6 @@ const UploadRelease = () => {
     title: "",
     releaseType: "single",
     genre: "",
-    phoneNumber: "",
     coverArt: null as File | null,
     audioFile: null as File | null,
     rightsConfirmed: false,
@@ -145,15 +144,6 @@ const UploadRelease = () => {
       return;
     }
 
-    if (!formData.phoneNumber.trim()) {
-      toast({
-        title: "Missing Phone Number",
-        description: "Please enter your phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (selectedLanguages.length === 0) {
       toast({
         title: "No Language Selected",
@@ -204,16 +194,6 @@ const UploadRelease = () => {
     setUploadProgress(0);
 
     try {
-      // Update user profile with phone number
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ phone_number: formData.phoneNumber })
-        .eq("id", user.id);
-
-      if (profileError) throw profileError;
-
-      setUploadProgress(10);
-
       // Upload cover art to storage
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
@@ -228,7 +208,7 @@ const UploadRelease = () => {
         .from("cover-art")
         .getPublicUrl(fileName);
 
-      setUploadProgress(40);
+      setUploadProgress(30);
 
       // Upload audio file to storage with progress tracking
       const audioExt = formData.audioFile!.name.split(".").pop();
@@ -244,7 +224,7 @@ const UploadRelease = () => {
         .from("audio-files")
         .getPublicUrl(audioFileName);
 
-      setUploadProgress(80);
+      setUploadProgress(70);
 
       // Insert release data
       const { error: insertError } = await supabase
@@ -319,19 +299,6 @@ const UploadRelease = () => {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter your release title"
-                  required
-                />
-              </div>
-
-              {/* Phone Number */}
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                  placeholder="+260 XXX XXX XXX"
                   required
                 />
               </div>
