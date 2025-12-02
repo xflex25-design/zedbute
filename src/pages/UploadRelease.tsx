@@ -45,6 +45,8 @@ const UploadRelease = () => {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [audioUploadProgress, setAudioUploadProgress] = useState(0);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     releaseType: "single",
@@ -211,14 +213,37 @@ const UploadRelease = () => {
       setUploadProgress(30);
 
       // Upload audio file to storage with progress tracking
+      setIsUploadingAudio(true);
+      setAudioUploadProgress(0);
+      
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
+      
+      // Simulate progress for audio upload
+      const progressInterval = setInterval(() => {
+        setAudioUploadProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
       
       const { error: audioUploadError } = await supabase.storage
         .from("audio-files")
         .upload(audioFileName, formData.audioFile!);
 
-      if (audioUploadError) throw audioUploadError;
+      clearInterval(progressInterval);
+      
+      if (audioUploadError) {
+        setIsUploadingAudio(false);
+        setAudioUploadProgress(0);
+        throw audioUploadError;
+      }
+
+      setAudioUploadProgress(100);
+      setIsUploadingAudio(false);
 
       const { data: { publicUrl: audioUrl } } = supabase.storage
         .from("audio-files")
@@ -265,6 +290,8 @@ const UploadRelease = () => {
       setLoading(false);
       setIsUploading(false);
       setUploadProgress(0);
+      setAudioUploadProgress(0);
+      setIsUploadingAudio(false);
     }
   };
 
@@ -428,12 +455,25 @@ const UploadRelease = () => {
                       <p className="text-xs text-muted-foreground">
                         {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
+                      
+                      {/* Audio Upload Progress */}
+                      {isUploadingAudio && (
+                        <div className="space-y-2 mt-4">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Uploading audio...</span>
+                            <span className="font-medium">{audioUploadProgress}%</span>
+                          </div>
+                          <Progress value={audioUploadProgress} className="h-2" />
+                        </div>
+                      )}
+                      
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => {
                           setFormData({ ...formData, audioFile: null });
                         }}
+                        disabled={isUploadingAudio}
                       >
                         Remove File
                       </Button>
