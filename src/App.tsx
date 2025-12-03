@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
 import UploadRelease from "./pages/UploadRelease";
 import Pricing from "./pages/Pricing";
+import Payment from "./pages/Payment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/verify" element={<Verify />} />
           <Route path="/upload-release" element={<UploadRelease />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/payment" element={<Payment />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

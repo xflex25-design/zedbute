@@ -47,6 +47,7 @@ const UploadRelease = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [hasValidPayment, setHasValidPayment] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     releaseType: "single",
@@ -64,8 +65,40 @@ const UploadRelease = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/auth");
+      return;
+    }
+    setUser(user);
+    
+    // Check for valid payment
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString();
+    const { data: payments } = await supabase
+      .from("release_payments")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("status", "verified")
+      .gte("created_at", startOfYear);
+    
+    if (!payments || payments.length === 0) {
+      // Check for pending payment
+      const { data: pendingPayments } = await supabase
+        .from("release_payments")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .gte("created_at", startOfYear);
+      
+      if (pendingPayments && pendingPayments.length > 0) {
+        toast({
+          title: "Payment Pending",
+          description: "Your payment is being verified. Please wait for confirmation.",
+        });
+        setHasValidPayment(false);
+      } else {
+        // No payment found, redirect to payment page
+        navigate("/payment?type=release");
+      }
     } else {
-      setUser(user);
+      setHasValidPayment(true);
     }
   };
 
@@ -295,10 +328,33 @@ const UploadRelease = () => {
     }
   };
 
-  if (!user) {
+  if (!user || hasValidPayment === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (hasValidPayment === false) {
+    return (
+      <div className="min-h-screen bg-background py-12 px-4">
+        <div className="max-w-lg mx-auto">
+          <Card>
+            <CardHeader className="text-center">
+              <AlertCircle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
+              <CardTitle>Payment Pending</CardTitle>
+              <CardDescription>
+                Your payment is being verified. You'll be notified once confirmed and can then upload your release.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button className="w-full" onClick={() => navigate("/dashboard")}>
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
