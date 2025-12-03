@@ -24,7 +24,9 @@ export type Database = {
           facebook_url: string | null
           id: string
           instagram_url: string | null
+          payment_phone_number: string | null
           payment_status: string | null
+          payment_transaction_id: string | null
           review_date: string | null
           soundcloud_url: string | null
           spotify_url: string | null
@@ -46,7 +48,9 @@ export type Database = {
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          payment_phone_number?: string | null
           payment_status?: string | null
+          payment_transaction_id?: string | null
           review_date?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
@@ -68,7 +72,9 @@ export type Database = {
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          payment_phone_number?: string | null
           payment_status?: string | null
+          payment_transaction_id?: string | null
           review_date?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
@@ -180,6 +186,51 @@ export type Database = {
           id?: string
           phone_number?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      release_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_date: string
+          payment_method: string
+          phone_number: string
+          status: string
+          transaction_id: string
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_date?: string
+          payment_method: string
+          phone_number: string
+          status?: string
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_date?: string
+          payment_method?: string
+          phone_number?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }

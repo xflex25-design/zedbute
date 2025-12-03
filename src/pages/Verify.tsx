@@ -25,6 +25,7 @@ const Verify = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [hasVerification, setHasVerification] = useState(false);
+  const [hasValidPayment, setHasValidPayment] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -54,10 +55,43 @@ const Verify = () => {
       
       if (data) {
         setHasVerification(true);
+        setHasValidPayment(true);
+        return;
+      }
+
+      // Check for valid payment for verification
+      const { data: payments } = await supabase
+        .from("release_payments")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "verified")
+        .eq("amount", VERIFICATION_DEPOSIT);
+      
+      if (!payments || payments.length === 0) {
+        // Check for pending payment
+        const { data: pendingPayments } = await supabase
+          .from("release_payments")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .eq("status", "pending")
+          .eq("amount", VERIFICATION_DEPOSIT);
+        
+        if (pendingPayments && pendingPayments.length > 0) {
+          toast({
+            title: "Payment Pending",
+            description: "Your verification payment is being verified. Please wait for confirmation.",
+          });
+          setHasValidPayment(false);
+        } else {
+          // No payment found, redirect to payment page
+          navigate("/payment?type=verification");
+        }
+      } else {
+        setHasValidPayment(true);
       }
     };
     checkUser();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +118,9 @@ const Verify = () => {
           bio: formData.bio,
           youtube_url: formData.youtubeUrl || null,
           spotify_url: formData.spotifyUrl,
+          website_url: formData.boomplayUrl,
           deposit_amount: VERIFICATION_DEPOSIT,
-          payment_status: "unpaid",
+          payment_status: "paid",
           status: "pending",
         });
 
@@ -93,11 +128,9 @@ const Verify = () => {
 
       toast({
         title: "Application submitted!",
-        description: `Please complete the K${VERIFICATION_DEPOSIT} deposit via mobile money. Your verification will be processed within 2 weeks.`,
+        description: "Your verification will be processed within 2 weeks.",
       });
 
-      // In a real app, redirect to payment page
-      // For now, just navigate to dashboard
       navigate("/dashboard");
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -121,6 +154,40 @@ const Verify = () => {
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // Loading state
+  if (!user || hasValidPayment === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Payment pending state
+  if (hasValidPayment === false) {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <Navbar user={user} />
+        <div className="container mx-auto px-4 pt-24 pb-12">
+          <Card className="max-w-2xl mx-auto shadow-card text-center">
+            <CardContent className="pt-12 pb-8">
+              <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-8 w-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Payment Pending</h2>
+              <p className="text-muted-foreground mb-6">
+                Your verification payment is being verified. You'll be notified once confirmed and can then submit your verification request.
+              </p>
+              <Button variant="hero" onClick={() => navigate("/dashboard")}>
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   if (hasVerification) {
     return (
@@ -158,10 +225,12 @@ const Verify = () => {
 
           <Card className="shadow-card mb-6">
             <CardHeader>
-              <CardTitle>Verification Fee</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                Payment Confirmed
+              </CardTitle>
               <CardDescription>
-                A one-time deposit of K{VERIFICATION_DEPOSIT} is required. Processing takes approximately 2 weeks.
-                Pay via Airtel Money, Zamtel Kwacha, or MTN Mobile Money.
+                Your K{VERIFICATION_DEPOSIT} verification fee has been received. Processing takes approximately 2 weeks.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -244,10 +313,10 @@ const Verify = () => {
 
                 <div className="pt-4">
                   <Button type="submit" variant="hero" className="w-full" disabled={loading}>
-                    {loading ? "Submitting..." : `Submit & Pay K${VERIFICATION_DEPOSIT}`}
+                    {loading ? "Submitting..." : "Submit Verification Request"}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    By submitting, you agree to pay the verification deposit
+                    Your application will be processed within 2 weeks
                   </p>
                 </div>
               </form>
