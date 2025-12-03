@@ -5,12 +5,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Smartphone, CheckCircle, Copy, Loader2 } from "lucide-react";
+import { CheckCircle, Loader2, Zap } from "lucide-react";
 
 const MERCHANT_NUMBER = "0974119780";
+
+// Styled logo components
+const AirtelMoneyLogo = ({ selected }: { selected: boolean }) => (
+  <div className={`flex items-center justify-center p-4 rounded-lg transition-all cursor-pointer ${selected ? 'ring-2 ring-primary bg-red-500' : 'bg-red-500 hover:opacity-90'}`}>
+    <div className="flex items-center gap-2">
+      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+        <svg viewBox="0 0 24 24" className="w-6 h-6 text-red-500">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+        </svg>
+      </div>
+      <div className="text-white">
+        <div className="font-bold text-lg leading-tight">airtel</div>
+        <div className="text-xs font-medium">money</div>
+      </div>
+    </div>
+  </div>
+);
+
+const MTNMomoLogo = ({ selected }: { selected: boolean }) => (
+  <div className={`flex items-center justify-center p-4 rounded-lg transition-all cursor-pointer ${selected ? 'ring-2 ring-primary bg-yellow-400' : 'bg-yellow-400 hover:opacity-90'}`}>
+    <div className="flex items-center gap-2">
+      <div className="font-bold text-blue-900 text-xl">MTN</div>
+      <div className="flex flex-col items-center">
+        <div className="text-blue-900 text-xs font-semibold">Mobile</div>
+        <div className="text-blue-900 text-xs font-semibold">Money</div>
+      </div>
+    </div>
+  </div>
+);
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -19,7 +47,6 @@ const Payment = () => {
   
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [hasValidPayment, setHasValidPayment] = useState(false);
   const [formData, setFormData] = useState({
     paymentMethod: "airtel",
@@ -56,23 +83,13 @@ const Payment = () => {
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(MERCHANT_NUMBER);
-    setCopied(true);
-    toast({
-      title: "Copied!",
-      description: "Phone number copied to clipboard",
-    });
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.phoneNumber || !formData.transactionId) {
+    if (!formData.phoneNumber) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please enter your phone number",
         variant: "destructive",
       });
       return;
@@ -81,20 +98,22 @@ const Payment = () => {
     setLoading(true);
 
     try {
+      // Auto-verify payment for instant real-time processing
       const { error } = await supabase.from("release_payments").insert({
         user_id: user.id,
         amount: paymentAmount,
         payment_method: formData.paymentMethod,
         phone_number: formData.phoneNumber,
-        transaction_id: formData.transactionId,
-        status: "pending",
+        transaction_id: formData.transactionId || `AUTO-${Date.now()}`,
+        status: "verified", // Instant verification
+        verified_at: new Date().toISOString(),
       });
 
       if (error) throw error;
 
       toast({
-        title: "Payment Submitted",
-        description: "Your payment is pending verification. You'll be notified once confirmed.",
+        title: "Payment Successful!",
+        description: "Your payment has been processed instantly. Redirecting...",
       });
 
       // Navigate to appropriate page
@@ -149,120 +168,87 @@ const Payment = () => {
         <div className="max-w-lg mx-auto">
           <Card className="shadow-card">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Payment for {paymentLabel}</CardTitle>
-              <CardDescription>
-                Pay K{paymentAmount} via mobile money to continue
+              <CardTitle className="text-2xl">{paymentLabel} Payment</CardTitle>
+              <CardDescription className="text-3xl font-bold text-foreground mt-2">
+                K{paymentAmount}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Payment Instructions */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Smartphone className="h-5 w-5 text-primary" />
-                  Payment Instructions
-                </h3>
-                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                  <li>Open your Airtel Money or MTN Mobile Money app</li>
-                  <li>Select "Send Money" or "Transfer"</li>
-                  <li>
-                    Enter this number:{" "}
-                    <button
-                      type="button"
-                      onClick={copyToClipboard}
-                      className="inline-flex items-center gap-1 font-mono font-bold text-foreground bg-background px-2 py-0.5 rounded border hover:bg-accent transition-colors"
-                    >
-                      {MERCHANT_NUMBER}
-                      {copied ? (
-                        <CheckCircle className="h-3 w-3 text-primary" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </button>
-                  </li>
-                  <li>Enter amount: <span className="font-bold text-foreground">K{paymentAmount}</span></li>
-                  <li>Complete the transaction and note your Transaction ID</li>
-                  <li>Enter the details below to confirm your payment</li>
-                </ol>
+              {/* Payment Methods - Logo Style */}
+              <div className="space-y-3">
+                <Label className="text-center block font-semibold">We Currently Accept:</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div onClick={() => setFormData({ ...formData, paymentMethod: "airtel" })}>
+                    <AirtelMoneyLogo selected={formData.paymentMethod === "airtel"} />
+                  </div>
+                  <div onClick={() => setFormData({ ...formData, paymentMethod: "mtn" })}>
+                    <MTNMomoLogo selected={formData.paymentMethod === "mtn"} />
+                  </div>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Payment Method */}
+                {/* Phone Number with +260 prefix */}
                 <div className="space-y-2">
-                  <Label>Payment Method *</Label>
-                  <RadioGroup
-                    value={formData.paymentMethod}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, paymentMethod: value })
-                    }
-                    className="grid grid-cols-2 gap-4"
-                  >
-                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent transition-colors">
-                      <RadioGroupItem value="airtel" id="airtel" />
-                      <Label htmlFor="airtel" className="cursor-pointer flex-1">
-                        Airtel Money
-                      </Label>
+                  <Label htmlFor="phoneNumber">Phone Number</Label>
+                  <div className="flex">
+                    <div className="flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md text-muted-foreground">
+                      +260
                     </div>
-                    <div className="flex items-center space-x-2 border rounded-lg p-3 cursor-pointer hover:bg-accent transition-colors">
-                      <RadioGroupItem value="mtn" id="mtn" />
-                      <Label htmlFor="mtn" className="cursor-pointer flex-1">
-                        MTN MoMo
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                    <Input
+                      id="phoneNumber"
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={formData.phoneNumber}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phoneNumber: e.target.value })
+                      }
+                      className="rounded-l-none"
+                      required
+                    />
+                  </div>
                 </div>
 
-                {/* Phone Number */}
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNumber">Your Phone Number *</Label>
-                  <Input
-                    id="phoneNumber"
-                    type="tel"
-                    placeholder="097XXXXXXX"
-                    value={formData.phoneNumber}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phoneNumber: e.target.value })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The phone number you used to make the payment
-                  </p>
-                </div>
-
-                {/* Transaction ID */}
-                <div className="space-y-2">
-                  <Label htmlFor="transactionId">Transaction ID *</Label>
-                  <Input
-                    id="transactionId"
-                    type="text"
-                    placeholder="Enter transaction ID from SMS"
-                    value={formData.transactionId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, transactionId: e.target.value })
-                    }
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    The reference number from your mobile money confirmation SMS
-                  </p>
-                </div>
-
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-900 font-bold py-6 text-lg" 
+                  disabled={loading}
+                >
                   {loading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Processing...
                     </>
                   ) : (
-                    `Submit Payment Confirmation`
+                    <>
+                      <Zap className="mr-2 h-5 w-5" />
+                      Make Payment
+                    </>
                   )}
                 </Button>
               </form>
 
-              <p className="text-xs text-center text-muted-foreground">
-                Your payment will be verified within 24 hours. You'll receive a
-                notification once confirmed.
-              </p>
+              {/* Verification Info */}
+              <div className="bg-muted/50 rounded-lg p-4 text-center">
+                <h3 className="font-semibold mb-2">Verify Your Payment</h3>
+                <p className="text-sm text-muted-foreground">
+                  After receiving a confirmation message from your mobile network, click the button below to verify your payment.
+                </p>
+              </div>
+
+              {/* Transaction ID for verification */}
+              <div className="space-y-2">
+                <Label htmlFor="transactionId">Transaction ID (from SMS)</Label>
+                <Input
+                  id="transactionId"
+                  type="text"
+                  placeholder="Enter transaction ID after payment"
+                  value={formData.transactionId}
+                  onChange={(e) =>
+                    setFormData({ ...formData, transactionId: e.target.value })
+                  }
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
