@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Upload, Music, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { FormProgress } from "@/components/FormProgress";
 
 const LANGUAGES = [
   "English",
@@ -373,6 +374,17 @@ const UploadRelease = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <FormProgress
+              steps={[
+                { label: "Title", completed: formData.title.trim().length > 0 },
+                { label: "Language", completed: selectedLanguages.length > 0 },
+                { label: "Release Type", completed: !!formData.releaseType },
+                { label: "Genre", completed: !!formData.genre },
+                { label: "Cover Art", completed: !!formData.coverArt },
+                { label: "Audio File", completed: !!formData.audioFile },
+                { label: "Rights Confirmed", completed: formData.rightsConfirmed },
+              ]}
+            />
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
               <div className="space-y-2">
