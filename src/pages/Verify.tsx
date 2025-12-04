@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2 } from "lucide-react";
+import { FormProgress } from "@/components/FormProgress";
 import { z } from "zod";
 
 const verificationSchema = z.object({
@@ -243,6 +244,14 @@ const Verify = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <FormProgress
+                steps={[
+                  { label: "Artist Name", completed: formData.artistName.trim().length > 0 },
+                  { label: "Bio", completed: formData.bio.trim().length >= 10 },
+                  { label: "Boomplay URL", completed: formData.boomplayUrl.includes("boomplay.com") },
+                  { label: "Spotify URL", completed: formData.spotifyUrl.includes("spotify.com") },
+                ]}
+              />
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="artistName">Artist Name *</Label>
