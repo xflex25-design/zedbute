@@ -83,6 +83,8 @@ const Payment = () => {
     }
   };
 
+  const isValidTransactionId = formData.transactionId.trim().length >= 6;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -90,6 +92,15 @@ const Payment = () => {
       toast({
         title: "Error",
         description: "Please enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidTransactionId) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid transaction ID (at least 6 characters)",
         variant: "destructive",
       });
       return;
@@ -104,7 +115,7 @@ const Payment = () => {
         amount: paymentAmount,
         payment_method: formData.paymentMethod,
         phone_number: formData.phoneNumber,
-        transaction_id: formData.transactionId || `AUTO-${Date.now()}`,
+        transaction_id: formData.transactionId.trim(),
         status: "verified", // Instant verification
         verified_at: new Date().toISOString(),
       });
@@ -212,7 +223,7 @@ const Payment = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-900 font-bold py-6 text-lg" 
-                  disabled={loading}
+                  disabled={loading || !isValidTransactionId || !formData.phoneNumber}
                 >
                   {loading ? (
                     <>
@@ -238,7 +249,7 @@ const Payment = () => {
 
               {/* Transaction ID for verification */}
               <div className="space-y-2">
-                <Label htmlFor="transactionId">Transaction ID (from SMS)</Label>
+                <Label htmlFor="transactionId">Transaction ID (from SMS) <span className="text-destructive">*</span></Label>
                 <Input
                   id="transactionId"
                   type="text"
@@ -247,7 +258,12 @@ const Payment = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, transactionId: e.target.value })
                   }
+                  required
+                  className={formData.transactionId && !isValidTransactionId ? "border-destructive" : ""}
                 />
+                {formData.transactionId && !isValidTransactionId && (
+                  <p className="text-sm text-destructive">Transaction ID must be at least 6 characters</p>
+                )}
               </div>
             </CardContent>
           </Card>
