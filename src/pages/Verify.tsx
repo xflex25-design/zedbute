@@ -30,12 +30,29 @@ const Verify = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState({
-    artistName: "",
-    bio: "",
-    boomplayUrl: "",
-    spotifyUrl: "",
-    youtubeUrl: "",
+  const [formData, setFormData] = useState(() => {
+    // Restore form data from sessionStorage if available
+    const saved = sessionStorage.getItem("verifyFormData");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {
+          artistName: "",
+          bio: "",
+          boomplayUrl: "",
+          spotifyUrl: "",
+          youtubeUrl: "",
+        };
+      }
+    }
+    return {
+      artistName: "",
+      bio: "",
+      boomplayUrl: "",
+      spotifyUrl: "",
+      youtubeUrl: "",
+    };
   });
 
   useEffect(() => {
@@ -68,27 +85,11 @@ const Verify = () => {
         .eq("status", "verified")
         .eq("amount", VERIFICATION_DEPOSIT);
       
-      if (!payments || payments.length === 0) {
-        // Check for pending payment
-        const { data: pendingPayments } = await supabase
-          .from("release_payments")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .eq("status", "pending")
-          .eq("amount", VERIFICATION_DEPOSIT);
-        
-        if (pendingPayments && pendingPayments.length > 0) {
-          toast({
-            title: "Payment Pending",
-            description: "Your verification payment is being verified. Please wait for confirmation.",
-          });
-          setHasValidPayment(false);
-        } else {
-          // No payment found, redirect to payment page
-          navigate("/payment?type=verification");
-        }
-      } else {
+      if (payments && payments.length > 0) {
         setHasValidPayment(true);
+      } else {
+        // Allow form filling without payment - payment required on submit
+        setHasValidPayment(false);
       }
     };
     checkUser();
@@ -110,6 +111,18 @@ const Verify = () => {
         return;
       }
 
+      // Check if payment is required
+      if (!hasValidPayment) {
+        // Save form data to sessionStorage before redirecting to payment
+        sessionStorage.setItem("verifyFormData", JSON.stringify(formData));
+        toast({
+          title: "Payment Required",
+          description: "Please complete payment to submit your verification.",
+        });
+        navigate("/payment?type=verification");
+        return;
+      }
+
       // Insert verification request
       const { error } = await supabase
         .from("artist_verifications")
@@ -126,6 +139,9 @@ const Verify = () => {
         });
 
       if (error) throw error;
+
+      // Clear saved form data
+      sessionStorage.removeItem("verifyFormData");
 
       toast({
         title: "Application submitted!",
@@ -165,31 +181,6 @@ const Verify = () => {
     );
   }
 
-  // Payment pending state
-  if (hasValidPayment === false) {
-    return (
-      <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
-        <div className="container mx-auto px-4 pt-24 pb-12">
-          <Card className="max-w-2xl mx-auto shadow-card text-center">
-            <CardContent className="pt-12 pb-8">
-              <div className="h-16 w-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="h-8 w-8 text-amber-600" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Payment Pending</h2>
-              <p className="text-muted-foreground mb-6">
-                Your verification payment is being verified. You'll be notified once confirmed and can then submit your verification request.
-              </p>
-              <Button variant="hero" onClick={() => navigate("/dashboard")}>
-                Go to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   if (hasVerification) {
     return (
       <div className="min-h-screen bg-gradient-hero">
@@ -224,17 +215,33 @@ const Verify = () => {
             </p>
           </div>
 
-          <Card className="shadow-card mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Payment Confirmed
-              </CardTitle>
-              <CardDescription>
-                Your K{VERIFICATION_DEPOSIT} verification fee has been received. Processing takes approximately 2 weeks.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {hasValidPayment && (
+            <Card className="shadow-card mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  Payment Confirmed
+                </CardTitle>
+                <CardDescription>
+                  Your K{VERIFICATION_DEPOSIT} verification fee has been received. Processing takes approximately 2 weeks.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
+
+          {!hasValidPayment && (
+            <Card className="shadow-card mb-6 border-amber-200 bg-amber-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-700">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Payment Required
+                </CardTitle>
+                <CardDescription className="text-amber-600">
+                  Fill out the form below. You'll be redirected to payment (K{VERIFICATION_DEPOSIT}) when you submit.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          )}
 
           <Card className="shadow-card">
             <CardHeader>
@@ -322,10 +329,13 @@ const Verify = () => {
 
                 <div className="pt-4">
                   <Button type="submit" variant="hero" className="w-full" disabled={loading}>
-                    {loading ? "Submitting..." : "Submit Verification Request"}
+                    {loading ? "Submitting..." : hasValidPayment ? "Submit Verification Request" : "Continue to Payment"}
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-2">
-                    Your application will be processed within 2 weeks
+                    {hasValidPayment 
+                      ? "Your application will be processed within 2 weeks"
+                      : "You'll be redirected to complete payment after form validation"
+                    }
                   </p>
                 </div>
               </form>
