@@ -43,19 +43,55 @@ const UploadRelease = () => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(() => {
+    const saved = sessionStorage.getItem("uploadFormData");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.selectedLanguages || [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [hasValidPayment, setHasValidPayment] = useState<boolean | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    releaseType: "single",
-    genre: "",
-    coverArt: null as File | null,
-    audioFile: null as File | null,
-    rightsConfirmed: false,
+  const [formData, setFormData] = useState(() => {
+    const saved = sessionStorage.getItem("uploadFormData");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          title: parsed.title || "",
+          releaseType: parsed.releaseType || "single",
+          genre: parsed.genre || "",
+          coverArt: null as File | null,
+          audioFile: null as File | null,
+          rightsConfirmed: parsed.rightsConfirmed || false,
+        };
+      } catch {
+        return {
+          title: "",
+          releaseType: "single",
+          genre: "",
+          coverArt: null as File | null,
+          audioFile: null as File | null,
+          rightsConfirmed: false,
+        };
+      }
+    }
+    return {
+      title: "",
+      releaseType: "single",
+      genre: "",
+      coverArt: null as File | null,
+      audioFile: null as File | null,
+      rightsConfirmed: false,
+    };
   });
 
   useEffect(() => {
@@ -79,27 +115,11 @@ const UploadRelease = () => {
       .eq("status", "verified")
       .gte("created_at", startOfYear);
     
-    if (!payments || payments.length === 0) {
-      // Check for pending payment
-      const { data: pendingPayments } = await supabase
-        .from("release_payments")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "pending")
-        .gte("created_at", startOfYear);
-      
-      if (pendingPayments && pendingPayments.length > 0) {
-        toast({
-          title: "Payment Pending",
-          description: "Your payment is being verified. Please wait for confirmation.",
-        });
-        setHasValidPayment(false);
-      } else {
-        // No payment found, redirect to payment page
-        navigate("/payment?type=release");
-      }
-    } else {
+    if (payments && payments.length > 0) {
       setHasValidPayment(true);
+    } else {
+      // Allow form filling without payment - payment required on submit
+      setHasValidPayment(false);
     }
   };
 
@@ -225,6 +245,24 @@ const UploadRelease = () => {
       return;
     }
 
+    // Check if payment is required
+    if (!hasValidPayment) {
+      // Save form metadata to sessionStorage before redirecting to payment
+      sessionStorage.setItem("uploadFormData", JSON.stringify({
+        title: formData.title,
+        releaseType: formData.releaseType,
+        genre: formData.genre,
+        rightsConfirmed: formData.rightsConfirmed,
+        selectedLanguages,
+      }));
+      toast({
+        title: "Payment Required",
+        description: "Please complete payment to upload your release.",
+      });
+      navigate("/payment?type=release");
+      return;
+    }
+
     setLoading(true);
     setIsUploading(true);
     setUploadProgress(0);
@@ -305,6 +343,9 @@ const UploadRelease = () => {
 
       setUploadProgress(100);
 
+      // Clear saved form data
+      sessionStorage.removeItem("uploadFormData");
+
       toast({
         title: "Release Submitted Successfully",
         description: "Your release is now pending review. This will take up to 2 weeks.",
@@ -337,29 +378,6 @@ const UploadRelease = () => {
     );
   }
 
-  if (hasValidPayment === false) {
-    return (
-      <div className="min-h-screen bg-background py-12 px-4">
-        <div className="max-w-lg mx-auto">
-          <Card>
-            <CardHeader className="text-center">
-              <AlertCircle className="h-16 w-16 text-amber-500 mx-auto mb-4" />
-              <CardTitle>Payment Pending</CardTitle>
-              <CardDescription>
-                Your payment is being verified. You'll be notified once confirmed and can then upload your release.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" onClick={() => navigate("/dashboard")}>
-                Go to Dashboard
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background py-12 px-4">
       <div className="max-w-3xl mx-auto">
@@ -372,6 +390,14 @@ const UploadRelease = () => {
             <CardDescription>
               Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks.
             </CardDescription>
+            {!hasValidPayment && (
+              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-sm text-amber-700">
+                  <AlertCircle className="h-4 w-4 inline mr-1" />
+                  Payment required (K399). Fill out the form and you'll be redirected to payment on submit.
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <FormProgress
@@ -611,10 +637,17 @@ const UploadRelease = () => {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Submitting...
                   </>
-                ) : (
+                ) : hasValidPayment ? (
                   "Submit Release"
+                ) : (
+                  "Continue to Payment"
                 )}
               </Button>
+              {!hasValidPayment && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  You'll be redirected to complete payment after form validation
+                </p>
+              )}
             </form>
           </CardContent>
         </Card>
