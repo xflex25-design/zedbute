@@ -77,18 +77,13 @@ const Verify = () => {
         return;
       }
 
-      // Check for valid payment for verification
-      const { data: payments } = await supabase
-        .from("release_payments")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("status", "verified")
-        .eq("amount", VERIFICATION_DEPOSIT);
-      
-      if (payments && payments.length > 0) {
+      // Check if returning from payment with valid session storage
+      const pendingPayment = sessionStorage.getItem("pendingVerificationPayment");
+      if (pendingPayment === "completed") {
+        sessionStorage.removeItem("pendingVerificationPayment");
         setHasValidPayment(true);
       } else {
-        // Allow form filling without payment - payment required on submit
+        // No payment yet - payment required on submit
         setHasValidPayment(false);
       }
     };

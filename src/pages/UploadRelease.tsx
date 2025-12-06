@@ -106,19 +106,13 @@ const UploadRelease = () => {
     }
     setUser(user);
     
-    // Check for valid payment
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString();
-    const { data: payments } = await supabase
-      .from("release_payments")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("status", "verified")
-      .gte("created_at", startOfYear);
-    
-    if (payments && payments.length > 0) {
+    // Check if returning from payment with valid session storage
+    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
+    if (pendingPayment === "completed") {
+      sessionStorage.removeItem("pendingReleasePayment");
       setHasValidPayment(true);
     } else {
-      // Allow form filling without payment - payment required on submit
+      // No payment yet - payment required on submit for every release
       setHasValidPayment(false);
     }
   };
