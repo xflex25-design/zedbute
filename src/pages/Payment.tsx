@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { CheckCircle, Loader2, Zap } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 
 const MERCHANT_NUMBER = "0974119780";
 
@@ -39,7 +39,6 @@ const Payment = () => {
   
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [hasValidPayment, setHasValidPayment] = useState(false);
   const [formData, setFormData] = useState({
     paymentMethod: "airtel",
     phoneNumber: "",
@@ -60,19 +59,7 @@ const Payment = () => {
       return;
     }
     setUser(session.user);
-    
-    // Check if user already has valid payment for this year
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString();
-    const { data: payments } = await supabase
-      .from("release_payments")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("status", "verified")
-      .gte("created_at", startOfYear);
-    
-    if (payments && payments.length > 0) {
-      setHasValidPayment(true);
-    }
+    // Don't check for existing payments - each submission requires new payment
   };
 
   const isValidTransactionId = formData.transactionId.trim().length >= 6;
@@ -119,11 +106,13 @@ const Payment = () => {
         description: "Your payment has been processed instantly. Redirecting...",
       });
 
-      // Navigate to appropriate page
+      // Set session flag to indicate payment completed
       if (paymentType === "verification") {
+        sessionStorage.setItem("pendingVerificationPayment", "completed");
         navigate("/verify");
       } else {
-        navigate("/upload");
+        sessionStorage.setItem("pendingReleasePayment", "completed");
+        navigate("/upload-release");
       }
     } catch (error: any) {
       console.error("Payment submission error:", error);
@@ -137,29 +126,10 @@ const Payment = () => {
     }
   };
 
-  if (hasValidPayment) {
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
-        <div className="container mx-auto px-4 pt-24 pb-12">
-          <Card className="max-w-lg mx-auto shadow-card">
-            <CardHeader className="text-center">
-              <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
-              <CardTitle className="text-2xl">Payment Already Verified</CardTitle>
-              <CardDescription>
-                You have a valid payment for this year. You can proceed with {paymentLabel.toLowerCase()}.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                className="w-full"
-                onClick={() => navigate(paymentType === "verification" ? "/verify" : "/upload")}
-              >
-                Continue to {paymentLabel}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
