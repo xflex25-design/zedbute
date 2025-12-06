@@ -11,32 +11,24 @@ import { CheckCircle, Loader2, Zap } from "lucide-react";
 
 const MERCHANT_NUMBER = "0974119780";
 
-// Styled logo components
+// Styled round logo components
 const AirtelMoneyLogo = ({ selected }: { selected: boolean }) => (
-  <div className={`flex items-center justify-center p-4 rounded-lg transition-all cursor-pointer ${selected ? 'ring-2 ring-primary bg-red-500' : 'bg-red-500 hover:opacity-90'}`}>
-    <div className="flex items-center gap-2">
-      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-        <svg viewBox="0 0 24 24" className="w-6 h-6 text-red-500">
-          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-        </svg>
-      </div>
-      <div className="text-white">
-        <div className="font-bold text-lg leading-tight">airtel</div>
-        <div className="text-xs font-medium">money</div>
-      </div>
+  <div className="flex flex-col items-center gap-2 cursor-pointer">
+    <div className={`w-20 h-20 rounded-full bg-red-500 flex flex-col items-center justify-center transition-all ${selected ? 'ring-4 ring-primary ring-offset-2' : 'hover:scale-105'}`}>
+      <div className="text-white font-bold text-sm leading-tight">airtel</div>
+      <div className="text-white text-[10px] font-medium">money</div>
     </div>
+    <span className="text-sm text-muted-foreground">Airtel Money</span>
   </div>
 );
 
 const MTNMomoLogo = ({ selected }: { selected: boolean }) => (
-  <div className={`flex items-center justify-center p-4 rounded-lg transition-all cursor-pointer ${selected ? 'ring-2 ring-primary bg-yellow-400' : 'bg-yellow-400 hover:opacity-90'}`}>
-    <div className="flex items-center gap-2">
-      <div className="font-bold text-blue-900 text-xl">MTN</div>
-      <div className="flex flex-col items-center">
-        <div className="text-blue-900 text-xs font-semibold">Mobile</div>
-        <div className="text-blue-900 text-xs font-semibold">Money</div>
-      </div>
+  <div className="flex flex-col items-center gap-2 cursor-pointer">
+    <div className={`w-20 h-20 rounded-full bg-yellow-400 flex flex-col items-center justify-center transition-all ${selected ? 'ring-4 ring-primary ring-offset-2' : 'hover:scale-105'}`}>
+      <div className="font-bold text-blue-900 text-sm">MTN</div>
+      <div className="text-blue-900 text-[8px] font-semibold">Mobile Money</div>
     </div>
+    <span className="text-sm text-muted-foreground">MTN MoMo</span>
   </div>
 );
 
