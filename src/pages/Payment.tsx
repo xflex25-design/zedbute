@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Zap } from "lucide-react";
 
-const MERCHANT_NUMBER = "0974119780";
+const AIRTEL_NUMBER = "0974119780";
+const MTN_NUMBER = "0979580446";
 
 // Styled round logo components
 const AirtelMoneyLogo = ({ selected }: { selected: boolean }) => (
@@ -157,6 +158,21 @@ const Payment = () => {
                   <div onClick={() => setFormData({ ...formData, paymentMethod: "mtn" })}>
                     <MTNMomoLogo selected={formData.paymentMethod === "mtn"} />
                   </div>
+                </div>
+              </div>
+
+              {/* Send Payment To Section */}
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+                <h3 className="font-semibold mb-2 text-primary">Send K{paymentAmount} to:</h3>
+                <div className="space-y-2">
+                  {formData.paymentMethod === "airtel" ? (
+                    <div className="text-lg font-bold">{AIRTEL_NUMBER}</div>
+                  ) : (
+                    <div className="text-lg font-bold">{MTN_NUMBER}</div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    {formData.paymentMethod === "airtel" ? "Airtel Money" : "MTN Mobile Money"}
+                  </p>
                 </div>
               </div>
 
