@@ -43,7 +43,6 @@ const Payment = () => {
   const [formData, setFormData] = useState({
     paymentMethod: "airtel",
     phoneNumber: "",
-    transactionId: "",
   });
 
   const paymentAmount = paymentType === "verification" ? 30 : 399;
@@ -63,8 +62,6 @@ const Payment = () => {
     // Don't check for existing payments - each submission requires new payment
   };
 
-  const isValidTransactionId = formData.transactionId.trim().length >= 6;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -72,15 +69,6 @@ const Payment = () => {
       toast({
         title: "Error",
         description: "Please enter your phone number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!isValidTransactionId) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid transaction ID (at least 6 characters)",
         variant: "destructive",
       });
       return;
@@ -95,7 +83,7 @@ const Payment = () => {
         amount: paymentAmount,
         payment_method: formData.paymentMethod,
         phone_number: formData.phoneNumber,
-        transaction_id: formData.transactionId.trim(),
+        transaction_id: `AUTO-${Date.now()}`, // Auto-generated transaction ID
         status: "verified", // Instant verification
         verified_at: new Date().toISOString(),
       });
@@ -200,8 +188,8 @@ const Payment = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-yellow-900 font-bold py-6 text-lg" 
-                  disabled={loading || !isValidTransactionId || !formData.phoneNumber}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg" 
+                  disabled={loading || !formData.phoneNumber}
                 >
                   {loading ? (
                     <>
@@ -217,31 +205,11 @@ const Payment = () => {
                 </Button>
               </form>
 
-              {/* Verification Info */}
+              {/* Payment Info */}
               <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <h3 className="font-semibold mb-2">Verify Your Payment</h3>
                 <p className="text-sm text-muted-foreground">
-                  After receiving a confirmation message from your mobile network, click the button below to verify your payment.
+                  Enter your phone number and click "Make Payment" to complete your transaction.
                 </p>
-              </div>
-
-              {/* Transaction ID for verification */}
-              <div className="space-y-2">
-                <Label htmlFor="transactionId">Transaction ID (from SMS) <span className="text-destructive">*</span></Label>
-                <Input
-                  id="transactionId"
-                  type="text"
-                  placeholder="Enter transaction ID after payment"
-                  value={formData.transactionId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, transactionId: e.target.value })
-                  }
-                  required
-                  className={formData.transactionId && !isValidTransactionId ? "border-destructive" : ""}
-                />
-                {formData.transactionId && !isValidTransactionId && (
-                  <p className="text-sm text-destructive">Transaction ID must be at least 6 characters</p>
-                )}
               </div>
             </CardContent>
           </Card>
