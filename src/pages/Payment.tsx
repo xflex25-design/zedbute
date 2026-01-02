@@ -41,7 +41,7 @@ const Payment = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    paymentMethod: "airtel",
+    paymentMethod: "mtn",
     phoneNumber: "",
   });
 
