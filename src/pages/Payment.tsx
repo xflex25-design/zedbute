@@ -74,40 +74,84 @@ const Payment = () => {
       return;
     }
 
+    // Only MTN MoMo supports the API integration currently
+    if (formData.paymentMethod !== "mtn") {
+      toast({
+        title: "Coming Soon",
+        description: "Airtel Money integration is coming soon. Please use MTN MoMo for now.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Auto-verify payment for instant real-time processing
-      const { error } = await supabase.from("release_payments").insert({
-        user_id: user.id,
-        amount: paymentAmount,
-        payment_method: formData.paymentMethod,
-        phone_number: formData.phoneNumber,
-        transaction_id: `AUTO-${Date.now()}`, // Auto-generated transaction ID
-        status: "verified", // Instant verification
-        verified_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-
       toast({
-        title: "Payment Successful!",
-        description: "Your payment has been processed instantly. Redirecting...",
+        title: "Payment Request Sent",
+        description: "Please check your phone for the PIN prompt to authorize payment.",
       });
 
-      // Set session flag to indicate payment completed
-      if (paymentType === "verification") {
-        sessionStorage.setItem("pendingVerificationPayment", "completed");
-        navigate("/verify");
+      // Call MTN MoMo API via edge function
+      const { data, error: functionError } = await supabase.functions.invoke('mtn-momo-payment', {
+        body: {
+          amount: paymentAmount,
+          phoneNumber: formData.phoneNumber,
+          externalId: `${paymentType}-${user.id}-${Date.now()}`,
+          payerMessage: `Payment for ${paymentLabel}`,
+          payeeNote: `${paymentLabel} - K${paymentAmount}`,
+        },
+      });
+
+      if (functionError) {
+        throw new Error(functionError.message || 'Payment request failed');
+      }
+
+      console.log('Payment response:', data);
+
+      if (data.success) {
+        // Payment successful - save to database
+        const { error: dbError } = await supabase.from("release_payments").insert({
+          user_id: user.id,
+          amount: paymentAmount,
+          payment_method: formData.paymentMethod,
+          phone_number: formData.phoneNumber,
+          transaction_id: data.referenceId,
+          status: "verified",
+          verified_at: new Date().toISOString(),
+        });
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+        }
+
+        toast({
+          title: "Payment Successful!",
+          description: "Your payment has been processed. Redirecting...",
+        });
+
+        // Redirect based on payment type
+        if (paymentType === "verification") {
+          sessionStorage.setItem("pendingVerificationPayment", "completed");
+          navigate("/verify");
+        } else {
+          sessionStorage.setItem("pendingReleasePayment", "completed");
+          navigate("/upload-release");
+        }
+      } else if (data.status === 'PENDING') {
+        toast({
+          title: "Payment Pending",
+          description: data.message || "Please enter your PIN on your phone to complete payment.",
+          variant: "destructive",
+        });
       } else {
-        sessionStorage.setItem("pendingReleasePayment", "completed");
-        navigate("/upload-release");
+        throw new Error(data.error || data.reason || 'Payment failed');
       }
     } catch (error: any) {
-      console.error("Payment submission error:", error);
+      console.error("Payment error:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to submit payment",
+        title: "Payment Failed",
+        description: error.message || "Failed to process payment. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -149,19 +193,23 @@ const Payment = () => {
                 </div>
               </div>
 
-              {/* Send Payment To Section */}
+              {/* Payment Info Section */}
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                <h3 className="font-semibold mb-2 text-primary">Send K{paymentAmount} to:</h3>
-                <div className="space-y-2">
-                  {formData.paymentMethod === "airtel" ? (
-                    <div className="text-lg font-bold">{AIRTEL_NUMBER}</div>
-                  ) : (
-                    <div className="text-lg font-bold">{MTN_NUMBER}</div>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {formData.paymentMethod === "airtel" ? "Airtel Money" : "MTN Mobile Money"}
-                  </p>
-                </div>
+                {formData.paymentMethod === "mtn" ? (
+                  <>
+                    <h3 className="font-semibold mb-2 text-primary">Automatic Payment</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your phone number and click "Make Payment". You'll receive a PIN prompt on your phone to authorize the K{paymentAmount} payment.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-semibold mb-2 text-yellow-600">Coming Soon</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Airtel Money integration is coming soon. Please select MTN MoMo to make your payment.
+                    </p>
+                  </>
+                )}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -205,12 +253,6 @@ const Payment = () => {
                 </Button>
               </form>
 
-              {/* Payment Info */}
-              <div className="bg-muted/50 rounded-lg p-4 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Enter your phone number and click "Make Payment" to complete your transaction.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </div>

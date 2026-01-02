@@ -1,1 +1,4 @@
 project_id = "nyxubpqniyuckkoflzqu"
+
+[functions.mtn-momo-payment]
+verify_jwt = false
