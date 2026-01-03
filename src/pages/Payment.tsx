@@ -12,6 +12,42 @@ import { Loader2, Zap } from "lucide-react";
 const AIRTEL_NUMBER = "0974119780";
 const MTN_NUMBER = "0979580446";
 
+type MomoErrorPayload = {
+  error?: string;
+  code?: string;
+  userMessage?: string;
+  providerMessage?: string;
+  details?: string;
+};
+
+function getMomoFriendlyMessage(opts: {
+  functionError?: any;
+  payload?: any;
+}): string {
+  const { functionError, payload } = opts;
+
+  // If the function returned structured error info
+  const p = (payload ?? {}) as MomoErrorPayload;
+  if (p.userMessage) return p.userMessage;
+
+  // If invoke returned a non-2xx, Supabase provides a generic message.
+  const status = functionError?.context?.status ?? functionError?.status;
+  const msg = String(functionError?.message ?? "");
+
+  if (status === 429) return "Too many payment attempts. Please wait a moment and try again.";
+  if (status === 401 || /unauthorized|access denied/i.test(msg)) {
+    return "Payment service authentication failed. Please try again later.";
+  }
+  if (status === 400) {
+    return "Payment request was rejected. Check your phone number and try again.";
+  }
+  if (status >= 500) {
+    return "Payment service is temporarily unavailable. Please try again shortly.";
+  }
+
+  return msg || "Failed to process payment. Please try again.";
+}
+
 // Styled round logo components
 const AirtelMoneyLogo = ({ selected }: { selected: boolean }) => (
   <div className="flex flex-col items-center gap-2 cursor-pointer">
@@ -92,7 +128,7 @@ const Payment = () => {
         description: "Please check your phone for the PIN prompt to authorize payment.",
       });
 
-      // Call MTN MoMo API via edge function
+      // Call MTN MoMo API via backend function
       const { data, error: functionError } = await supabase.functions.invoke('mtn-momo-payment', {
         body: {
           amount: paymentAmount,
@@ -104,7 +140,12 @@ const Payment = () => {
       });
 
       if (functionError) {
-        throw new Error(functionError.message || 'Payment request failed');
+        // Some function errors include a parsed JSON body under `context`.
+        // If we can't access it, we still show a friendly message.
+        throw Object.assign(new Error(getMomoFriendlyMessage({ functionError, payload: data })), {
+          raw: functionError,
+          payload: data,
+        });
       }
 
       console.log('Payment response:', data);
@@ -148,10 +189,16 @@ const Payment = () => {
         throw new Error(data.error || data.reason || 'Payment failed');
       }
     } catch (error: any) {
-      console.error("Payment error:", error);
+      console.error("Payment error:", error?.raw ?? error);
+
+      const description =
+        error?.payload?.userMessage ||
+        error?.message ||
+        "Failed to process payment. Please try again.";
+
       toast({
         title: "Payment Failed",
-        description: error.message || "Failed to process payment. Please try again.",
+        description,
         variant: "destructive",
       });
     } finally {
