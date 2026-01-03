@@ -5,6 +5,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function mapMomoError(status: number, raw: string) {
+  const text = raw || '';
+  const lower = text.toLowerCase();
+
+  if (status === 401 && lower.includes('invalid subscription key')) {
+    return {
+      code: 'INVALID_SUBSCRIPTION_KEY',
+      userMessage: 'Payment service is not configured correctly. Please contact support.',
+      providerMessage: text,
+    };
+  }
+
+  if (status === 401 || lower.includes('access denied') || lower.includes('unauthorized')) {
+    return {
+      code: 'PROVIDER_AUTH_FAILED',
+      userMessage: 'Payment service authentication failed. Please try again later.',
+      providerMessage: text,
+    };
+  }
+
+  if (status === 400 && (lower.includes('msisdn') || lower.includes('partyid') || lower.includes('invalid') || lower.includes('format'))) {
+    return {
+      code: 'INVALID_PHONE',
+      userMessage: 'The phone number looks invalid. Please check it and try again.',
+      providerMessage: text,
+    };
+  }
+
+  if (lower.includes('insufficient') || lower.includes('not enough')) {
+    return {
+      code: 'INSUFFICIENT_FUNDS',
+      userMessage: 'You may have insufficient funds. Please top up and try again.',
+      providerMessage: text,
+    };
+  }
+
+  if (lower.includes('timeout') || lower.includes('timed out')) {
+    return {
+      code: 'TIMEOUT',
+      userMessage: 'The payment request timed out. Please try again.',
+      providerMessage: text,
+    };
+  }
+
+  return {
+    code: 'PROVIDER_ERROR',
+    userMessage: 'Payment provider returned an error. Please try again.',
+    providerMessage: text,
+  };
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -47,9 +98,13 @@ serve(async (req) => {
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Token error:', tokenResponse.status, errorText);
+      const mapped = mapMomoError(tokenResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: 'Failed to authenticate with payment provider' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: 'Failed to authenticate with payment provider',
+          ...mapped,
+        }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -93,9 +148,13 @@ serve(async (req) => {
     if (!requestToPayResponse.ok) {
       const errorText = await requestToPayResponse.text();
       console.error('Request to Pay error:', requestToPayResponse.status, errorText);
+      const mapped = mapMomoError(requestToPayResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: 'Failed to initiate payment request', details: errorText }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: 'Failed to initiate payment request',
+          ...mapped,
+        }),
+        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -165,8 +224,12 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error('Error processing payment:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const mapped = mapMomoError(500, errorMessage);
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({
+        error: errorMessage,
+        ...mapped,
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
