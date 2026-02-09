@@ -110,15 +110,8 @@ const Payment = () => {
       return;
     }
 
-    // Only MTN MoMo supports the API integration currently
-    if (formData.paymentMethod !== "mtn") {
-      toast({
-        title: "Coming Soon",
-        description: "Airtel Money integration is coming soon. Please use MTN MoMo for now.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Route to appropriate payment function
+    const isAirtel = formData.paymentMethod === "airtel";
 
     setLoading(true);
 
@@ -128,15 +121,25 @@ const Payment = () => {
         description: "Please check your phone for the PIN prompt to authorize payment.",
       });
 
-      // Call MTN MoMo API via backend function
-      const { data, error: functionError } = await supabase.functions.invoke('mtn-momo-payment', {
-        body: {
-          amount: paymentAmount,
-          phoneNumber: formData.phoneNumber,
-          externalId: `${paymentType}-${user.id}-${Date.now()}`,
-          payerMessage: `Payment for ${paymentLabel}`,
-          payeeNote: `${paymentLabel} - K${paymentAmount}`,
-        },
+      const functionName = isAirtel ? 'airtel-money-payment' : 'mtn-momo-payment';
+      const requestBody = isAirtel
+        ? {
+            amount: paymentAmount,
+            phoneNumber: formData.phoneNumber,
+            reference: `${paymentType}-${user.id}-${Date.now()}`,
+            payerMessage: `Payment for ${paymentLabel}`,
+          }
+        : {
+            amount: paymentAmount,
+            phoneNumber: formData.phoneNumber,
+            externalId: `${paymentType}-${user.id}-${Date.now()}`,
+            payerMessage: `Payment for ${paymentLabel}`,
+            payeeNote: `${paymentLabel} - K${paymentAmount}`,
+          };
+
+      // Call payment API via backend function
+      const { data, error: functionError } = await supabase.functions.invoke(functionName, {
+        body: requestBody,
       });
 
       if (functionError) {
@@ -242,18 +245,18 @@ const Payment = () => {
 
               {/* Payment Info Section */}
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                {formData.paymentMethod === "mtn" ? (
+              {formData.paymentMethod === "mtn" ? (
                   <>
-                    <h3 className="font-semibold mb-2 text-primary">Automatic Payment</h3>
+                    <h3 className="font-semibold mb-2 text-primary">MTN MoMo - Automatic Payment</h3>
                     <p className="text-sm text-muted-foreground">
                       Enter your phone number and click "Make Payment". You'll receive a PIN prompt on your phone to authorize the K{paymentAmount} payment.
                     </p>
                   </>
                 ) : (
                   <>
-                    <h3 className="font-semibold mb-2 text-yellow-600">Coming Soon</h3>
+                    <h3 className="font-semibold mb-2 text-primary">Airtel Money - Automatic Payment</h3>
                     <p className="text-sm text-muted-foreground">
-                      Airtel Money integration is coming soon. Please select MTN MoMo to make your payment.
+                      Enter your Airtel number and click "Make Payment". You'll receive a prompt on your phone to authorize the K{paymentAmount} payment.
                     </p>
                   </>
                 )}
