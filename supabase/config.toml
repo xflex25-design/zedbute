@@ -2,3 +2,6 @@ project_id = "nyxubpqniyuckkoflzqu"
 
 [functions.mtn-momo-payment]
 verify_jwt = false
+
+[functions.airtel-money-payment]
+verify_jwt = false
