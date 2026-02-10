@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const AIRTEL_BASE_URL = 'https://openapi.airtel.africa';
+const AIRTEL_BASE_URL = 'https://openapiuat.airtel.africa';
 
 async function getAirtelToken(): Promise<string> {
   const clientId = Deno.env.get('AIRTEL_CLIENT_ID');
