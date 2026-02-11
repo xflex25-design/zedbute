@@ -5,36 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const AIRTEL_BASE_URL = 'https://openapiuat.airtel.africa';
-
-async function getAirtelToken(): Promise<string> {
-  const clientId = Deno.env.get('AIRTEL_CLIENT_ID');
-  const clientSecret = Deno.env.get('AIRTEL_CLIENT_SECRET');
-
-  if (!clientId || !clientSecret) {
-    throw new Error('Airtel API credentials not configured');
-  }
-
-  const response = await fetch(`${AIRTEL_BASE_URL}/auth/oauth2/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: 'client_credentials',
-    }),
-  });
-
-  const data = await response.json();
-  console.log('Airtel token response status:', response.status);
-
-  if (!response.ok || !data.access_token) {
-    console.error('Token error:', JSON.stringify(data));
-    throw new Error('Failed to authenticate with Airtel');
-  }
-
-  return data.access_token;
-}
+const LENCO_BASE_URL = 'https://api.lenco.co/access/v2';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -44,65 +15,57 @@ serve(async (req) => {
   try {
     const { amount, phoneNumber, reference, payerMessage } = await req.json();
 
-    // Format phone: remove leading 0, ensure starts with 260
+    const lencoToken = Deno.env.get('LENCO_API_TOKEN');
+    if (!lencoToken) {
+      console.error('Missing LENCO_API_TOKEN');
+      return new Response(
+        JSON.stringify({ error: 'Payment service not configured', userMessage: 'Payment service is not configured. Please contact support.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Format phone: remove spaces/leading zero, ensure starts with 260
     let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '');
     if (!formattedPhone.startsWith('260')) {
       formattedPhone = '260' + formattedPhone;
     }
 
-    console.log('Processing Airtel payment for:', formattedPhone, 'Amount:', amount);
+    const ref = reference || crypto.randomUUID();
+    console.log('Processing Airtel payment via Lenco for:', formattedPhone, 'Amount:', amount);
 
-    const token = await getAirtelToken();
-    const txnId = reference || crypto.randomUUID();
-
-    const paymentBody = {
-      reference: payerMessage || 'Payment for Mziki service',
-      subscriber: {
-        country: 'ZM',
-        currency: 'ZMW',
-        msisdn: formattedPhone,
-      },
-      transaction: {
-        amount: amount,
-        country: 'ZM',
-        currency: 'ZMW',
-        id: txnId,
-      },
-    };
-
-    console.log('Airtel payment request:', JSON.stringify(paymentBody));
-
-    const response = await fetch(`${AIRTEL_BASE_URL}/merchant/v2/payments/`, {
+    const response = await fetch(`${LENCO_BASE_URL}/collections/mobile-money`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${lencoToken}`,
         'Content-Type': 'application/json',
-        'X-Country': 'ZM',
-        'X-Currency': 'ZMW',
       },
-      body: JSON.stringify(paymentBody),
+      body: JSON.stringify({
+        amount: Number(amount),
+        phoneNumber: formattedPhone,
+        reference: ref,
+        narration: payerMessage || 'Payment for Mziki service',
+      }),
     });
 
-    const responseData = await response.json();
-    console.log('Airtel response:', response.status, JSON.stringify(responseData));
+    const data = await response.json();
+    console.log('Lenco response:', response.status, JSON.stringify(data));
 
-    if (!response.ok) {
-      const userMessage = mapAirtelError(response.status, responseData);
+    if (!response.ok || !data.status) {
+      const userMessage = mapLencoError(response.status, data);
       return new Response(
-        JSON.stringify({ error: responseData.status?.message || 'Payment failed', userMessage }),
+        JSON.stringify({ error: data.message || 'Payment failed', userMessage }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const status = responseData.status?.code;
-    const txnStatus = responseData.data?.transaction?.status;
+    const collectionId = data.data?.id;
+    const collectionStatus = data.data?.status;
 
-    // Airtel returns status code "200" and transaction status
-    if (txnStatus === 'TS') {
+    if (collectionStatus === 'successful') {
       return new Response(
         JSON.stringify({
           success: true,
-          referenceId: responseData.data?.transaction?.id || txnId,
+          referenceId: collectionId || ref,
           status: 'SUCCESSFUL',
           message: 'Payment completed successfully',
         }),
@@ -110,92 +73,73 @@ serve(async (req) => {
       );
     }
 
-    if (txnStatus === 'TF') {
+    if (collectionStatus === 'failed') {
       return new Response(
         JSON.stringify({
           success: false,
-          referenceId: txnId,
+          referenceId: collectionId || ref,
           status: 'FAILED',
-          error: responseData.status?.message || 'Payment failed',
-          userMessage: responseData.status?.message || 'Payment was declined. Please try again.',
+          error: data.data?.reasonForFailure || 'Payment failed',
+          userMessage: data.data?.reasonForFailure || 'Payment was declined. Please try again.',
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Transaction initiated (TIP) — poll for result
-    if (txnStatus === 'TIP' || status === '200') {
-      let attempts = 0;
-      const maxAttempts = 30;
+    // Poll for result
+    let attempts = 0;
+    const maxAttempts = 30;
 
-      while (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-        const statusResponse = await fetch(
-          `${AIRTEL_BASE_URL}/standard/v1/payments/${txnId}`,
-          {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'X-Country': 'ZM',
-              'X-Currency': 'ZMW',
-            },
-          }
-        );
+      const statusResponse = await fetch(`${LENCO_BASE_URL}/collections/${collectionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${lencoToken}`,
+        },
+      });
 
-        if (statusResponse.ok) {
-          const statusData = await statusResponse.json();
-          const currentStatus = statusData.data?.transaction?.status;
-          console.log('Status check', attempts + 1, ':', currentStatus);
+      if (statusResponse.ok) {
+        const statusData = await statusResponse.json();
+        const currentStatus = statusData.data?.status;
+        console.log('Status check', attempts + 1, ':', currentStatus);
 
-          if (currentStatus === 'TS') {
-            return new Response(
-              JSON.stringify({
-                success: true,
-                referenceId: statusData.data?.transaction?.id || txnId,
-                status: 'SUCCESSFUL',
-                message: 'Payment completed successfully',
-              }),
-              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-
-          if (currentStatus === 'TF') {
-            return new Response(
-              JSON.stringify({
-                success: false,
-                referenceId: txnId,
-                status: 'FAILED',
-                error: statusData.status?.message || 'Payment failed',
-                userMessage: statusData.status?.message || 'Payment was declined.',
-              }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
+        if (currentStatus === 'successful') {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              referenceId: collectionId || ref,
+              status: 'SUCCESSFUL',
+              message: 'Payment completed successfully',
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
-        attempts++;
+        if (currentStatus === 'failed') {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              referenceId: collectionId || ref,
+              status: 'FAILED',
+              error: statusData.data?.reasonForFailure || 'Payment failed',
+              userMessage: statusData.data?.reasonForFailure || 'Payment was declined.',
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
 
-      // Timeout
-      return new Response(
-        JSON.stringify({
-          success: false,
-          referenceId: txnId,
-          status: 'PENDING',
-          message: 'Payment is still processing. Please check your phone to authorize.',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      attempts++;
     }
 
-    // Fallback
     return new Response(
       JSON.stringify({
         success: false,
-        status: txnStatus || status,
-        referenceId: txnId,
-        message: 'Unexpected payment status. Please try again.',
+        referenceId: collectionId || ref,
+        status: 'PENDING',
+        message: 'Payment is still processing. Please check your phone to authorize.',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -210,12 +154,13 @@ serve(async (req) => {
   }
 });
 
-function mapAirtelError(status: number, data: any): string {
-  const msg = String(data?.status?.message || '').toLowerCase();
+function mapLencoError(status: number, data: any): string {
+  const msg = String(data?.message || '').toLowerCase();
   if (status === 401) return 'Payment service authentication failed. Please contact support.';
   if (msg.includes('insufficient')) return 'Insufficient funds. Please top up and try again.';
-  if (msg.includes('invalid') && msg.includes('msisdn')) return 'Invalid phone number. Please check and try again.';
+  if (msg.includes('invalid') && msg.includes('phone')) return 'Invalid phone number. Please check and try again.';
   if (status === 400) return 'Payment request was rejected. Please check your details.';
-  if (status >= 500) return 'Airtel service is temporarily unavailable. Please try again shortly.';
-  return data?.status?.message || 'Payment failed. Please try again.';
+  if (status === 429) return 'Too many payment attempts. Please wait a moment and try again.';
+  if (status >= 500) return 'Payment service is temporarily unavailable. Please try again shortly.';
+  return data?.message || 'Payment failed. Please try again.';
 }

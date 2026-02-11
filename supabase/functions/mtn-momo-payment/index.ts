@@ -5,59 +5,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-function mapMomoError(status: number, raw: string) {
-  const text = raw || '';
-  const lower = text.toLowerCase();
-
-  if (status === 401 && lower.includes('invalid subscription key')) {
-    return {
-      code: 'INVALID_SUBSCRIPTION_KEY',
-      userMessage: 'Payment service is not configured correctly. Please contact support.',
-      providerMessage: text,
-    };
-  }
-
-  if (status === 401 || lower.includes('access denied') || lower.includes('unauthorized')) {
-    return {
-      code: 'PROVIDER_AUTH_FAILED',
-      userMessage: 'Payment service authentication failed. Please try again later.',
-      providerMessage: text,
-    };
-  }
-
-  if (status === 400 && (lower.includes('msisdn') || lower.includes('partyid') || lower.includes('invalid') || lower.includes('format'))) {
-    return {
-      code: 'INVALID_PHONE',
-      userMessage: 'The phone number looks invalid. Please check it and try again.',
-      providerMessage: text,
-    };
-  }
-
-  if (lower.includes('insufficient') || lower.includes('not enough')) {
-    return {
-      code: 'INSUFFICIENT_FUNDS',
-      userMessage: 'You may have insufficient funds. Please top up and try again.',
-      providerMessage: text,
-    };
-  }
-
-  if (lower.includes('timeout') || lower.includes('timed out')) {
-    return {
-      code: 'TIMEOUT',
-      userMessage: 'The payment request timed out. Please try again.',
-      providerMessage: text,
-    };
-  }
-
-  return {
-    code: 'PROVIDER_ERROR',
-    userMessage: 'Payment provider returned an error. Please try again.',
-    providerMessage: text,
-  };
-}
+const LENCO_BASE_URL = 'https://api.lenco.co/access/v2';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -65,156 +15,132 @@ serve(async (req) => {
   try {
     const { amount, phoneNumber, externalId, payerMessage, payeeNote } = await req.json();
 
-    const subscriptionKey = Deno.env.get('MTN_MOMO_SUBSCRIPTION_KEY');
-    const apiUser = Deno.env.get('MTN_MOMO_API_USER');
-    const apiKey = Deno.env.get('MTN_MOMO_API_KEY');
-
-    if (!subscriptionKey || !apiUser || !apiKey) {
-      console.error('Missing MTN MoMo API credentials');
+    const lencoToken = Deno.env.get('LENCO_API_TOKEN');
+    if (!lencoToken) {
+      console.error('Missing LENCO_API_TOKEN');
       return new Response(
-        JSON.stringify({ error: 'Payment service not configured' }),
+        JSON.stringify({ error: 'Payment service not configured', userMessage: 'Payment service is not configured. Please contact support.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Format phone number (remove leading zero if present, add country code)
+    // Format phone: remove spaces/leading zero, ensure starts with 260
     let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '');
-    if (!formattedPhone.startsWith('26')) {
-      formattedPhone = '26' + formattedPhone;
+    if (!formattedPhone.startsWith('260')) {
+      formattedPhone = '260' + formattedPhone;
     }
 
-    console.log('Processing payment for phone:', formattedPhone, 'Amount:', amount);
+    const reference = externalId || crypto.randomUUID();
+    console.log('Processing MTN MoMo payment via Lenco for:', formattedPhone, 'Amount:', amount);
 
-    // Step 1: Get access token
-    const credentials = btoa(`${apiUser}:${apiKey}`);
-    const tokenResponse = await fetch('https://sandbox.momodeveloper.mtn.com/collection/token/', {
+    const response = await fetch(`${LENCO_BASE_URL}/collections/mobile-money`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Ocp-Apim-Subscription-Key': subscriptionKey,
-      },
-    });
-
-    if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token error:', tokenResponse.status, errorText);
-      const mapped = mapMomoError(tokenResponse.status, errorText);
-      return new Response(
-        JSON.stringify({
-          error: 'Failed to authenticate with payment provider',
-          ...mapped,
-        }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const tokenData = await tokenResponse.json();
-    const accessToken = tokenData.access_token;
-    console.log('Got access token');
-
-    // Step 2: Create a unique reference ID for this transaction
-    const referenceId = crypto.randomUUID();
-    console.log('Reference ID:', referenceId);
-
-    // Step 3: Request to Pay
-    const requestToPayBody = {
-      amount: amount.toString(),
-      currency: 'ZMW',
-      externalId: externalId || referenceId,
-      payer: {
-        partyIdType: 'MSISDN',
-        partyId: formattedPhone,
-      },
-      payerMessage: payerMessage || 'Payment for Mziki service',
-      payeeNote: payeeNote || 'Thank you for your payment',
-    };
-
-    console.log('Request to Pay body:', JSON.stringify(requestToPayBody));
-
-    const requestToPayResponse = await fetch('https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'X-Reference-Id': referenceId,
-        'X-Target-Environment': 'sandbox',
-        'Ocp-Apim-Subscription-Key': subscriptionKey,
+        'Authorization': `Bearer ${lencoToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestToPayBody),
+      body: JSON.stringify({
+        amount: Number(amount),
+        phoneNumber: formattedPhone,
+        reference,
+        narration: payerMessage || 'Payment for Mziki service',
+      }),
     });
 
-    console.log('Request to Pay status:', requestToPayResponse.status);
+    const data = await response.json();
+    console.log('Lenco response:', response.status, JSON.stringify(data));
 
-    if (!requestToPayResponse.ok) {
-      const errorText = await requestToPayResponse.text();
-      console.error('Request to Pay error:', requestToPayResponse.status, errorText);
-      const mapped = mapMomoError(requestToPayResponse.status, errorText);
+    if (!response.ok || !data.status) {
+      const userMessage = mapLencoError(response.status, data);
       return new Response(
-        JSON.stringify({
-          error: 'Failed to initiate payment request',
-          ...mapped,
-        }),
+        JSON.stringify({ error: data.message || 'Payment failed', userMessage }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Step 4: Check payment status (poll for result)
-    let paymentStatus = 'PENDING';
-    let attempts = 0;
-    const maxAttempts = 30; // Wait up to 60 seconds (30 * 2 seconds)
+    const collectionId = data.data?.id;
+    const collectionStatus = data.data?.status;
 
-    while (paymentStatus === 'PENDING' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-      
-      const statusResponse = await fetch(
-        `https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay/${referenceId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'X-Target-Environment': 'sandbox',
-            'Ocp-Apim-Subscription-Key': subscriptionKey,
-          },
-        }
+    // If already successful
+    if (collectionStatus === 'successful') {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          referenceId: collectionId || reference,
+          status: 'SUCCESSFUL',
+          message: 'Payment completed successfully',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // If failed immediately
+    if (collectionStatus === 'failed') {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          referenceId: collectionId || reference,
+          status: 'FAILED',
+          error: data.data?.reasonForFailure || 'Payment failed',
+          userMessage: data.data?.reasonForFailure || 'Payment was declined. Please try again.',
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Status is pending/pay-offline — poll for result
+    let attempts = 0;
+    const maxAttempts = 30;
+
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const statusResponse = await fetch(`${LENCO_BASE_URL}/collections/${collectionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${lencoToken}`,
+        },
+      });
 
       if (statusResponse.ok) {
         const statusData = await statusResponse.json();
-        paymentStatus = statusData.status;
-        console.log('Payment status check', attempts + 1, ':', paymentStatus);
+        const currentStatus = statusData.data?.status;
+        console.log('Status check', attempts + 1, ':', currentStatus);
 
-        if (paymentStatus === 'SUCCESSFUL') {
+        if (currentStatus === 'successful') {
           return new Response(
             JSON.stringify({
               success: true,
-              referenceId: referenceId,
+              referenceId: collectionId || reference,
               status: 'SUCCESSFUL',
               message: 'Payment completed successfully',
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
-        } else if (paymentStatus === 'FAILED') {
+        }
+
+        if (currentStatus === 'failed') {
           return new Response(
             JSON.stringify({
               success: false,
-              referenceId: referenceId,
+              referenceId: collectionId || reference,
               status: 'FAILED',
-              error: 'Payment was declined or failed',
-              reason: statusData.reason || 'Unknown reason',
+              error: statusData.data?.reasonForFailure || 'Payment failed',
+              userMessage: statusData.data?.reasonForFailure || 'Payment was declined.',
             }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
       }
-      
+
       attempts++;
     }
 
-    // If we've waited too long, return pending status
+    // Timeout — still pending
     return new Response(
       JSON.stringify({
         success: false,
-        referenceId: referenceId,
+        referenceId: collectionId || reference,
         status: 'PENDING',
         message: 'Payment is still processing. Please check your phone for the PIN prompt.',
       }),
@@ -222,15 +148,22 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    console.error('Error processing payment:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
-    const mapped = mapMomoError(500, errorMessage);
+    console.error('MTN MoMo payment error:', error);
+    const msg = error instanceof Error ? error.message : 'Internal server error';
     return new Response(
-      JSON.stringify({
-        error: errorMessage,
-        ...mapped,
-      }),
+      JSON.stringify({ error: msg, userMessage: 'Failed to process payment. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+function mapLencoError(status: number, data: any): string {
+  const msg = String(data?.message || '').toLowerCase();
+  if (status === 401) return 'Payment service authentication failed. Please contact support.';
+  if (msg.includes('insufficient')) return 'Insufficient funds. Please top up and try again.';
+  if (msg.includes('invalid') && msg.includes('phone')) return 'Invalid phone number. Please check and try again.';
+  if (status === 400) return 'Payment request was rejected. Please check your details.';
+  if (status === 429) return 'Too many payment attempts. Please wait a moment and try again.';
+  if (status >= 500) return 'Payment service is temporarily unavailable. Please try again shortly.';
+  return data?.message || 'Payment failed. Please try again.';
+}
