@@ -24,10 +24,13 @@ serve(async (req) => {
       );
     }
 
-    // Format phone: remove spaces/leading zero, ensure starts with 260
-    let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '');
-    if (!formattedPhone.startsWith('260')) {
-      formattedPhone = '260' + formattedPhone;
+    // Format phone: keep local format with leading zero for Lenco
+    let formattedPhone = phoneNumber.replace(/\s+/g, '');
+    // Remove country code if present, Lenco expects local format
+    formattedPhone = formattedPhone.replace(/^\+?260/, '0');
+    // Ensure starts with 0
+    if (!formattedPhone.startsWith('0')) {
+      formattedPhone = '0' + formattedPhone;
     }
 
     const ref = reference || crypto.randomUUID();
@@ -38,10 +41,13 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${lencoToken}`,
         'Content-Type': 'application/json',
+        'accept': 'application/json',
       },
       body: JSON.stringify({
         amount: Number(amount),
-        phoneNumber: formattedPhone,
+        phone: formattedPhone,
+        operator: 'airtel',
+        country: 'zm',
         reference: ref,
         narration: payerMessage || 'Payment for Mziki service',
       }),
