@@ -53,8 +53,15 @@ serve(async (req) => {
       }),
     });
 
-    const data = await response.json();
-    console.log('Lenco response:', response.status, JSON.stringify(data));
+    const responseText = await response.text();
+    console.log('Lenco raw response:', response.status, response.statusText, responseText);
+    
+    let data: any;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { message: responseText };
+    }
 
     if (!response.ok || !data.status) {
       const userMessage = mapLencoError(response.status, data);
