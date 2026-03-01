@@ -5,13 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Zap, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 
-const AIRTEL_NUMBER = "0974119780";
-const MTN_NUMBER = "0979580446";
 
 type MomoErrorPayload = {
   error?: string;
@@ -73,14 +71,12 @@ const Payment = () => {
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<"auto" | "manual">("manual");
   const [formData, setFormData] = useState({
     paymentMethod: "mtn",
     phoneNumber: "",
-    transactionId: "",
   });
 
-  const paymentAmount = paymentType === "verification" ? 30 : 399;
+  const paymentAmount = paymentType === "verification" ? 30 : 50;
   const paymentLabel = paymentType === "verification" ? "Artist Verification" : "Release Upload";
 
   useEffect(() => {
@@ -124,34 +120,6 @@ const Payment = () => {
     } else {
       sessionStorage.setItem("pendingReleasePayment", "completed");
       navigate("/upload-release");
-    }
-  };
-
-  // Manual payment - user sends money and enters transaction ID
-  const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.phoneNumber || !formData.transactionId) {
-      toast({
-        title: "Error",
-        description: "Please enter your phone number and transaction ID",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await savePaymentAndRedirect(formData.transactionId, "pending");
-    } catch (error: any) {
-      console.error("Manual payment error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit payment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -263,151 +231,63 @@ const Payment = () => {
                 </div>
               </div>
 
-              <Tabs value={paymentMode} onValueChange={(v) => setPaymentMode(v as "auto" | "manual")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="manual">Send & Confirm</TabsTrigger>
-                  <TabsTrigger value="auto">Auto Pay</TabsTrigger>
-                </TabsList>
+              <div className="space-y-4 mt-4">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+                  {formData.paymentMethod === "mtn" ? (
+                    <>
+                      <h3 className="font-semibold mb-2 text-primary">MTN MoMo Payment</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Enter your phone number and click "Make Payment". You'll receive a PIN prompt on your phone to authorize the K{paymentAmount} payment.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="font-semibold mb-2 text-primary">Airtel Money Payment</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Enter your Airtel number and click "Make Payment". You'll receive a prompt on your phone to authorize the K{paymentAmount} payment.
+                      </p>
+                    </>
+                  )}
+                </div>
 
-                {/* Manual Payment Tab */}
-                <TabsContent value="manual" className="space-y-4 mt-4">
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center space-y-3">
-                    <h3 className="font-semibold text-primary">Manual Payment</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Send <span className="font-bold text-foreground">K{paymentAmount}</span> to the {formData.paymentMethod === "mtn" ? "MTN" : "Airtel"} number below, then enter the transaction ID you receive.
-                    </p>
-                    <div className="flex items-center justify-center gap-2 bg-background rounded-md p-3 border">
-                      <span className="text-lg font-mono font-bold text-foreground">
-                        {formData.paymentMethod === "mtn" ? MTN_NUMBER : AIRTEL_NUMBER}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          const num = formData.paymentMethod === "mtn" ? MTN_NUMBER : AIRTEL_NUMBER;
-                          navigator.clipboard.writeText(num);
-                          toast({ title: "Copied!", description: `${num} copied to clipboard.` });
-                        }}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phoneNumber">Phone Number</Label>
+                    <div className="flex">
+                      <div className="flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md text-muted-foreground">
+                        +260
+                      </div>
+                      <Input
+                        id="phoneNumber"
+                        type="tel"
+                        placeholder="Enter phone number"
+                        value={formData.phoneNumber}
+                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                        className="rounded-l-none"
+                        required
+                      />
                     </div>
                   </div>
 
-                  <form onSubmit={handleManualSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phoneNumberManual">Your Phone Number</Label>
-                      <div className="flex">
-                        <div className="flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md text-muted-foreground">
-                          +260
-                        </div>
-                        <Input
-                          id="phoneNumberManual"
-                          type="tel"
-                          placeholder="Enter your phone number"
-                          value={formData.phoneNumber}
-                          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                          className="rounded-l-none"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="transactionId">Transaction ID</Label>
-                      <Input
-                        id="transactionId"
-                        placeholder="Enter the transaction ID from your receipt"
-                        value={formData.transactionId}
-                        onChange={(e) => setFormData({ ...formData, transactionId: e.target.value })}
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        You'll find this in the SMS confirmation after sending money.
-                      </p>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg"
-                      disabled={loading || !formData.phoneNumber || !formData.transactionId}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="mr-2 h-5 w-5" />
-                          Confirm Payment
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
-
-                {/* Automatic Payment Tab */}
-                <TabsContent value="auto" className="space-y-4 mt-4">
-                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                    {formData.paymentMethod === "mtn" ? (
+                  <Button
+                    type="submit"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg"
+                    disabled={loading || !formData.phoneNumber}
+                  >
+                    {loading ? (
                       <>
-                        <h3 className="font-semibold mb-2 text-primary">MTN MoMo - Automatic Payment</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Enter your phone number and click "Make Payment". You'll receive a PIN prompt on your phone to authorize the K{paymentAmount} payment.
-                        </p>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Processing...
                       </>
                     ) : (
                       <>
-                        <h3 className="font-semibold mb-2 text-primary">Airtel Money - Automatic Payment</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Enter your Airtel number and click "Make Payment". You'll receive a prompt on your phone to authorize the K{paymentAmount} payment.
-                        </p>
+                        <Zap className="mr-2 h-5 w-5" />
+                        Make Payment
                       </>
                     )}
-                  </div>
-
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <div className="flex">
-                        <div className="flex items-center px-3 bg-muted border border-r-0 border-input rounded-l-md text-muted-foreground">
-                          +260
-                        </div>
-                        <Input
-                          id="phoneNumber"
-                          type="tel"
-                          placeholder="Enter phone number"
-                          value={formData.phoneNumber}
-                          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                          className="rounded-l-none"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg"
-                      disabled={loading || !formData.phoneNumber}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="mr-2 h-5 w-5" />
-                          Make Payment
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
+                  </Button>
+                </form>
+              </div>
 
             </CardContent>
           </Card>
