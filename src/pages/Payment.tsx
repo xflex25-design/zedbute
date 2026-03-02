@@ -3,9 +3,11 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2, Zap, Phone } from "lucide-react";
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
@@ -17,6 +19,7 @@ const Payment = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const paymentAmount = paymentType === "verification" ? 30 : 50;
   const paymentLabel = paymentType === "verification" ? "Artist Verification" : "Release Upload";
@@ -40,6 +43,9 @@ const Payment = () => {
       .single();
 
     setProfile(profileData);
+    if (profileData?.phone_number) {
+      setPhoneNumber(profileData.phone_number);
+    }
   };
 
   const savePaymentAndRedirect = async (transactionId: string, status: "verified" | "pending") => {
@@ -47,7 +53,7 @@ const Payment = () => {
       user_id: user.id,
       amount: paymentAmount,
       payment_method: "lenco_inline",
-      phone_number: "inline_checkout",
+      phone_number: phoneNumber,
       transaction_id: transactionId,
       status,
       verified_at: status === "verified" ? new Date().toISOString() : null,
@@ -74,6 +80,15 @@ const Payment = () => {
   };
 
   const handlePayment = () => {
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "Phone number required",
+        description: "Please enter your phone number before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (typeof LencoPay === "undefined") {
       toast({
         title: "Error",
@@ -96,7 +111,7 @@ const Payment = () => {
       customer: {
         firstName: profile?.full_name?.split(" ")[0] || "Customer",
         lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
-        phone: profile?.phone_number || "",
+        phone: phoneNumber,
       },
       onSuccess: async (response) => {
         await savePaymentAndRedirect(response.reference, "verified");
@@ -137,6 +152,23 @@ const Payment = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Phone Number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="e.g. 0971234567"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter the phone number associated with your mobile money account.
+                </p>
+              </div>
+
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
                 <h3 className="font-semibold mb-2 text-primary">Secure Checkout</h3>
                 <p className="text-sm text-muted-foreground">
@@ -146,7 +178,7 @@ const Payment = () => {
 
               <Button
                 onClick={handlePayment}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 text-lg"
+                className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold py-6 text-lg"
                 disabled={loading}
               >
                 {loading ? (
