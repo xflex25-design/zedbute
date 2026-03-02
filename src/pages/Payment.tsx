@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Zap } from "lucide-react";
 
-const LENCO_PUBLIC_KEY = "YOUR_PUBLIC_KEY"; // Replace with your Lenco public key
+const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
 const Payment = () => {
   const navigate = useNavigate();
