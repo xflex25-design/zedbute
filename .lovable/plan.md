@@ -15,13 +15,13 @@ Two changes needed to make pricing consistent across the app:
 ### Summary of prices after fix
 
 
-| Item               | Price     |
-| ------------------ | --------- |
-| Starter plan       | K50/year  |
-| Pro plan           | K100/year |
-| Label plan         | K50/year  |
-| Release upload fee | K50       |
-| Verification fee   | K30       |
+| Item               | Price       |
+| ------------------ | ----------- |
+| Starter plan       | K50/year    |
+| Pro plan           | - K100/year |
+| Label plan         | K50/year    |
+| Release upload fee | K50         |
+| Verification fee   | K30         |
 
 
 The Payment page (`Payment.tsx`) already correctly shows K50 for releases and K30 for verification -- no changes needed there.
