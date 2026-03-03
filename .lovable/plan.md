@@ -1,16 +1,27 @@
+## Fix Pricing Inconsistencies
+
+Two changes needed to make pricing consistent across the app:
+
+### 1. Fix Starter plan price on Pricing page
+
+- **File:** `src/pages/Pricing.tsx` (line 22)
+- Change `"K399"` to `"K339"`
+
+### 2. Fix release upload price in UploadRelease page
+
+- **File:** `src/pages/UploadRelease.tsx` (line 392)
+- Change `"Payment required (K399)"` to `"Payment required (K50)"`
+
+### Summary of prices after fix
 
 
-# Update LENCO_API_TOKEN Secret
+| Item               | Price     |
+| ------------------ | --------- |
+| Starter plan       | K50/year  |
+| Pro plan           | K100/year |
+| Label plan         | K50/year  |
+| Release upload fee | K50       |
+| Verification fee   | K30       |
 
-## What will be done
-Update the `LENCO_API_TOKEN` secret with the value from your Lenco API code snippet: `xo+CAiijrIy9XvZCYyhjrv0fpSAL6CfU8CgA+up1NXqK`
 
-## Steps
-1. Use the secret management tool to update `LENCO_API_TOKEN` with the new value
-2. Test the Airtel Money payment edge function to verify the token works against the Lenco API
-3. If successful, also test the MTN MoMo payment edge function
-
-## Expected outcome
-- The 401 Unauthorized errors should be resolved
-- Both automatic payment flows (Airtel and MTN) should be functional
-
+The Payment page (`Payment.tsx`) already correctly shows K50 for releases and K30 for verification -- no changes needed there.
