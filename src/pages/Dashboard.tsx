@@ -89,17 +89,17 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">
+      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
             Welcome, {profile?.full_name || "Artist"}!
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage your music distribution and verification status
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="shadow-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -172,13 +172,13 @@ const Dashboard = () => {
                 {releases.map((release) => (
                   <div
                     key={release.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 border border-border rounded-lg"
                   >
-                    <div>
-                      <h3 className="font-semibold">{release.title}</h3>
-                      <p className="text-sm text-muted-foreground">{release.artist_name}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold truncate">{release.title}</h3>
+                      <p className="text-sm text-muted-foreground truncate">{release.artist_name}</p>
                     </div>
-                    <span className="text-sm capitalize px-3 py-1 bg-muted rounded-full">
+                    <span className="text-sm capitalize px-3 py-1 bg-muted rounded-full self-start sm:self-auto whitespace-nowrap">
                       {release.status}
                     </span>
                   </div>

@@ -62,7 +62,7 @@ const Index = () => {
       
       {/* Hero Section */}
       <section
-        className="relative pt-32 pb-20 px-4 overflow-hidden"
+        className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(rgba(220, 25, 5, 0.8), rgba(220, 25, 5, 0.9)), url(${heroBg})`,
           backgroundSize: 'cover',
@@ -70,21 +70,21 @@ const Index = () => {
         }}
       >
         <div className="container mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-foreground">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-foreground leading-tight">
             Distribute Your Music
             <span className="block bg-gradient-primary bg-clip-text text-transparent">
               To The World
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-foreground/90 mb-8 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/90 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">
             Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
             <Button
               size="lg"
               variant="hero"
               onClick={() => navigate(user ? "/dashboard" : "/auth")}
-              className="text-lg px-8"
+              className="text-base sm:text-lg px-6 sm:px-8"
             >
               {user ? "Go to Dashboard" : "Start Distributing"}
             </Button>
@@ -92,7 +92,7 @@ const Index = () => {
               size="lg"
               variant="outline"
               onClick={() => navigate("/pricing")}
-              className="text-lg px-8 bg-background/20 backdrop-blur-sm border-foreground/20 hover:bg-background/30"
+              className="text-base sm:text-lg px-6 sm:px-8 bg-background/20 backdrop-blur-sm border-foreground/20 hover:bg-background/30"
             >
               View Pricing
             </Button>
@@ -101,26 +101,26 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-gradient-hero">
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-hero">
         <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
               Everything You Need To Succeed
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
               Professional music distribution tools built for independent artists
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature) => (
               <Card key={feature.title} className="shadow-card hover:shadow-glow transition-shadow duration-300">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary-foreground" />
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                    <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
                   </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                  <CardDescription className="text-base">
+                  <CardTitle className="text-lg sm:text-xl">{feature.title}</CardTitle>
+                  <CardDescription className="text-sm sm:text-base">
                     {feature.description}
                   </CardDescription>
                 </CardHeader>
@@ -131,19 +131,19 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-primary">
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-primary">
         <div className="container mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-primary-foreground">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-primary-foreground">
             Ready to Share Your Music?
           </h2>
-          <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Join MusicFlow today and start distributing your music to millions of listeners worldwide
+          <p className="text-base sm:text-lg lg:text-xl text-primary-foreground/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+            Join ZedBute today and start distributing your music to millions of listeners worldwide
           </p>
           <Button
             size="lg"
             variant="secondary"
             onClick={() => navigate(user ? "/dashboard" : "/auth")}
-            className="text-lg px-8"
+            className="text-base sm:text-lg px-6 sm:px-8"
           >
             {user ? "Go to Dashboard" : "Get Started Free"}
           </Button>
@@ -151,9 +151,9 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 border-t border-border bg-card">
+      <footer className="py-10 sm:py-12 lg:py-16 px-4 border-t border-border bg-card">
         <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-12 mb-12">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
             {/* Brand */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">

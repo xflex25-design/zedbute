@@ -63,20 +63,20 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4">Simple, Transparent Pricing</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
+        <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">Simple, Transparent Pricing</h1>
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             Choose the plan that fits your music career. Cancel anytime.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <Card
               key={plan.name}
               className={`shadow-card relative ${
-                plan.popular ? "border-primary shadow-glow" : ""
+                plan.popular ? "border-primary shadow-glow sm:col-span-2 lg:col-span-1" : ""
               }`}
             >
               {plan.popular && (
@@ -117,11 +117,11 @@ const Pricing = () => {
           ))}
         </div>
 
-        <div className="mt-16 text-center">
-          <p className="text-muted-foreground mb-4">
+        <div className="mt-10 sm:mt-12 lg:mt-16 text-center">
+          <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4">
             All plans include unlimited releases and keep 100% of your royalties.
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Payment accepted via Airtel Money, Zamtel Kwacha, and MTN Mobile Money
           </p>
         </div>
