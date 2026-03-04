@@ -389,7 +389,7 @@ const UploadRelease = () => {
               <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
                 <p className="text-sm text-amber-700">
                   <AlertCircle className="h-4 w-4 inline mr-1" />
-                  Payment required (K399). Fill out the form and you'll be redirected to payment on submit.
+                  Payment required (K50). Fill out the form and you'll be redirected to payment on submit.
                 </p>
               </div>
             )}
