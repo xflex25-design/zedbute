@@ -19,7 +19,7 @@ const Pricing = () => {
   const plans = [
     {
       name: "Starter",
-      price: "K399",
+      price: "K339",
       period: "/year",
       features: [
         "Distribute to 10+ platforms",
