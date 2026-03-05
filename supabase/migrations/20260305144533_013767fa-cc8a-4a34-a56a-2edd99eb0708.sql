@@ -1,0 +1,1 @@
+ALTER TABLE public.music_releases ADD COLUMN IF NOT EXISTS upload_progress integer DEFAULT 0;
