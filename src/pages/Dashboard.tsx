@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Music, CheckCircle2, Clock, Upload } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
@@ -172,15 +173,27 @@ const Dashboard = () => {
                 {releases.map((release) => (
                   <div
                     key={release.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 border border-border rounded-lg"
+                    className="flex flex-col gap-2 p-3 sm:p-4 border border-border rounded-lg"
                   >
-                    <div className="min-w-0">
-                      <h3 className="font-semibold truncate">{release.title}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{release.artist_name}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold truncate">{release.title}</h3>
+                        <p className="text-sm text-muted-foreground truncate">{release.artist_name}</p>
+                      </div>
+                      <span className="text-sm capitalize px-3 py-1 bg-muted rounded-full self-start sm:self-auto whitespace-nowrap">
+                        {release.status}
+                      </span>
                     </div>
-                    <span className="text-sm capitalize px-3 py-1 bg-muted rounded-full self-start sm:self-auto whitespace-nowrap">
-                      {release.status}
-                    </span>
+                    {release.status === "pending" && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Distribution Progress</span>
+                          <span className="font-medium text-foreground">{release.upload_progress ?? 0}%</span>
+                        </div>
+                        <Progress value={release.upload_progress ?? 0} className="h-2" />
+                        <p className="text-[11px] text-muted-foreground">Processing takes up to 2 weeks</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

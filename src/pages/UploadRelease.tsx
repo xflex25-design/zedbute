@@ -10,7 +10,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Music, AlertCircle } from "lucide-react";
+import { Loader2, Upload, Music, AlertCircle, CalendarIcon, Info } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, addWeeks } from "date-fns";
+import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { FormProgress } from "@/components/FormProgress";
 
@@ -70,6 +74,7 @@ const UploadRelease = () => {
           title: parsed.title || "",
           releaseType: parsed.releaseType || "single",
           genre: parsed.genre || "",
+          releaseDate: parsed.releaseDate ? new Date(parsed.releaseDate) : undefined as Date | undefined,
           coverArt: null as File | null,
           audioFile: null as File | null,
           rightsConfirmed: parsed.rightsConfirmed || false,
@@ -79,6 +84,7 @@ const UploadRelease = () => {
           title: "",
           releaseType: "single",
           genre: "",
+          releaseDate: undefined as Date | undefined,
           coverArt: null as File | null,
           audioFile: null as File | null,
           rightsConfirmed: false,
@@ -89,6 +95,7 @@ const UploadRelease = () => {
       title: "",
       releaseType: "single",
       genre: "",
+      releaseDate: undefined as Date | undefined,
       coverArt: null as File | null,
       audioFile: null as File | null,
       rightsConfirmed: false,
@@ -247,6 +254,7 @@ const UploadRelease = () => {
         title: formData.title,
         releaseType: formData.releaseType,
         genre: formData.genre,
+        releaseDate: formData.releaseDate?.toISOString(),
         rightsConfirmed: formData.rightsConfirmed,
         selectedLanguages,
       }));
@@ -328,10 +336,12 @@ const UploadRelease = () => {
           language: selectedLanguages,
           release_type: formData.releaseType,
           genre: formData.genre,
+          release_date: formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") : null,
           cover_art_url: publicUrl,
           audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
           status: "pending",
+          upload_progress: 0,
         } as any);
 
       if (insertError) throw insertError;
@@ -401,6 +411,7 @@ const UploadRelease = () => {
                 { label: "Language", completed: selectedLanguages.length > 0 },
                 { label: "Release Type", completed: !!formData.releaseType },
                 { label: "Genre", completed: !!formData.genre },
+                { label: "Release Date", completed: !!formData.releaseDate },
                 { label: "Cover Art", completed: !!formData.coverArt },
                 { label: "Audio File", completed: !!formData.audioFile },
                 { label: "Rights Confirmed", completed: formData.rightsConfirmed },
@@ -484,6 +495,44 @@ const UploadRelease = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Release Date */}
+              <div className="space-y-2">
+                <Label>Release Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.releaseDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.releaseDate ? format(formData.releaseDate, "PPP") : <span>Pick a release date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.releaseDate}
+                      onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                  <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission. 
+                    {formData.releaseDate && (
+                      <span> Estimated live date: <strong className="text-primary">{format(addWeeks(new Date(), 2), "PPP")}</strong></span>
+                    )}
+                  </p>
+                </div>
               </div>
 
               {/* Cover Art */}

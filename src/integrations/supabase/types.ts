@@ -113,6 +113,7 @@ export type Database = {
           status: string | null
           title: string
           updated_at: string
+          upload_progress: number | null
           user_id: string
         }
         Insert: {
@@ -130,6 +131,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string
+          upload_progress?: number | null
           user_id: string
         }
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string
+          upload_progress?: number | null
           user_id?: string
         }
         Relationships: [

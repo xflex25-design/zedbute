@@ -6,6 +6,7 @@ import { Music, Sparkles, Globe, Shield, TrendingUp, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import heroBg from "@/assets/hero-bg.jpg";
+import { PlatformLogos } from "@/components/PlatformLogos";
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
@@ -99,6 +100,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Platform Logos */}
+      <PlatformLogos />
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-hero">
