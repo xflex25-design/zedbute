@@ -2,15 +2,49 @@ import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Music, Sparkles, Globe, Shield, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/useSEO";
 import heroBg from "@/assets/hero-bg.jpg";
 import { PlatformLogos } from "@/components/PlatformLogos";
+
+const faqs = [
+  { q: "How do I distribute my music with ZedBute?", a: "Sign up, upload your track and cover art, fill in your release metadata, choose a plan, and pay securely with mobile money or card. We deliver your music to Spotify, Apple Music, TikTok and 150+ platforms." },
+  { q: "How long does music distribution take?", a: "Most releases go live on major platforms within 1–7 business days after submission, depending on each store's review process. We recommend submitting at least 2 weeks before your release date." },
+  { q: "Do I keep 100% of my royalties?", a: "Yes. ZedBute never takes a cut of your streaming or download royalties. You pay a flat plan fee and keep everything you earn from streams and sales." },
+  { q: "Which platforms can I distribute to?", a: "Spotify, Apple Music, YouTube Music, TikTok, Amazon Music, Deezer, Tidal, Boomplay and 150+ more digital stores and streaming services worldwide." },
+  { q: "Can I distribute music from Zambia?", a: "Absolutely. ZedBute is built for Zambian and African artists. You can pay in ZMW via Airtel Money, MTN MoMo, or card through our secure Lenco integration." },
+  { q: "Do I need to be a verified artist?", a: "No, anyone can distribute. But getting verified through ZedBute boosts your credibility on streaming platforms and unlocks artist profile control on Spotify and Apple Music." },
+];
 
 const Index = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+
+  useSEO({
+    title: "ZedBute | Music Distribution for Zambian & Independent Artists",
+    description: "Distribute your music to Spotify, Apple Music, TikTok & 150+ platforms. Keep 100% of your royalties. Built for Zambian and independent artists.",
+    canonical: "https://zedbute-net.lovable.app/",
+    keywords: "music distribution, distribute music free, keep 100% royalties, independent artist music distribution, Zambian music distribution",
+  });
+
+  useEffect(() => {
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    });
+    document.head.appendChild(ld);
+    return () => { document.head.removeChild(ld); };
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -131,6 +165,24 @@ const Index = () => {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-background">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">Frequently Asked Questions</h2>
+            <p className="text-base sm:text-lg text-muted-foreground">Everything you need to know about distributing your music with ZedBute</p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((f, i) => (
+              <AccordionItem key={i} value={`item-${i}`}>
+                <AccordionTrigger className="text-left text-base sm:text-lg">{f.q}</AccordionTrigger>
+                <AccordionContent className="text-sm sm:text-base text-muted-foreground">{f.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       </section>
 
