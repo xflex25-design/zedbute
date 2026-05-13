@@ -168,6 +168,24 @@ const Index = () => {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-background">
+        <div className="container mx-auto max-w-3xl">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">Frequently Asked Questions</h2>
+            <p className="text-base sm:text-lg text-muted-foreground">Everything you need to know about distributing your music with ZedBute</p>
+          </div>
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((f, i) => (
+              <AccordionItem key={i} value={`item-${i}`}>
+                <AccordionTrigger className="text-left text-base sm:text-lg">{f.q}</AccordionTrigger>
+                <AccordionContent className="text-sm sm:text-base text-muted-foreground">{f.a}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-primary">
         <div className="container mx-auto text-center">
