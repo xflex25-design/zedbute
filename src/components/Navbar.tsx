@@ -64,6 +64,9 @@ export const Navbar = ({ user }: NavbarProps) => {
             <Link to="/pricing" className="text-foreground hover:text-primary transition-colors">
               Pricing
             </Link>
+            <Link to="/blog" className="text-foreground hover:text-primary transition-colors">
+              Blog
+            </Link>
             
             {user ? (
               <Button onClick={handleSignOut} variant="outline">
@@ -131,6 +134,13 @@ export const Navbar = ({ user }: NavbarProps) => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
+            </Link>
+            <Link
+              to="/blog"
+              className="block text-foreground hover:text-primary transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
             </Link>
             {user ? (
               <Button onClick={handleSignOut} variant="outline" className="w-full">
