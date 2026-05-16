@@ -10,6 +10,8 @@ import Verify from "./pages/Verify";
 import UploadRelease from "./pages/UploadRelease";
 import Pricing from "./pages/Pricing";
 import Payment from "./pages/Payment";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
