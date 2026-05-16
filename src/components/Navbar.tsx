@@ -135,6 +135,13 @@ export const Navbar = ({ user }: NavbarProps) => {
             >
               Pricing
             </Link>
+            <Link
+              to="/blog"
+              className="block text-foreground hover:text-primary transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
+            </Link>
             {user ? (
               <Button onClick={handleSignOut} variant="outline" className="w-full">
                 Sign Out
