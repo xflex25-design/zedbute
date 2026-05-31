@@ -11,27 +11,27 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://zedbute-net.lovable.app/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zedbute-net.lovable.app/blog/why-zambian-artists-should-distribute-music-online-in-2026</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://zedbute-net.lovable.app/auth</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/dashboard</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://zedbute-net.lovable.app/upload</loc>
+    <loc>https://zedbute-net.lovable.app/upload-release</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://zedbute-net.lovable.app/verify</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://zedbute-net.lovable.app/payment</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
