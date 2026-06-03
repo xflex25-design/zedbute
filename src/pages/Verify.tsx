@@ -77,15 +77,17 @@ const Verify = () => {
         return;
       }
 
-      // Check if returning from payment with valid session storage
-      const pendingPayment = sessionStorage.getItem("pendingVerificationPayment");
-      if (pendingPayment === "completed") {
-        sessionStorage.removeItem("pendingVerificationPayment");
-        setHasValidPayment(true);
-      } else {
-        // No payment yet - payment required on submit
-        setHasValidPayment(false);
-      }
+      // Server-side check: must have a verified verification payment in release_payments
+      const { data: payments } = await supabase
+        .from("release_payments")
+        .select("id, status, transaction_id")
+        .eq("user_id", session.user.id)
+        .eq("status", "verified")
+        .ilike("transaction_id", "verification-%");
+
+      setHasValidPayment((payments?.length ?? 0) > 0);
+      // Clean up any stale session flag
+      sessionStorage.removeItem("pendingVerificationPayment");
     };
     checkUser();
   }, [navigate, toast]);
