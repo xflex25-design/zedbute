@@ -21,7 +21,7 @@ const Payment = () => {
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  const paymentAmount = paymentType === "verification" ? 30 : 50;
+  const paymentAmount = 50;
   const paymentLabel = paymentType === "verification" ? "Artist Verification" : "Release Upload";
 
   useEffect(() => {
