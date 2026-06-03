@@ -77,15 +77,17 @@ const Verify = () => {
         return;
       }
 
-      // Check if returning from payment with valid session storage
-      const pendingPayment = sessionStorage.getItem("pendingVerificationPayment");
-      if (pendingPayment === "completed") {
-        sessionStorage.removeItem("pendingVerificationPayment");
-        setHasValidPayment(true);
-      } else {
-        // No payment yet - payment required on submit
-        setHasValidPayment(false);
-      }
+      // Server-side check: must have a verified verification payment in release_payments
+      const { data: payments } = await supabase
+        .from("release_payments")
+        .select("id, status, transaction_id")
+        .eq("user_id", session.user.id)
+        .eq("status", "verified")
+        .ilike("transaction_id", "verification-%");
+
+      setHasValidPayment((payments?.length ?? 0) > 0);
+      // Clean up any stale session flag
+      sessionStorage.removeItem("pendingVerificationPayment");
     };
     checkUser();
   }, [navigate, toast]);
@@ -106,9 +108,16 @@ const Verify = () => {
         return;
       }
 
-      // Check if payment is required
-      if (!hasValidPayment) {
-        // Save form data to sessionStorage before redirecting to payment
+      // Re-verify payment server-side before insert (defense-in-depth against client tampering)
+      const { data: paymentCheck } = await supabase
+        .from("release_payments")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "verified")
+        .ilike("transaction_id", "verification-%")
+        .limit(1);
+
+      if (!paymentCheck || paymentCheck.length === 0) {
         sessionStorage.setItem("verifyFormData", JSON.stringify(formData));
         toast({
           title: "Payment Required",
