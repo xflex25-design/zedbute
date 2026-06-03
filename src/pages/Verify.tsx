@@ -20,7 +20,7 @@ const verificationSchema = z.object({
   youtubeUrl: z.string().url("Invalid YouTube URL").max(500).optional().or(z.literal("")),
 });
 
-const VERIFICATION_DEPOSIT = 30; // K30 deposit
+const VERIFICATION_DEPOSIT = 50; // K50 deposit
 
 const Verify = () => {
   const [user, setUser] = useState<any>(null);
