@@ -21,18 +21,23 @@ export type Database = {
           bio: string | null
           created_at: string
           deposit_amount: number | null
+          distributor_name: string | null
           facebook_url: string | null
           id: string
           instagram_url: string | null
           payment_phone_number: string | null
           payment_status: string | null
           payment_transaction_id: string | null
+          platform: string | null
+          platform_email: string | null
+          platform_user_id: string | null
           review_date: string | null
           soundcloud_url: string | null
           spotify_url: string | null
           status: string | null
           submission_date: string
           tiktok_url: string | null
+          topic_channel_url: string | null
           twitter_url: string | null
           updated_at: string
           user_id: string
@@ -45,18 +50,23 @@ export type Database = {
           bio?: string | null
           created_at?: string
           deposit_amount?: number | null
+          distributor_name?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
           payment_phone_number?: string | null
           payment_status?: string | null
           payment_transaction_id?: string | null
+          platform?: string | null
+          platform_email?: string | null
+          platform_user_id?: string | null
           review_date?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
           status?: string | null
           submission_date?: string
           tiktok_url?: string | null
+          topic_channel_url?: string | null
           twitter_url?: string | null
           updated_at?: string
           user_id: string
@@ -69,18 +79,23 @@ export type Database = {
           bio?: string | null
           created_at?: string
           deposit_amount?: number | null
+          distributor_name?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
           payment_phone_number?: string | null
           payment_status?: string | null
           payment_transaction_id?: string | null
+          platform?: string | null
+          platform_email?: string | null
+          platform_user_id?: string | null
           review_date?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
           status?: string | null
           submission_date?: string
           tiktok_url?: string | null
+          topic_channel_url?: string | null
           twitter_url?: string | null
           updated_at?: string
           user_id?: string
