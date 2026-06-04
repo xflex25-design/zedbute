@@ -1,25 +1,26 @@
+# Plan
 
+Apply the previously-approved changes now that the DB migration has run.
 
-## Fix Pricing Inconsistencies
+## 1. `src/pages/UploadRelease.tsx`
+- Add an **Artist Name** text input (required) above the Title field.
+- Persist `artistName` in `sessionStorage` alongside other fields.
+- Validate non-empty before submit; pass `artist_name` when inserting into `music_releases`.
 
-Two changes needed to make pricing consistent across the app:
+## 2. `src/pages/Pricing.tsx`
+- Remove all existing tier cards.
+- Replace with one centered card: "Upload your release for just **K50**" — one-time per release, paid via Mobile Money or Card (Lenco). CTA → `/upload-release` (or `/auth` if signed out).
 
-### 1. Fix Starter plan price on Pricing page
-- **File:** `src/pages/Pricing.tsx` (line 22)
-- Change `"K399"` to `"K339"`
+## 3. `src/pages/Verify.tsx`
+- Rewrite as a shadcn `Tabs` UI with three tabs sharing the same Lenco flow as `Payment.tsx`:
+  - **Spotify (K50)** — green theme. Fields: Spotify email → `platform_email`, artist name → `artist_name`, Spotify URI → `spotify_url`, social → `instagram_url`.
+  - **Boomplay (K50)** — orange theme. Fields: Boomplay email → `platform_email`, artist name → `artist_name`, Boom ID → `platform_user_id`, social → `instagram_url`.
+  - **YouTube OAC (K260)** — red theme. Fields: channel name → `artist_name`, channel URL → `youtube_url`, topic channel URL → `topic_channel_url`, distributor (DistroKid/TuneCore/CD Baby/ONErpm/Other) → `distributor_name`.
+- Each submit: show loading spinner, call `LencoPay.getPaid` with `ZMW` and reference `verification-{platform}-{userId}-{ts}`. On Lenco success/confirmation-pending only, insert into `artist_verifications` with `platform`, `payment_status: 'paid'`, `status: 'pending'`, `deposit_amount`, `payment_transaction_id`. Toast: "Payment Confirmed via Lenco! Your request is being processed. 🚀".
 
-### 2. Fix release upload price in UploadRelease page
-- **File:** `src/pages/UploadRelease.tsx` (line 392)
-- Change `"Payment required (K399)"` to `"Payment required (K50)"`
+## Files
+- `src/pages/UploadRelease.tsx`
+- `src/pages/Pricing.tsx`
+- `src/pages/Verify.tsx`
 
-### Summary of prices after fix
-| Item | Price |
-|------|-------|
-| Starter plan | K339/year |
-| Pro plan | K799/year |
-| Label plan | K1999/year |
-| Release upload fee | K50 |
-| Verification fee | K30 |
-
-The Payment page (`Payment.tsx`) already correctly shows K50 for releases and K30 for verification -- no changes needed there.
-
+No further DB changes — migration already applied.
