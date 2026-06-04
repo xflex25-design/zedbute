@@ -72,6 +72,7 @@ const UploadRelease = () => {
         const parsed = JSON.parse(saved);
         return {
           title: parsed.title || "",
+          artistName: parsed.artistName || "",
           releaseType: parsed.releaseType || "single",
           genre: parsed.genre || "",
           releaseDate: parsed.releaseDate ? new Date(parsed.releaseDate) : undefined as Date | undefined,
@@ -82,6 +83,7 @@ const UploadRelease = () => {
       } catch {
         return {
           title: "",
+          artistName: "",
           releaseType: "single",
           genre: "",
           releaseDate: undefined as Date | undefined,
@@ -93,6 +95,7 @@ const UploadRelease = () => {
     }
     return {
       title: "",
+      artistName: "",
       releaseType: "single",
       genre: "",
       releaseDate: undefined as Date | undefined,
@@ -202,6 +205,15 @@ const UploadRelease = () => {
       return;
     }
 
+    if (!formData.artistName.trim()) {
+      toast({
+        title: "Missing Artist Name",
+        description: "Please enter the artist name",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedLanguages.length === 0) {
       toast({
         title: "No Language Selected",
@@ -252,6 +264,7 @@ const UploadRelease = () => {
       // Save form metadata to sessionStorage before redirecting to payment
       sessionStorage.setItem("uploadFormData", JSON.stringify({
         title: formData.title,
+        artistName: formData.artistName,
         releaseType: formData.releaseType,
         genre: formData.genre,
         releaseDate: formData.releaseDate?.toISOString(),
@@ -332,7 +345,7 @@ const UploadRelease = () => {
         .insert({
           user_id: user.id,
           title: formData.title,
-          artist_name: user.email || "Artist",
+          artist_name: formData.artistName,
           language: selectedLanguages,
           release_type: formData.releaseType,
           genre: formData.genre,
@@ -418,6 +431,19 @@ const UploadRelease = () => {
               ]}
             />
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Artist Name */}
+              <div className="space-y-2">
+                <Label htmlFor="artistName">Artist Name *</Label>
+                <Input
+                  id="artistName"
+                  value={formData.artistName}
+                  onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
+                  placeholder="Your artist/band name"
+                  required
+                  maxLength={100}
+                />
+              </div>
+
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Release Title *</Label>
