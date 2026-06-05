@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Zap, Phone } from "lucide-react";
+import { promise } from "zod";
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
@@ -115,6 +116,7 @@ const Payment = () => {
       },
       onSuccess: async (response) => {
         await savePaymentAndRedirect(response.reference, "verified");
+        await new Promise(res=>setTimeout(res,300));
         setLoading(false);
       },
       onClose: () => {

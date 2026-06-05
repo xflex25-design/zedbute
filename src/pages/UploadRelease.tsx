@@ -104,28 +104,23 @@ const UploadRelease = () => {
       rightsConfirmed: false,
     };
   });
-
   useEffect(() => {
     checkUser();
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    setUser(user);
-    
-    // Check if returning from payment with valid session storage
-    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
-    if (pendingPayment === "completed") {
-      sessionStorage.removeItem("pendingReleasePayment");
-      setHasValidPayment(true);
-    } else {
-      // No payment yet - payment required on submit for every release
-      setHasValidPayment(false);
-    }
+  const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
+if (pendingPayment === "completed") {
+  sessionStorage.removeItem("pendingReleasePayment");
+  setHasValidPayment(true);
+}
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) {
+  navigate("/auth");
+  return;
+}
+setUser(user);
+
   };
 
   const validateImage = (file: File): Promise<boolean> => {
