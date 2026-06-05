@@ -16,15 +16,18 @@ export type Database = {
     Tables: {
       artist_verifications: {
         Row: {
+          additional_notes: string | null
           admin_notes: string | null
           artist_name: string
           bio: string | null
           created_at: string
           deposit_amount: number | null
+          distributor_default: string | null
           distributor_name: string | null
           facebook_url: string | null
           id: string
           instagram_url: string | null
+          legal_name: string | null
           payment_phone_number: string | null
           payment_status: string | null
           payment_transaction_id: string | null
@@ -32,6 +35,7 @@ export type Database = {
           platform_email: string | null
           platform_user_id: string | null
           review_date: string | null
+          screenshot_url: string | null
           soundcloud_url: string | null
           spotify_url: string | null
           status: string | null
@@ -45,15 +49,18 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          additional_notes?: string | null
           admin_notes?: string | null
           artist_name: string
           bio?: string | null
           created_at?: string
           deposit_amount?: number | null
+          distributor_default?: string | null
           distributor_name?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          legal_name?: string | null
           payment_phone_number?: string | null
           payment_status?: string | null
           payment_transaction_id?: string | null
@@ -61,6 +68,7 @@ export type Database = {
           platform_email?: string | null
           platform_user_id?: string | null
           review_date?: string | null
+          screenshot_url?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
           status?: string | null
@@ -74,15 +82,18 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          additional_notes?: string | null
           admin_notes?: string | null
           artist_name?: string
           bio?: string | null
           created_at?: string
           deposit_amount?: number | null
+          distributor_default?: string | null
           distributor_name?: string | null
           facebook_url?: string | null
           id?: string
           instagram_url?: string | null
+          legal_name?: string | null
           payment_phone_number?: string | null
           payment_status?: string | null
           payment_transaction_id?: string | null
@@ -90,6 +101,7 @@ export type Database = {
           platform_email?: string | null
           platform_user_id?: string | null
           review_date?: string | null
+          screenshot_url?: string | null
           soundcloud_url?: string | null
           spotify_url?: string | null
           status?: string | null
@@ -116,6 +128,7 @@ export type Database = {
         Row: {
           artist_name: string
           audio_url: string | null
+          completion_email_sent_at: string | null
           cover_art_url: string | null
           created_at: string
           distribution_platforms: Json | null
@@ -134,6 +147,7 @@ export type Database = {
         Insert: {
           artist_name: string
           audio_url?: string | null
+          completion_email_sent_at?: string | null
           cover_art_url?: string | null
           created_at?: string
           distribution_platforms?: Json | null
@@ -152,6 +166,7 @@ export type Database = {
         Update: {
           artist_name?: string
           audio_url?: string | null
+          completion_email_sent_at?: string | null
           cover_art_url?: string | null
           created_at?: string
           distribution_platforms?: Json | null
@@ -252,15 +267,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -387,6 +429,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
