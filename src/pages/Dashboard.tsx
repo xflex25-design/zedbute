@@ -100,6 +100,22 @@ const Dashboard = () => {
           </p>
         </div>
 
+        <Card className="shadow-card mb-6 sm:mb-8 border-2 border-primary bg-gradient-primary/10">
+          <CardContent className="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" /> Verify Your Artist Profile
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Claim your official Spotify or Boomplay artist profile — we'll submit it for you.
+              </p>
+            </div>
+            <Button variant="hero" size="lg" onClick={() => navigate("/verify-claim")}>
+              Start Verification
+            </Button>
+          </CardContent>
+        </Card>
+
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="shadow-card">
             <CardHeader>
