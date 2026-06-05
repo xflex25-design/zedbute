@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS enforce_verification_payment_trigger ON public.artist_verifications;
