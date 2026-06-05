@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
+import VerifyClaim from "./pages/VerifyClaim";
+import Admin from "./pages/Admin";
 import UploadRelease from "./pages/UploadRelease";
 import Pricing from "./pages/Pricing";
 import Payment from "./pages/Payment";
@@ -27,6 +29,8 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/verify-claim" element={<VerifyClaim />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/upload-release" element={<UploadRelease />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/payment" element={<Payment />} />
