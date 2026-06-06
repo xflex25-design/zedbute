@@ -109,18 +109,23 @@ const UploadRelease = () => {
   }, []);
 
   const checkUser = async () => {
-  const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
-if (pendingPayment === "completed") {
-  sessionStorage.removeItem("pendingReleasePayment");
-  setHasValidPayment(true);
-}
-const { data: { user } } = await supabase.auth.getUser();
-if (!user) {
-  navigate("/auth");
-  return;
-}
-setUser(user);
-
+    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    setUser(user);
+    if (pendingPayment === "completed") {
+      sessionStorage.removeItem("pendingReleasePayment");
+      setHasValidPayment(true);
+      toast({
+        title: "Payment confirmed",
+        description: "Please re-attach your cover art and audio file, then submit.",
+      });
+    } else {
+      setHasValidPayment(false);
+    }
   };
 
   const validateImage = (file: File): Promise<boolean> => {
@@ -240,6 +245,15 @@ setUser(user);
       toast({
         title: "No Audio File",
         description: "Please upload your music audio file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.releaseDate) {
+      toast({
+        title: "Missing Release Date",
+        description: "Please pick a release date",
         variant: "destructive",
       });
       return;
