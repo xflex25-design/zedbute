@@ -203,6 +203,7 @@ const Dashboard = () => {
         <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto sm:overflow-visible">
           <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-max sm:min-w-0">
             {STATS.map((s) => {
+              const displayValue = s.label === "Total Releases" ? String(releases.length) : s.value;
               const Icon = s.icon;
               return (
                 <Card
