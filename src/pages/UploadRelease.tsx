@@ -219,77 +219,45 @@ const UploadRelease = () => {
       return;
     }
 
-    // Check if payment is required
-    if (!hasValidPayment) {
-      // Save form metadata to sessionStorage before redirecting to payment
-      sessionStorage.setItem("uploadFormData", JSON.stringify({
-        title: formData.title,
-        artistName: formData.artistName,
-        releaseType: formData.releaseType,
-        genre: formData.genre,
-        releaseDate: formData.releaseDate?.toISOString(),
-        rightsConfirmed: formData.rightsConfirmed,
-        selectedLanguages,
-      }));
-      toast({
-        title: "Payment Required",
-        description: "Please complete payment to upload your release.",
-      });
-      navigate("/payment?type=release");
-      return;
-    }
-
     setLoading(true);
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
-      // Upload cover art to storage
+      // 1) Upload cover art
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
       const { error: uploadError } = await supabase.storage
         .from("cover-art")
         .upload(fileName, formData.coverArt);
-
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage
         .from("cover-art")
         .getPublicUrl(fileName);
 
       setUploadProgress(30);
 
-      // Upload audio file to storage with progress tracking
+      // 2) Upload audio
       setIsUploadingAudio(true);
       setAudioUploadProgress(0);
-      
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
-      
-      // Simulate progress for audio upload
+
       const progressInterval = setInterval(() => {
-        setAudioUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
+        setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 300);
-      
+
       const { error: audioUploadError } = await supabase.storage
         .from("audio-files")
         .upload(audioFileName, formData.audioFile!);
 
       clearInterval(progressInterval);
-      
+
       if (audioUploadError) {
         setIsUploadingAudio(false);
         setAudioUploadProgress(0);
         throw audioUploadError;
       }
-
       setAudioUploadProgress(100);
       setIsUploadingAudio(false);
 
@@ -299,8 +267,8 @@ const UploadRelease = () => {
 
       setUploadProgress(70);
 
-      // Insert release data
-      const { error: insertError } = await supabase
+      // 3) Insert release as 'unpaid' BEFORE navigating to payment
+      const { data: inserted, error: insertError } = await supabase
         .from("music_releases")
         .insert({
           user_id: user.id,
@@ -313,25 +281,23 @@ const UploadRelease = () => {
           cover_art_url: publicUrl,
           audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
-          status: "pending",
+          status: "unpaid",
           upload_progress: 0,
-        } as any);
+        } as any)
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
 
       setUploadProgress(100);
 
-      // Clear saved form data
-      sessionStorage.removeItem("uploadFormData");
-
       toast({
-        title: "Release Submitted Successfully",
-        description: "Your release is now pending review. This will take up to 2 weeks.",
+        title: "Release Saved",
+        description: "Redirecting you to complete payment...",
       });
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 500);
+      navigate(`/payment?type=release&releaseId=${inserted.id}`);
+
     } catch (error: any) {
       console.error("Error submitting release:", error);
       toast({
