@@ -125,6 +125,7 @@ const statusLabel = (status: string) => {
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>("12m");
   const navigate = useNavigate();
@@ -137,12 +138,17 @@ const Dashboard = () => {
         return;
       }
       setUser(session.user);
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      setProfile(data);
+      const [{ data: profileData }, { data: releaseData }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
+        supabase
+          .from("music_releases")
+          .select("id,title,artist_name,release_type,genre,release_date,cover_art_url,audio_url,language,status,created_at")
+          .eq("user_id", session.user.id)
+          .neq("status", "unpaid")
+          .order("created_at", { ascending: false }),
+      ]);
+      setProfile(profileData);
+      setReleases((releaseData as Release[]) || []);
       setLoading(false);
     };
     init();
