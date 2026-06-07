@@ -48,84 +48,35 @@ const UploadRelease = () => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem("uploadFormData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return parsed.selectedLanguages || [];
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const [hasValidPayment, setHasValidPayment] = useState<boolean | null>(null);
-  const [formData, setFormData] = useState(() => {
-    const saved = sessionStorage.getItem("uploadFormData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          title: parsed.title || "",
-          artistName: parsed.artistName || "",
-          releaseType: parsed.releaseType || "single",
-          genre: parsed.genre || "",
-          releaseDate: parsed.releaseDate ? new Date(parsed.releaseDate) : undefined as Date | undefined,
-          coverArt: null as File | null,
-          audioFile: null as File | null,
-          rightsConfirmed: parsed.rightsConfirmed || false,
-        };
-      } catch {
-        return {
-          title: "",
-          artistName: "",
-          releaseType: "single",
-          genre: "",
-          releaseDate: undefined as Date | undefined,
-          coverArt: null as File | null,
-          audioFile: null as File | null,
-          rightsConfirmed: false,
-        };
-      }
-    }
-    return {
-      title: "",
-      artistName: "",
-      releaseType: "single",
-      genre: "",
-      releaseDate: undefined as Date | undefined,
-      coverArt: null as File | null,
-      audioFile: null as File | null,
-      rightsConfirmed: false,
-    };
+  const [authChecked, setAuthChecked] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    artistName: "",
+    releaseType: "single",
+    genre: "",
+    releaseDate: undefined as Date | undefined,
+    coverArt: null as File | null,
+    audioFile: null as File | null,
+    rightsConfirmed: false,
   });
+
   useEffect(() => {
     checkUser();
   }, []);
 
   const checkUser = async () => {
-    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/auth");
       return;
     }
     setUser(user);
-    if (pendingPayment === "completed") {
-      sessionStorage.removeItem("pendingReleasePayment");
-      setHasValidPayment(true);
-      toast({
-        title: "Payment confirmed",
-        description: "Please re-attach your cover art and audio file, then submit.",
-      });
-    } else {
-      setHasValidPayment(false);
-    }
+    setAuthChecked(true);
   };
 
   const validateImage = (file: File): Promise<boolean> => {
