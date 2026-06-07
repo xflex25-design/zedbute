@@ -6,14 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Area,
   AreaChart,
   CartesianGrid,
@@ -24,12 +16,16 @@ import {
 } from "recharts";
 import {
   Disc,
+  Download,
+  Globe,
   Headphones,
+  Music as MusicIcon,
   Plus,
   TrendingUp,
   Users,
   Wallet,
 } from "lucide-react";
+import { format } from "date-fns";
 
 type Range = "7d" | "30d" | "12m";
 
