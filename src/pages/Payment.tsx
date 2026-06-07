@@ -65,10 +65,27 @@ const Payment = () => {
       console.error("Database error:", dbError);
     }
 
+    // For release payments, flip the saved release from 'unpaid' to 'pending'
+    if (paymentType === "release" && releaseId) {
+      const { error: releaseErr } = await supabase
+        .from("music_releases")
+        .update({ status: "pending" })
+        .eq("id", releaseId)
+        .eq("user_id", user.id);
+      if (releaseErr) {
+        console.error("Failed to update release status:", releaseErr);
+        toast({
+          title: "Release status update failed",
+          description: "Payment recorded, but we couldn't mark your release as pending. Contact support.",
+          variant: "destructive",
+        });
+      }
+    }
+
     toast({
       title: status === "verified" ? "Payment Successful!" : "Payment Submitted!",
       description: status === "verified"
-        ? "Your payment has been processed. Redirecting..."
+        ? "Your release is now pending review. Redirecting..."
         : "Your payment will be verified shortly. Redirecting...",
     });
 
@@ -76,8 +93,7 @@ const Payment = () => {
       sessionStorage.setItem("pendingVerificationPayment", "completed");
       navigate("/verify");
     } else {
-      sessionStorage.setItem("pendingReleasePayment", "completed");
-      navigate("/upload-release");
+      navigate("/dashboard");
     }
   };
 
