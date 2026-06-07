@@ -314,7 +314,7 @@ const UploadRelease = () => {
     }
   };
 
-  if (!user || hasValidPayment === null) {
+  if (!user || !authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -334,14 +334,12 @@ const UploadRelease = () => {
             <CardDescription>
               Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks.
             </CardDescription>
-            {!hasValidPayment && (
-              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
-                <p className="text-sm text-amber-700">
-                  <AlertCircle className="h-4 w-4 inline mr-1" />
-                  Payment required (K50). Fill out the form and you'll be redirected to payment on submit.
-                </p>
-              </div>
-            )}
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-700">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                Your release will be saved as <strong>unpaid</strong> and you'll be redirected to complete the K50 payment.
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             <FormProgress
