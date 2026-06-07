@@ -216,7 +216,7 @@ const Dashboard = () => {
                       <Icon className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-2xl font-bold leading-tight">{s.value}</p>
+                      <p className="text-2xl font-bold leading-tight">{displayValue}</p>
                       <div className="flex items-center gap-1 text-xs text-green-500 font-semibold mt-1">
                         <TrendingUp className="h-3 w-3" />
                         0%
