@@ -85,58 +85,41 @@ const DATA_7D = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => ({
   streams: 0,
 }));
 
-const RELEASES = [
-  {
-    title: "Location",
-    artist: "Yo Maps",
-    type: "Single",
-    date: "12 Mar 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "Bon Appétit",
-    artist: "Chef 187",
-    type: "EP",
-    date: "02 Feb 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "King Cobra",
-    artist: "Slapdee",
-    type: "Album",
-    date: "18 Jan 2025",
-    streams: 0,
-    status: "Processing",
-  },
-  {
-    title: "Money Maker",
-    artist: "Macky 2",
-    type: "Single",
-    date: "05 Jan 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "Mr. Tay",
-    artist: "Tay Grin",
-    type: "Single",
-    date: "20 Dec 2024",
-    streams: 0,
-    status: "Pending",
-  },
-];
+type Release = {
+  id: string;
+  title: string;
+  artist_name: string;
+  release_type: string | null;
+  genre: string | null;
+  release_date: string | null;
+  cover_art_url: string | null;
+  audio_url: string | null;
+  language: string[] | null;
+  status: string;
+  created_at: string;
+};
 
 const statusVariant = (status: string) => {
   switch (status) {
-    case "Live":
-      return "bg-green-500/15 text-green-500 border-green-500/30";
-    case "Processing":
-      return "bg-yellow-500/15 text-yellow-500 border-yellow-500/30";
+    case "distributed":
+      return "bg-green-500/15 text-green-600 border-green-500/30";
+    case "processing":
+      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
+    case "pending":
+      return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
+    case "failed":
+      return "bg-red-500/15 text-red-600 border-red-500/30";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
+};
+
+const statusLabel = (status: string) => {
+  if (status === "distributed") return "Delivered";
+  if (status === "processing") return "Processing";
+  if (status === "pending") return "Pending Review";
+  if (status === "failed") return "Failed";
+  return status;
 };
 
 const Dashboard = () => {
