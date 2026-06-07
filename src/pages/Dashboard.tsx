@@ -6,14 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Area,
   AreaChart,
   CartesianGrid,
@@ -24,12 +16,16 @@ import {
 } from "recharts";
 import {
   Disc,
+  Download,
+  Globe,
   Headphones,
+  Music as MusicIcon,
   Plus,
   TrendingUp,
   Users,
   Wallet,
 } from "lucide-react";
+import { format } from "date-fns";
 
 type Range = "7d" | "30d" | "12m";
 
@@ -89,63 +85,47 @@ const DATA_7D = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => ({
   streams: 0,
 }));
 
-const RELEASES = [
-  {
-    title: "Location",
-    artist: "Yo Maps",
-    type: "Single",
-    date: "12 Mar 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "Bon Appétit",
-    artist: "Chef 187",
-    type: "EP",
-    date: "02 Feb 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "King Cobra",
-    artist: "Slapdee",
-    type: "Album",
-    date: "18 Jan 2025",
-    streams: 0,
-    status: "Processing",
-  },
-  {
-    title: "Money Maker",
-    artist: "Macky 2",
-    type: "Single",
-    date: "05 Jan 2025",
-    streams: 0,
-    status: "Live",
-  },
-  {
-    title: "Mr. Tay",
-    artist: "Tay Grin",
-    type: "Single",
-    date: "20 Dec 2024",
-    streams: 0,
-    status: "Pending",
-  },
-];
+type Release = {
+  id: string;
+  title: string;
+  artist_name: string;
+  release_type: string | null;
+  genre: string | null;
+  release_date: string | null;
+  cover_art_url: string | null;
+  audio_url: string | null;
+  language: string[] | null;
+  status: string;
+  created_at: string;
+};
 
 const statusVariant = (status: string) => {
   switch (status) {
-    case "Live":
-      return "bg-green-500/15 text-green-500 border-green-500/30";
-    case "Processing":
-      return "bg-yellow-500/15 text-yellow-500 border-yellow-500/30";
+    case "distributed":
+      return "bg-green-500/15 text-green-600 border-green-500/30";
+    case "processing":
+      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
+    case "pending":
+      return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
+    case "failed":
+      return "bg-red-500/15 text-red-600 border-red-500/30";
     default:
       return "bg-muted text-muted-foreground border-border";
   }
 };
 
+const statusLabel = (status: string) => {
+  if (status === "distributed") return "Delivered";
+  if (status === "processing") return "Processing";
+  if (status === "pending") return "Pending Review";
+  if (status === "failed") return "Failed";
+  return status;
+};
+
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>("12m");
   const navigate = useNavigate();
@@ -158,12 +138,17 @@ const Dashboard = () => {
         return;
       }
       setUser(session.user);
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      setProfile(data);
+      const [{ data: profileData }, { data: releaseData }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
+        supabase
+          .from("music_releases")
+          .select("id,title,artist_name,release_type,genre,release_date,cover_art_url,audio_url,language,status,created_at")
+          .eq("user_id", session.user.id)
+          .neq("status", "unpaid")
+          .order("created_at", { ascending: false }),
+      ]);
+      setProfile(profileData);
+      setReleases((releaseData as Release[]) || []);
       setLoading(false);
     };
     init();
@@ -218,6 +203,7 @@ const Dashboard = () => {
         <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto sm:overflow-visible">
           <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-max sm:min-w-0">
             {STATS.map((s) => {
+              const displayValue = s.label === "Total Releases" ? String(releases.length) : s.value;
               const Icon = s.icon;
               return (
                 <Card
@@ -230,7 +216,7 @@ const Dashboard = () => {
                       <Icon className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-2xl font-bold leading-tight">{s.value}</p>
+                      <p className="text-2xl font-bold leading-tight">{displayValue}</p>
                       <div className="flex items-center gap-1 text-xs text-green-500 font-semibold mt-1">
                         <TrendingUp className="h-3 w-3" />
                         0%
@@ -338,81 +324,123 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            {/* Desktop table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cover</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Release Date</TableHead>
-                    <TableHead>Platforms</TableHead>
-                    <TableHead className="text-right">Streams</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {RELEASES.map((r) => (
-                    <TableRow key={r.title}>
-                      <TableCell>
-                        <div className="h-10 w-10 rounded-md bg-gradient-primary flex items-center justify-center">
-                          <Disc className="h-5 w-5 text-primary-foreground" />
+            {releases.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-10 text-center">
+                <Disc className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="font-medium">No releases yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Releases appear here after your payment is confirmed.
+                </p>
+                <Button variant="hero" size="sm" className="mt-4" onClick={() => navigate("/upload-release")}>
+                  <Plus className="h-4 w-4" />
+                  Upload your first release
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {releases.map((r) => {
+                  const dateStr = r.release_date
+                    ? format(new Date(r.release_date), "dd/MM/yyyy")
+                    : format(new Date(r.created_at), "dd/MM/yyyy");
+                  const typeLabel =
+                    r.release_type === "ep" ? "EP" : r.release_type === "album" ? "Album" : "Single";
+                  const languages = (r.language || []).join(", ") || "—";
+                  return (
+                    <div key={r.id} className="rounded-xl border border-border bg-background overflow-hidden">
+                      {/* Top: cover + title + status */}
+                      <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
+                        <div className="h-32 w-32 sm:h-36 sm:w-36 rounded-lg overflow-hidden bg-muted shrink-0 mx-auto sm:mx-0">
+                          {r.cover_art_url ? (
+                            <img src={r.cover_art_url} alt={`${r.title} cover`} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-primary flex items-center justify-center">
+                              <Disc className="h-10 w-10 text-primary-foreground" />
+                            </div>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{r.title}</div>
-                        <div className="text-xs text-muted-foreground">{r.artist}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{r.type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.date}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 text-xs text-muted-foreground">
-                          <span>Spotify</span>·<span>Apple</span>·<span>TikTok</span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusVariant(r.status)}`}>
+                            {statusLabel(r.status)}
+                          </span>
+                          <h3 className="text-xl font-bold mt-2 truncate">{r.title}</h3>
+                          <p className="text-sm text-muted-foreground truncate">{r.artist_name}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {typeLabel} · {r.genre || "—"}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{r.streams.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusVariant(r.status)}`}>
-                          {r.status}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
 
-            {/* Mobile cards */}
-            <div className="md:hidden space-y-3">
-              {RELEASES.map((r) => (
-                <div key={r.title} className="rounded-lg border border-border p-3 flex gap-3">
-                  <div className="h-14 w-14 rounded-md bg-gradient-primary flex items-center justify-center shrink-0">
-                    <Disc className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{r.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{r.artist}</p>
+                      {/* Release information */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Release information</p>
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Title</dt>
+                            <dd className="font-medium">{r.title}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Language</dt>
+                            <dd className="font-medium">{languages}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Label</dt>
+                            <dd className="font-medium">ZedBute</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Type</dt>
+                            <dd className="font-medium">{typeLabel}</dd>
+                          </div>
+                        </dl>
                       </div>
-                      <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusVariant(r.status)}`}>
-                        {r.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] py-0">{r.type}</Badge>
-                        <span>{r.date}</span>
+
+                      {/* Track */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Track</p>
+                        <div className="rounded-lg bg-muted/50 p-3 flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <MusicIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">1. {r.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{r.artist_name}</p>
+                          </div>
+                          {r.audio_url && (
+                            <a
+                              href={r.audio_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Audio
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-medium text-foreground">{r.streams.toLocaleString()} plays</span>
+
+                      {/* Distribution */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Distribution options</p>
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Release date</dt>
+                            <dd className="font-medium">{dateStr}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Countries</dt>
+                            <dd className="font-medium">Worldwide</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Platforms</dt>
+                            <dd className="font-medium">Spotify, Apple Music, Boomplay, YouTube Music, Tidal, Deezer, Amazon Music</dd>
+                          </div>
+                        </dl>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </Card>
       </div>
