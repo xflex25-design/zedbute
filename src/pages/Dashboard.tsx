@@ -323,81 +323,123 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            {/* Desktop table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cover</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Release Date</TableHead>
-                    <TableHead>Platforms</TableHead>
-                    <TableHead className="text-right">Streams</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {RELEASES.map((r) => (
-                    <TableRow key={r.title}>
-                      <TableCell>
-                        <div className="h-10 w-10 rounded-md bg-gradient-primary flex items-center justify-center">
-                          <Disc className="h-5 w-5 text-primary-foreground" />
+            {releases.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border p-10 text-center">
+                <Disc className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="font-medium">No releases yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Releases appear here after your payment is confirmed.
+                </p>
+                <Button variant="hero" size="sm" className="mt-4" onClick={() => navigate("/upload-release")}>
+                  <Plus className="h-4 w-4" />
+                  Upload your first release
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {releases.map((r) => {
+                  const dateStr = r.release_date
+                    ? format(new Date(r.release_date), "dd/MM/yyyy")
+                    : format(new Date(r.created_at), "dd/MM/yyyy");
+                  const typeLabel =
+                    r.release_type === "ep" ? "EP" : r.release_type === "album" ? "Album" : "Single";
+                  const languages = (r.language || []).join(", ") || "—";
+                  return (
+                    <div key={r.id} className="rounded-xl border border-border bg-background overflow-hidden">
+                      {/* Top: cover + title + status */}
+                      <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
+                        <div className="h-32 w-32 sm:h-36 sm:w-36 rounded-lg overflow-hidden bg-muted shrink-0 mx-auto sm:mx-0">
+                          {r.cover_art_url ? (
+                            <img src={r.cover_art_url} alt={`${r.title} cover`} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-primary flex items-center justify-center">
+                              <Disc className="h-10 w-10 text-primary-foreground" />
+                            </div>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{r.title}</div>
-                        <div className="text-xs text-muted-foreground">{r.artist}</div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{r.type}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.date}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1 text-xs text-muted-foreground">
-                          <span>Spotify</span>·<span>Apple</span>·<span>TikTok</span>
+                        <div className="flex-1 min-w-0">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusVariant(r.status)}`}>
+                            {statusLabel(r.status)}
+                          </span>
+                          <h3 className="text-xl font-bold mt-2 truncate">{r.title}</h3>
+                          <p className="text-sm text-muted-foreground truncate">{r.artist_name}</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {typeLabel} · {r.genre || "—"}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">{r.streams.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusVariant(r.status)}`}>
-                          {r.status}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
 
-            {/* Mobile cards */}
-            <div className="md:hidden space-y-3">
-              {RELEASES.map((r) => (
-                <div key={r.title} className="rounded-lg border border-border p-3 flex gap-3">
-                  <div className="h-14 w-14 rounded-md bg-gradient-primary flex items-center justify-center shrink-0">
-                    <Disc className="h-6 w-6 text-primary-foreground" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium truncate">{r.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{r.artist}</p>
+                      {/* Release information */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Release information</p>
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Title</dt>
+                            <dd className="font-medium">{r.title}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Language</dt>
+                            <dd className="font-medium">{languages}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Label</dt>
+                            <dd className="font-medium">ZedBute</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Type</dt>
+                            <dd className="font-medium">{typeLabel}</dd>
+                          </div>
+                        </dl>
                       </div>
-                      <span className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusVariant(r.status)}`}>
-                        {r.status}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[10px] py-0">{r.type}</Badge>
-                        <span>{r.date}</span>
+
+                      {/* Track */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Track</p>
+                        <div className="rounded-lg bg-muted/50 p-3 flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <MusicIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">1. {r.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{r.artist_name}</p>
+                          </div>
+                          {r.audio_url && (
+                            <a
+                              href={r.audio_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline shrink-0"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Audio
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-medium text-foreground">{r.streams.toLocaleString()} plays</span>
+
+                      {/* Distribution */}
+                      <div className="border-t border-border px-4 sm:px-5 py-4">
+                        <p className="text-sm font-semibold mb-3">Distribution options</p>
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Release date</dt>
+                            <dd className="font-medium">{dateStr}</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground flex items-center gap-1"><Globe className="h-3.5 w-3.5" /> Countries</dt>
+                            <dd className="font-medium">Worldwide</dd>
+                          </div>
+                          <div className="flex justify-between sm:block">
+                            <dt className="text-muted-foreground">Platforms</dt>
+                            <dd className="font-medium">Spotify, Apple Music, Boomplay, YouTube Music, Tidal, Deezer, Amazon Music</dd>
+                          </div>
+                        </dl>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </Card>
       </div>
