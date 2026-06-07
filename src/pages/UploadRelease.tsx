@@ -48,84 +48,35 @@ const UploadRelease = () => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(() => {
-    const saved = sessionStorage.getItem("uploadFormData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return parsed.selectedLanguages || [];
-      } catch {
-        return [];
-      }
-    }
-    return [];
-  });
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
-  const [hasValidPayment, setHasValidPayment] = useState<boolean | null>(null);
-  const [formData, setFormData] = useState(() => {
-    const saved = sessionStorage.getItem("uploadFormData");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          title: parsed.title || "",
-          artistName: parsed.artistName || "",
-          releaseType: parsed.releaseType || "single",
-          genre: parsed.genre || "",
-          releaseDate: parsed.releaseDate ? new Date(parsed.releaseDate) : undefined as Date | undefined,
-          coverArt: null as File | null,
-          audioFile: null as File | null,
-          rightsConfirmed: parsed.rightsConfirmed || false,
-        };
-      } catch {
-        return {
-          title: "",
-          artistName: "",
-          releaseType: "single",
-          genre: "",
-          releaseDate: undefined as Date | undefined,
-          coverArt: null as File | null,
-          audioFile: null as File | null,
-          rightsConfirmed: false,
-        };
-      }
-    }
-    return {
-      title: "",
-      artistName: "",
-      releaseType: "single",
-      genre: "",
-      releaseDate: undefined as Date | undefined,
-      coverArt: null as File | null,
-      audioFile: null as File | null,
-      rightsConfirmed: false,
-    };
+  const [authChecked, setAuthChecked] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    artistName: "",
+    releaseType: "single",
+    genre: "",
+    releaseDate: undefined as Date | undefined,
+    coverArt: null as File | null,
+    audioFile: null as File | null,
+    rightsConfirmed: false,
   });
+
   useEffect(() => {
     checkUser();
   }, []);
 
   const checkUser = async () => {
-    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/auth");
       return;
     }
     setUser(user);
-    if (pendingPayment === "completed") {
-      sessionStorage.removeItem("pendingReleasePayment");
-      setHasValidPayment(true);
-      toast({
-        title: "Payment confirmed",
-        description: "Please re-attach your cover art and audio file, then submit.",
-      });
-    } else {
-      setHasValidPayment(false);
-    }
+    setAuthChecked(true);
   };
 
   const validateImage = (file: File): Promise<boolean> => {
@@ -268,77 +219,45 @@ const UploadRelease = () => {
       return;
     }
 
-    // Check if payment is required
-    if (!hasValidPayment) {
-      // Save form metadata to sessionStorage before redirecting to payment
-      sessionStorage.setItem("uploadFormData", JSON.stringify({
-        title: formData.title,
-        artistName: formData.artistName,
-        releaseType: formData.releaseType,
-        genre: formData.genre,
-        releaseDate: formData.releaseDate?.toISOString(),
-        rightsConfirmed: formData.rightsConfirmed,
-        selectedLanguages,
-      }));
-      toast({
-        title: "Payment Required",
-        description: "Please complete payment to upload your release.",
-      });
-      navigate("/payment?type=release");
-      return;
-    }
-
     setLoading(true);
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
-      // Upload cover art to storage
+      // 1) Upload cover art
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
       const { error: uploadError } = await supabase.storage
         .from("cover-art")
         .upload(fileName, formData.coverArt);
-
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage
         .from("cover-art")
         .getPublicUrl(fileName);
 
       setUploadProgress(30);
 
-      // Upload audio file to storage with progress tracking
+      // 2) Upload audio
       setIsUploadingAudio(true);
       setAudioUploadProgress(0);
-      
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
-      
-      // Simulate progress for audio upload
+
       const progressInterval = setInterval(() => {
-        setAudioUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
+        setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 300);
-      
+
       const { error: audioUploadError } = await supabase.storage
         .from("audio-files")
         .upload(audioFileName, formData.audioFile!);
 
       clearInterval(progressInterval);
-      
+
       if (audioUploadError) {
         setIsUploadingAudio(false);
         setAudioUploadProgress(0);
         throw audioUploadError;
       }
-
       setAudioUploadProgress(100);
       setIsUploadingAudio(false);
 
@@ -348,8 +267,8 @@ const UploadRelease = () => {
 
       setUploadProgress(70);
 
-      // Insert release data
-      const { error: insertError } = await supabase
+      // 3) Insert release as 'unpaid' BEFORE navigating to payment
+      const { data: inserted, error: insertError } = await supabase
         .from("music_releases")
         .insert({
           user_id: user.id,
@@ -362,25 +281,23 @@ const UploadRelease = () => {
           cover_art_url: publicUrl,
           audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
-          status: "pending",
+          status: "unpaid",
           upload_progress: 0,
-        } as any);
+        } as any)
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
 
       setUploadProgress(100);
 
-      // Clear saved form data
-      sessionStorage.removeItem("uploadFormData");
-
       toast({
-        title: "Release Submitted Successfully",
-        description: "Your release is now pending review. This will take up to 2 weeks.",
+        title: "Release Saved",
+        description: "Redirecting you to complete payment...",
       });
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 500);
+      navigate(`/payment?type=release&releaseId=${inserted.id}`);
+
     } catch (error: any) {
       console.error("Error submitting release:", error);
       toast({
@@ -397,7 +314,7 @@ const UploadRelease = () => {
     }
   };
 
-  if (!user || hasValidPayment === null) {
+  if (!user || !authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -417,14 +334,12 @@ const UploadRelease = () => {
             <CardDescription>
               Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks.
             </CardDescription>
-            {!hasValidPayment && (
-              <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
-                <p className="text-sm text-amber-700">
-                  <AlertCircle className="h-4 w-4 inline mr-1" />
-                  Payment required (K50). Fill out the form and you'll be redirected to payment on submit.
-                </p>
-              </div>
-            )}
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-700">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                Your release will be saved as <strong>unpaid</strong> and you'll be redirected to complete the K50 payment.
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             <FormProgress
@@ -715,19 +630,15 @@ const UploadRelease = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Saving release...
                   </>
-                ) : hasValidPayment ? (
-                  "Submit Release"
                 ) : (
-                  "Continue to Payment"
+                  "Save & Continue to Payment"
                 )}
               </Button>
-              {!hasValidPayment && (
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  You'll be redirected to complete payment after form validation
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Your release will be saved as unpaid before you're redirected to payment
+              </p>
             </form>
           </CardContent>
         </Card>
