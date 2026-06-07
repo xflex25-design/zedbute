@@ -16,6 +16,7 @@ const Payment = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const paymentType = searchParams.get("type") || "release";
+  const releaseId = searchParams.get("releaseId");
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
