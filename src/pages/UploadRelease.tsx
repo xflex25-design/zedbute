@@ -630,19 +630,15 @@ const UploadRelease = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Saving release...
                   </>
-                ) : hasValidPayment ? (
-                  "Submit Release"
                 ) : (
-                  "Continue to Payment"
+                  "Save & Continue to Payment"
                 )}
               </Button>
-              {!hasValidPayment && (
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  You'll be redirected to complete payment after form validation
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Your release will be saved as unpaid before you're redirected to payment
+              </p>
             </form>
           </CardContent>
         </Card>
