@@ -445,7 +445,7 @@ const Auth = () => {
                 className="w-full flex items-center justify-center gap-2"
                 onClick={async () => {
                   const { error } = await supabase.auth.signInWithOAuth({
-                   provider: 'google',
+                   provider: 'github',
                    options: {
                    redirectTo: window.location.origin,
                     },
