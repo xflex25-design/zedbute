@@ -29,36 +29,23 @@ import { format } from "date-fns";
 
 type Range = "7d" | "30d" | "12m";
 
-const STATS = [
-  {
-    label: "Monthly Streams",
-    value: "0",
-    icon: Headphones,
-    accent: "bg-primary",
-    tileClass: "bg-primary/10 text-primary",
-  },
-  {
-    label: "Monthly Listeners",
-    value: "0",
-    icon: Users,
-    accent: "bg-secondary",
-    tileClass: "bg-secondary/10 text-secondary",
-  },
-  {
-    label: "Estimated Royalties",
-    value: "K 0",
-    icon: Wallet,
-    accent: "bg-primary",
-    tileClass: "bg-primary/10 text-primary",
-  },
-  {
-    label: "Total Releases",
-    value: "0",
-    icon: Disc,
-    accent: "bg-secondary",
-    tileClass: "bg-secondary/10 text-secondary",
-  },
-];
+type Stats = {
+  monthly_streams: number;
+  monthly_listeners: number;
+  estimated_royalties: number;
+  streams_change_pct: number;
+  listeners_change_pct: number;
+  royalties_change_pct: number;
+};
+
+const DEFAULT_STATS: Stats = {
+  monthly_streams: 0,
+  monthly_listeners: 0,
+  estimated_royalties: 0,
+  streams_change_pct: 0,
+  listeners_change_pct: 0,
+  royalties_change_pct: 0,
+};
 
 const DATA_12M = [
   { label: "Jan", streams: 0 },
@@ -123,6 +110,7 @@ const statusLabel = (status: string) => {
 };
 
 const Dashboard = () => {
+  const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
@@ -138,7 +126,7 @@ const Dashboard = () => {
         return;
       }
       setUser(session.user);
-      const [{ data: profileData }, { data: releaseData }] = await Promise.all([
+      const [{ data: profileData }, { data: releaseData }, { data: statsData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
         supabase
           .from("music_releases")
@@ -146,9 +134,11 @@ const Dashboard = () => {
           .eq("user_id", session.user.id)
           .neq("status", "unpaid")
           .order("created_at", { ascending: false }),
+        supabase.from("user_stats" as any).select("*").eq("user_id", session.user.id).maybeSingle(),
       ]);
       setProfile(profileData);
       setReleases((releaseData as Release[]) || []);
+      if (statsData) setStats({ ...DEFAULT_STATS, ...(statsData as any) });
       setLoading(false);
     };
     init();
@@ -190,36 +180,39 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Create Artist CTA */}
+        {/* Add Verification CTA */}
         <button
           onClick={() => navigate("/verify-claim")}
           className="w-full mb-8 rounded-2xl bg-gradient-primary px-6 py-5 text-base sm:text-lg font-bold text-primary-foreground shadow-glow hover:opacity-95 transition-opacity flex items-center justify-center gap-2"
         >
           <Plus className="h-5 w-5" />
-          Create Artist
+          Add Verification
         </button>
 
         {/* Stat cards */}
         <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto sm:overflow-visible">
           <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-max sm:min-w-0">
-            {STATS.map((s) => {
-              const displayValue = s.label === "Total Releases" ? String(releases.length) : s.value;
+            {[
+              { label: "Monthly Streams", value: stats.monthly_streams.toLocaleString(), change: stats.streams_change_pct, icon: Headphones, accent: "bg-primary", tileClass: "bg-primary/10 text-primary" },
+              { label: "Monthly Listeners", value: stats.monthly_listeners.toLocaleString(), change: stats.listeners_change_pct, icon: Users, accent: "bg-secondary", tileClass: "bg-secondary/10 text-secondary" },
+              { label: "Estimated Royalties", value: `K ${Number(stats.estimated_royalties).toLocaleString()}`, change: stats.royalties_change_pct, icon: Wallet, accent: "bg-primary", tileClass: "bg-primary/10 text-primary" },
+              { label: "Total Releases", value: String(releases.length), change: 0, icon: Disc, accent: "bg-secondary", tileClass: "bg-secondary/10 text-secondary" },
+            ].map((s) => {
               const Icon = s.icon;
+              const changeNum = Number(s.change) || 0;
+              const positive = changeNum >= 0;
               return (
-                <Card
-                  key={s.label}
-                  className="relative overflow-hidden bg-card shadow-card w-64 sm:w-auto shrink-0 snap-start"
-                >
+                <Card key={s.label} className="relative overflow-hidden bg-card shadow-card w-64 sm:w-auto shrink-0 snap-start">
                   <div className={`absolute top-0 left-0 right-0 h-1 ${s.accent}`} />
                   <div className="p-5 flex items-start gap-4">
                     <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${s.tileClass}`}>
                       <Icon className="h-6 w-6" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-2xl font-bold leading-tight">{displayValue}</p>
-                      <div className="flex items-center gap-1 text-xs text-green-500 font-semibold mt-1">
-                        <TrendingUp className="h-3 w-3" />
-                        0%
+                      <p className="text-2xl font-bold leading-tight">{s.value}</p>
+                      <div className={`flex items-center gap-1 text-xs font-semibold mt-1 ${positive ? "text-green-500" : "text-red-500"}`}>
+                        <TrendingUp className={`h-3 w-3 ${positive ? "" : "rotate-180"}`} />
+                        {positive ? "+" : ""}{changeNum}%
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {s.label} · vs previous period

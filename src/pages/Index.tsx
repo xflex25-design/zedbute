@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import heroBg from "@/assets/hero-bg.jpg";
 import { PlatformLogos } from "@/components/PlatformLogos";
+import mpakaFye from "@/assets/mpaka-fye.jpg.asset.json";
+import elcZulu from "@/assets/elc-zulu.jpg.asset.json";
 
 const faqs = [
   { q: "How do I distribute my music with ZedBute?", a: "Sign up, upload your track and cover art, fill in your release metadata, choose a plan, and pay securely with mobile money or card. We deliver your music to Spotify, Apple Music, TikTok and 150+ platforms." },
@@ -163,6 +165,41 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
               </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Artists We've Worked With */}
+      <section className="py-12 sm:py-16 lg:py-20 px-4 bg-background">
+        <div className="container mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
+              Artists We've Worked With
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Real Zambian releases distributed worldwide through ZedBute
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {[
+              { src: mpakaFye.url, title: "Mpaka Fye", artist: "Emi ft Sensedanger" },
+              { src: elcZulu.url, title: "You Are Holy", artist: "Elc. Zulu" },
+            ].map((a) => (
+              <div key={a.title} className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-shadow">
+                <div className="aspect-square overflow-hidden bg-muted">
+                  <img
+                    src={a.src}
+                    alt={`${a.title} by ${a.artist} – distributed by ZedBute`}
+                    loading="lazy"
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-4 bg-card">
+                  <p className="font-bold text-lg">{a.title}</p>
+                  <p className="text-sm text-muted-foreground">{a.artist}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>

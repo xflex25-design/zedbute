@@ -288,6 +288,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_stats: {
+        Row: {
+          created_at: string
+          estimated_royalties: number
+          listeners_change_pct: number
+          monthly_listeners: number
+          monthly_streams: number
+          royalties_change_pct: number
+          streams_change_pct: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_royalties?: number
+          listeners_change_pct?: number
+          monthly_listeners?: number
+          monthly_streams?: number
+          royalties_change_pct?: number
+          streams_change_pct?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          estimated_royalties?: number
+          listeners_change_pct?: number
+          monthly_listeners?: number
+          monthly_streams?: number
+          royalties_change_pct?: number
+          streams_change_pct?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
