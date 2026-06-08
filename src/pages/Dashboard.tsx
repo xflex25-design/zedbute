@@ -110,6 +110,7 @@ const statusLabel = (status: string) => {
 };
 
 const Dashboard = () => {
+  const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
