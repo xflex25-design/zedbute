@@ -109,7 +109,6 @@ const UploadRelease = () => {
       });
       return;
     }
-
     const isValid = await validateImage(file);
     if (isValid) {
       setFormData({ ...formData, coverArt: file });

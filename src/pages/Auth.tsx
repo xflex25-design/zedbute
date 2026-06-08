@@ -444,12 +444,15 @@ const Auth = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2"
                 onClick={async () => {
-                  const { error } = await lovable.auth.signInWithOAuth("google", {
-                    redirect_uri: window.location.origin,
-                  });
-                  if (error) {
-                    toast({ title: "Google login failed", description: String(error), variant: "destructive" });
-                  }
+                  const { error } = await supabase.auth.signInWithOAuth({
+                   provider: 'google',
+                   options: {
+                   redirectTo: window.location.origin,
+                    },
+            });
+if (error) {
+  toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+}
                 }}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
