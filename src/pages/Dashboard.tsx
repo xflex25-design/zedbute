@@ -126,7 +126,7 @@ const Dashboard = () => {
         return;
       }
       setUser(session.user);
-      const [{ data: profileData }, { data: releaseData }] = await Promise.all([
+      const [{ data: profileData }, { data: releaseData }, { data: statsData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
         supabase
           .from("music_releases")
@@ -134,9 +134,11 @@ const Dashboard = () => {
           .eq("user_id", session.user.id)
           .neq("status", "unpaid")
           .order("created_at", { ascending: false }),
+        supabase.from("user_stats" as any).select("*").eq("user_id", session.user.id).maybeSingle(),
       ]);
       setProfile(profileData);
       setReleases((releaseData as Release[]) || []);
+      if (statsData) setStats({ ...DEFAULT_STATS, ...(statsData as any) });
       setLoading(false);
     };
     init();
