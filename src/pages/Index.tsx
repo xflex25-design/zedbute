@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
 import heroBg from "@/assets/hero-bg.jpg";
 import { PlatformLogos } from "@/components/PlatformLogos";
+import mpakaFye from "@/assets/mpaka-fye.jpg.asset.json";
+import elcZulu from "@/assets/elc-zulu.jpg.asset.json";
 
 const faqs = [
   { q: "How do I distribute my music with ZedBute?", a: "Sign up, upload your track and cover art, fill in your release metadata, choose a plan, and pay securely with mobile money or card. We deliver your music to Spotify, Apple Music, TikTok and 150+ platforms." },
