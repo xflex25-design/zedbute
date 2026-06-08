@@ -29,36 +29,23 @@ import { format } from "date-fns";
 
 type Range = "7d" | "30d" | "12m";
 
-const STATS = [
-  {
-    label: "Monthly Streams",
-    value: "0",
-    icon: Headphones,
-    accent: "bg-primary",
-    tileClass: "bg-primary/10 text-primary",
-  },
-  {
-    label: "Monthly Listeners",
-    value: "0",
-    icon: Users,
-    accent: "bg-secondary",
-    tileClass: "bg-secondary/10 text-secondary",
-  },
-  {
-    label: "Estimated Royalties",
-    value: "K 0",
-    icon: Wallet,
-    accent: "bg-primary",
-    tileClass: "bg-primary/10 text-primary",
-  },
-  {
-    label: "Total Releases",
-    value: "0",
-    icon: Disc,
-    accent: "bg-secondary",
-    tileClass: "bg-secondary/10 text-secondary",
-  },
-];
+type Stats = {
+  monthly_streams: number;
+  monthly_listeners: number;
+  estimated_royalties: number;
+  streams_change_pct: number;
+  listeners_change_pct: number;
+  royalties_change_pct: number;
+};
+
+const DEFAULT_STATS: Stats = {
+  monthly_streams: 0,
+  monthly_listeners: 0,
+  estimated_royalties: 0,
+  streams_change_pct: 0,
+  listeners_change_pct: 0,
+  royalties_change_pct: 0,
+};
 
 const DATA_12M = [
   { label: "Jan", streams: 0 },
