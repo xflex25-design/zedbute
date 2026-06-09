@@ -11,9 +11,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Separator } from "@/components/ui/separator";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
-
 const cleanPhone = (val: string) => val.replace(/[\s\-()]/g, "");
-
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).max(255).optional(),
   phone: z.string().regex(/^\+260\d{9}$/, { message: "Phone must be in format +260XXXXXXXXX" }).optional(),
@@ -39,7 +37,6 @@ const Auth = () => {
   const [resetPhone, setResetPhone] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -49,7 +46,6 @@ const Auth = () => {
     };
     checkUser();
   }, [navigate]);
-
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event) => {
@@ -60,7 +56,6 @@ const Auth = () => {
     );
     return () => subscription.unsubscribe();
   }, []);
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
@@ -74,7 +69,6 @@ const Auth = () => {
     }
     setPhone(cleanPhone(val));
   };
-
   const handleResetPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
@@ -88,11 +82,9 @@ const Auth = () => {
     }
     setResetPhone(cleanPhone(val));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       const cleanedPhone = cleanPhone(phone);
       const validationData = {
@@ -101,14 +93,11 @@ const Auth = () => {
         password,
         fullName: !isLogin ? fullName : undefined,
       };
-
       authSchema.parse(validationData);
-
       if (isLogin) {
         const credentials = usePhone
           ? { phone: cleanedPhone, password }
           : { email, password };
-
         const { error } = await supabase.auth.signInWithPassword(credentials);
 
         if (error) {
