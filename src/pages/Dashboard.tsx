@@ -118,14 +118,21 @@ const Dashboard = () => {
   const [range, setRange] = useState<Range>("12m");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
+ useEffect(() => {
+  const init = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+          subscription.unsubscribe();
+          init();
+        } else if (event === "SIGNED_OUT") {
+          navigate("/auth");
+        }
+      });
+      return;
+    }
+    setUser(session.user);
       const [{ data: profileData }, { data: releaseData }, { data: statsData }] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
         supabase
