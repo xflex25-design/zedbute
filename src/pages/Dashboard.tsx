@@ -122,6 +122,7 @@ const Dashboard = () => {
   const init = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
+       setLoading(false);
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
           subscription.unsubscribe();
