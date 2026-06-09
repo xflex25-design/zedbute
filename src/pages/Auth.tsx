@@ -45,11 +45,15 @@ useEffect(() => {
   };
   checkUser();
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+ useEffect(() => {
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       navigate("/dashboard");
     }
-  });
+  };
+  checkUser();
+}, [navigate]);
 
   return () => subscription.unsubscribe();
 }, [navigate]);
