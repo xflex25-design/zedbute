@@ -117,46 +117,46 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>("12m");
   const navigate = useNavigate();
+const loadData = async (userId: string) => {
+  const [{ data: profileData }, { data: releaseData }, { data: statsData }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("music_releases").select("id,title,artist_name,release_type,genre,release_date,cover_art_url,audio_url,language,status,created_at").eq("user_id", userId).neq("status", "unpaid").order("created_at", { ascending: false }),
+    supabase.from("user_stats" as any).select("*").eq("user_id", userId).maybeSingle(),
+  ]);
+  setProfile(profileData);
+  setReleases((releaseData as Release[]) || []);
+  if (statsData) setStats({ ...DEFAULT_STATS, ...(statsData as any) });
+  setLoading(false);
+};
+useEffect(() => {
+  let ignore = false;
 
- useEffect(() => {
-  const init = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-       setLoading(false);
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session) {
-          subscription.unsubscribe();
-          init();
-        } else if (event === "SIGNED_OUT") {
-          navigate("/auth");
-        }
-      });
-      return;
-    }
-    setUser(session.user);
-      const [{ data: profileData }, { data: releaseData }, { data: statsData }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
-        supabase
-          .from("music_releases")
-          .select("id,title,artist_name,release_type,genre,release_date,cover_art_url,audio_url,language,status,created_at")
-          .eq("user_id", session.user.id)
-          .neq("status", "unpaid")
-          .order("created_at", { ascending: false }),
-        supabase.from("user_stats" as any).select("*").eq("user_id", session.user.id).maybeSingle(),
-      ]);
-      setProfile(profileData);
-      setReleases((releaseData as Release[]) || []);
-      if (statsData) setStats({ ...DEFAULT_STATS, ...(statsData as any) });
+ supabase.auth.getSession().then(({ data: { session } }) => {
+    if (ignore) return;
+    if (session) {
+      setUser(session.user);
+      loadData(session.user.id);
+    } else {
       setLoading(false);
-    };
-    init();
+      navigate("/auth");
+    }
+  });
 
-   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
-  setUser(s?.user ?? null);
-  if (event === "SIGNED_OUT") navigate("/auth");
-        });
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (ignore) return;
+    if (session) {
+      setUser(session.user);
+      loadData(session.user.id);
+    } else if (event === "SIGNED_OUT") {
+      navigate("/auth");
+    }
+  });
+
+  return () => {
+    ignore = true;
+    subscription.unsubscribe();
+  };
+}, [navigate]);
 
   const chartData = useMemo(() => {
     if (range === "7d") return DATA_7D;
