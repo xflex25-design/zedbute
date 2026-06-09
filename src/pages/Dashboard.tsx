@@ -150,10 +150,10 @@ const Dashboard = () => {
     };
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => {
-      setUser(s?.user ?? null);
-      if (!s) navigate("/auth");
-    });
+   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+  setUser(s?.user ?? null);
+  if (event === "SIGNED_OUT") navigate("/auth");
+        });
     return () => subscription.unsubscribe();
   }, [navigate]);
 
