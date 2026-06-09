@@ -44,19 +44,6 @@ useEffect(() => {
     }
   };
   checkUser();
-
- useEffect(() => {
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      navigate("/dashboard");
-    }
-  };
-  checkUser();
-}, [navigate]);
-
-  return () => subscription.unsubscribe();
-}, [navigate]);
 useEffect(() => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     async (event, session) => {
