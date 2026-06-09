@@ -37,15 +37,23 @@ const Auth = () => {
   const [resetPhone, setResetPhone] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkUser();
-  }, [navigate]);
+useEffect(() => {
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      navigate("/dashboard");
+    }
+  };
+  checkUser();
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      navigate("/dashboard");
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}, [navigate]);
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event) => {
