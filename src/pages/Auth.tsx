@@ -53,16 +53,19 @@ useEffect(() => {
 
   return () => subscription.unsubscribe();
 }, [navigate]);
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        if (event === "PASSWORD_RECOVERY") {
-          setResetStep("set_new_password");
-        }
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setResetStep("set_new_password");
       }
-    );
-    return () => subscription.unsubscribe();
-  }, []);
+      if (event === "SIGNED_IN" && session) {
+        navigate("/dashboard");
+      }
+    }
+  );
+  return () => subscription.unsubscribe();
+}, [navigate]);
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
