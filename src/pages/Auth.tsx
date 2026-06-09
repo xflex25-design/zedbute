@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Music2, ArrowLeft, Phone, Mail } from "lucide-react";
-import { lovable } from "@/integrations/lovable/index";
 import { Separator } from "@/components/ui/separator";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
@@ -444,7 +443,7 @@ useEffect(() => {
                   const { error } = await supabase.auth.signInWithOAuth({
                    provider: 'google',
                    options: {
-                   redirectTo: `${window.location.origin}/dashboard`,
+                   redirectTo: `${window.location.origin}/auth`,
                     },
             });
 if (error) {
