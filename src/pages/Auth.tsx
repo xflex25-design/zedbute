@@ -44,6 +44,7 @@ useEffect(() => {
     }
   };
   checkUser();
+},[navigate]);
 useEffect(() => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     async (event, session) => {
