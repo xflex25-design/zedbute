@@ -50,7 +50,7 @@ useEffect(() => {
       if (hashSession) navigate("/dashboard");
     }
   };
-  checkUser();
+   setTimeout(checkUser,500);
 },[navigate]);
 useEffect(() => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
