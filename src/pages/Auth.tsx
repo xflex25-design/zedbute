@@ -41,6 +41,13 @@ useEffect(() => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       navigate("/dashboard");
+      return;
+    }
+    // Handle hash fragment from OAuth redirect
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token")) {
+      const { data: { session: hashSession } } = await supabase.auth.getSession();
+      if (hashSession) navigate("/dashboard");
     }
   };
   checkUser();
