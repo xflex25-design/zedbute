@@ -37,32 +37,21 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 useEffect(() => {
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+  supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) {
       navigate("/dashboard");
-      return;
     }
-    // Handle hash fragment from OAuth redirect
-    const hash = window.location.hash;
-    if (hash && hash.includes("access_token")) {
-      const { data: { session: hashSession } } = await supabase.auth.getSession();
-      if (hashSession) navigate("/dashboard");
+  });
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_IN" && session) {
+      navigate("/dashboard");
     }
-  };
-   setTimeout(checkUser,500);
-},[navigate]);
-useEffect(() => {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setResetStep("set_new_password");
-      }
-      if (event === "SIGNED_IN" && session) {
-        navigate("/dashboard");
-      }
+    if (event === "PASSWORD_RECOVERY") {
+      setResetStep("set_new_password");
     }
-  );
+  });
+
   return () => subscription.unsubscribe();
 }, [navigate]);
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
