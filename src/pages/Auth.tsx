@@ -108,7 +108,7 @@ useEffect(() => {
           });
         } else {
           toast({ title: "Welcome back!", description: "You've successfully logged in." });
-          navigate("/dashboard");
+              window.location.href = "/dashboard"
         }
       } else {
         const signUpData = usePhone
