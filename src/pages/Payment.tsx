@@ -9,9 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Zap, Phone } from "lucide-react";
 
-// FIX: Declare LencoPay globally to resolve TypeScript "Cannot find name 'LencoPay'" compilation error
+// Declaring LencoPay on the window object to handle TypeScript errors cleanly
 declare global {
-  const LencoPay: any;
+  interface Window {
+    LencoPay?: {
+      getPaid: (config: any) => void;
+    };
+  }
 }
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
@@ -35,22 +39,26 @@ const Payment = () => {
   }, []);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      navigate("/auth");
-      return;
-    }
-    setUser(session.user);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        navigate("/auth");
+        return;
+      }
+      setUser(session.user);
 
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", session.user.id)
-      .single();
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
-    setProfile(profileData);
-    if (profileData?.phone_number) {
-      setPhoneNumber(profileData.phone_number);
+      setProfile(profileData);
+      if (profileData?.phone_number) {
+        setPhoneNumber(profileData.phone_number);
+      }
+    } catch (error) {
+      console.error("Error during authentication check:", error);
     }
   };
 
@@ -76,6 +84,7 @@ const Payment = () => {
         .update({ status: "pending" })
         .eq("id", releaseId)
         .eq("user_id", user.id);
+        
       if (releaseErr) {
         console.error("Failed to update release status:", releaseErr);
         toast({
@@ -111,7 +120,7 @@ const Payment = () => {
       return;
     }
 
-    if (typeof LencoPay === "undefined") {
+    if (typeof window.LencoPay === "undefined") {
       toast({
         title: "Error",
         description: "Payment system is loading. Please try again.",
@@ -123,7 +132,7 @@ const Payment = () => {
     setLoading(true);
     const reference = `${paymentType}-${user.id}-${Date.now()}`;
 
-    LencoPay.getPaid({
+    window.LencoPay.getPaid({
       key: LENCO_PUBLIC_KEY,
       reference,
       email: user.email,
@@ -138,6 +147,8 @@ const Payment = () => {
       onSuccess: async (response: any) => {
         try {
           await savePaymentAndRedirect(response.reference, "verified");
+        } catch (error) {
+          console.error("Error saving successful payment:", error);
         } finally {
           setLoading(false);
         }
@@ -152,6 +163,8 @@ const Payment = () => {
       onConfirmationPending: async () => {
         try {
           await savePaymentAndRedirect(reference, "pending");
+        } catch (error) {
+          console.error("Error saving pending payment:", error);
         } finally {
           setLoading(false);
         }
