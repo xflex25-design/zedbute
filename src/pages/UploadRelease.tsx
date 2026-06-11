@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -282,7 +283,8 @@ const UploadRelease = () => {
           rights_confirmed: formData.rightsConfirmed,
           status: "unpaid",
           upload_progress: 0,
-        } as any)
+        // FIX 1: Removed `as any` — was suppressing TypeScript on the insert payload
+        })
         .select("id")
         .single();
 
@@ -478,7 +480,9 @@ const UploadRelease = () => {
                   <p className="text-xs text-muted-foreground">
                     Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission. 
                     {formData.releaseDate && (
-                      <span> Estimated live date: <strong className="text-primary">{format(addWeeks(new Date(), 2), "PPP")}</strong></span>
+                      // FIX 2: Was using `new Date()` (today) instead of `formData.releaseDate`
+                      // so the estimated live date was always 2 weeks from now, ignoring the chosen date
+                      <span> Estimated live date: <strong className="text-primary">{format(addWeeks(formData.releaseDate, 2), "PPP")}</strong></span>
                     )}
                   </p>
                 </div>
