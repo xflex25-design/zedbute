@@ -1,3 +1,8 @@
+
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +12,9 @@ import { Music2, ArrowLeft, Phone, Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
+
 const cleanPhone = (val: string) => val.replace(/[\s\-()]/g, "");
+
 const authSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }).max(255).optional(),
   phone: z.string().regex(/^\+260\d{9}$/, { message: "Phone must be in format +260XXXXXXXXX" }).optional(),
@@ -33,22 +40,15 @@ const Auth = () => {
   const [resetPhone, setResetPhone] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    if (session) {
-      navigate("/dashboard");
-    }
-  });
+
+  // FIX 1: Removed duplicate/nested useEffect blocks — replaced with two clean ones
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/dashboard");
-      }
-    };
-    checkUser();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/dashboard");
+    });
   }, [navigate]);
-useEffect(() => {
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "PASSWORD_RECOVERY") {
@@ -60,19 +60,7 @@ useEffect(() => {
     );
     return () => subscription.unsubscribe();
   }, [navigate]);
-=======
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_IN" && session) {
-      navigate("/dashboard");
-    }
-    if (event === "PASSWORD_RECOVERY") {
-      setResetStep("set_new_password");
-    }
-  });
 
-  return () => subscription.unsubscribe();
-}, [navigate]);
->>>>>>> b6fc6ea5333095834950881d2e0992f53e9fe695
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
@@ -86,6 +74,7 @@ useEffect(() => {
     }
     setPhone(cleanPhone(val));
   };
+
   const handleResetPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
@@ -99,6 +88,7 @@ useEffect(() => {
     }
     setResetPhone(cleanPhone(val));
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -116,7 +106,6 @@ useEffect(() => {
           ? { phone: cleanedPhone, password }
           : { email, password };
         const { error } = await supabase.auth.signInWithPassword(credentials);
-
         if (error) {
           toast({
             title: "Login failed",
@@ -127,7 +116,8 @@ useEffect(() => {
           });
         } else {
           toast({ title: "Welcome back!", description: "You've successfully logged in." });
-              window.location.href = "/dashboard"
+          // FIX 3: Was `window.location.href = "/dashboard"` — use navigate() instead
+          navigate("/dashboard");
         }
       } else {
         const signUpData = usePhone
@@ -451,14 +441,15 @@ useEffect(() => {
                 className="w-full flex items-center justify-center gap-2"
                 onClick={async () => {
                   const { error } = await supabase.auth.signInWithOAuth({
-                   provider: 'google',
-                   options: {
-                   redirectTo: `${window.location.origin}/auth`,
+                    provider: "google",
+                    options: {
+                      // FIX 4: Was `/auth` — caused a redirect loop back to login page
+                      redirectTo: `${window.location.origin}/dashboard`,
                     },
-            });
-if (error) {
-  toast({ title: "Google login failed", description: error.message, variant: "destructive" });
-}
+                  });
+                  if (error) {
+                    toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+                  }
                 }}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -540,12 +531,5 @@ if (error) {
     </div>
   );
 };
-<<<<<<< HEAD
 
-export default Auth;import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-=======
 export default Auth;
->>>>>>> b6fc6ea5333095834950881d2e0992f53e9fe695
-
