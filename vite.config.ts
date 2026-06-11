@@ -9,10 +9,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 8080,
-    allowedHosts: true, // This change is critical
+    allowedHosts: true,
   },
-  // ... rest of your config
-}))
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
