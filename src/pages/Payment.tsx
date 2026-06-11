@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Phone, Zap } from "lucide-react";
+import { Loader as Loader2, Phone, Zap } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
 import {
