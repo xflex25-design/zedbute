@@ -158,6 +158,11 @@ export default function Payment() {
         await updateReleaseStatus();
       }
 
+      // Clear pending flags on successful payment
+      sessionStorage.removeItem("pendingReleasePayment");
+      sessionStorage.removeItem("pendingCoverArtName");
+      sessionStorage.removeItem("pendingAudioFileName");
+
       toast({
         title:
           status === "verified"
@@ -266,6 +271,10 @@ export default function Payment() {
 
       onClose: () => {
         setProcessing(false);
+
+        // Mark payment as cancelled (user closed without paying)
+        // Keep file names for potential re-attach prompt on next attempt
+        sessionStorage.removeItem("pendingReleasePayment");
 
         toast({
           title: "Payment Cancelled",

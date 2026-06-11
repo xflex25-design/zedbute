@@ -1,11 +1,9 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -55,6 +53,15 @@ const UploadRelease = () => {
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [validatingImage, setValidatingImage] = useState(false);
+  const [showReattachPrompt, setShowReattachPrompt] = useState(false);
+  const [previousFileName, setPreviousFileName] = useState<string | null>(null);
+  const coverArtRef = useRef<HTMLInputElement>(null);
+  const audioFileRef = useRef<HTMLInputElement>(null);
+
+  // Ref to track interval for cleanup
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   const [formData, setFormData] = useState({
     title: "",
     artistName: "",
@@ -66,9 +73,43 @@ const UploadRelease = () => {
     rightsConfirmed: false,
   });
 
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Check for return from payment flow
+  useEffect(() => {
+    const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
+    const savedCoverName = sessionStorage.getItem("pendingCoverArtName");
+    const savedAudioName = sessionStorage.getItem("pendingAudioFileName");
+
+    if (pendingPayment === "completed") {
+      sessionStorage.removeItem("pendingReleasePayment");
+      // Show re-attach prompt if file names were saved but files are missing
+      if (savedCoverName || savedAudioName) {
+        setShowReattachPrompt(true);
+        setPreviousFileName(savedCoverName);
+        toast({
+          title: "Re-attach your files",
+          description: "Please re-upload your cover art and audio file to complete your release.",
+          variant: "default",
+        });
+        // Scroll to upload section
+        setTimeout(() => {
+          coverArtRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+      }
+    }
+  }, [toast]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -88,11 +129,19 @@ const UploadRelease = () => {
         if (!isValid) {
           toast({
             title: "Invalid Image Dimensions",
-            description: "Cover art must be exactly 3000x3000 pixels",
+            description: "Cover art must be exactly 3000x3000 pixels. Please upload a correctly sized image.",
             variant: "destructive",
           });
         }
         resolve(isValid);
+      };
+      img.onerror = () => {
+        toast({
+          title: "Image Load Error",
+          description: "Could not load the image. Please try a different file.",
+          variant: "destructive",
+        });
+        resolve(false);
       };
       img.src = URL.createObjectURL(file);
     });
@@ -108,13 +157,21 @@ const UploadRelease = () => {
         description: "Please upload an image file",
         variant: "destructive",
       });
+      e.target.value = "";
       return;
     }
+
+    setValidatingImage(true);
     const isValid = await validateImage(file);
+    setValidatingImage(false);
+
     if (isValid) {
       setFormData({ ...formData, coverArt: file });
       setImagePreview(URL.createObjectURL(file));
+      // Save file name for potential re-attach prompt
+      sessionStorage.setItem("pendingCoverArtName", file.name);
     } else {
+      // Don't clear the input - keep previous file if exists
       e.target.value = "";
     }
   };
@@ -134,6 +191,8 @@ const UploadRelease = () => {
     }
 
     setFormData({ ...formData, audioFile: file });
+    // Save file name for potential re-attach prompt
+    sessionStorage.setItem("pendingAudioFileName", file.name);
   };
 
   const handleLanguageToggle = (language: string) => {
@@ -146,7 +205,7 @@ const UploadRelease = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title.trim()) {
       toast({
         title: "Missing Title",
@@ -237,13 +296,19 @@ const UploadRelease = () => {
 
       setUploadProgress(30);
 
-      // 2) Upload audio
+      // 2) Upload audio with proper interval cleanup
       setIsUploadingAudio(true);
       setAudioUploadProgress(0);
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
 
-      const progressInterval = setInterval(() => {
+      // Clear any existing interval
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+
+      // Track progress with ref for cleanup
+      progressIntervalRef.current = setInterval(() => {
         setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 300);
 
@@ -251,7 +316,11 @@ const UploadRelease = () => {
         .from("audio-files")
         .upload(audioFileName, formData.audioFile!);
 
-      clearInterval(progressInterval);
+      // Clear interval after upload completes
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
 
       if (audioUploadError) {
         setIsUploadingAudio(false);
@@ -277,13 +346,12 @@ const UploadRelease = () => {
           language: selectedLanguages,
           release_type: formData.releaseType,
           genre: formData.genre,
-          release_date: formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") : null,
+          release_date: format(formData.releaseDate, "yyyy-MM-dd"),
           cover_art_url: publicUrl,
           audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
           status: "unpaid",
           upload_progress: 0,
-        // FIX 1: Removed `as any` — was suppressing TypeScript on the insert payload
         })
         .select("id")
         .single();
@@ -296,6 +364,9 @@ const UploadRelease = () => {
         title: "Release Saved",
         description: "Redirecting you to complete payment...",
       });
+
+      // Set pending payment flag before navigating
+      sessionStorage.setItem("pendingReleasePayment", "started");
 
       navigate(`/payment?type=release&releaseId=${inserted.id}`);
 
@@ -312,6 +383,11 @@ const UploadRelease = () => {
       setUploadProgress(0);
       setAudioUploadProgress(0);
       setIsUploadingAudio(false);
+      // Ensure interval is cleaned up
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
   };
 
@@ -478,10 +554,8 @@ const UploadRelease = () => {
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                   <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission. 
+                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission.
                     {formData.releaseDate && (
-                      // FIX 2: Was using `new Date()` (today) instead of `formData.releaseDate`
-                      // so the estimated live date was always 2 weeks from now, ignoring the chosen date
                       <span> Estimated live date: <strong className="text-primary">{format(addWeeks(formData.releaseDate, 2), "PPP")}</strong></span>
                     )}
                   </p>
@@ -490,8 +564,11 @@ const UploadRelease = () => {
 
               {/* Cover Art */}
               <div className="space-y-3">
-                <Label htmlFor="coverArt">Cover Art (3000x3000 pixels) *</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <Label htmlFor="coverArt" className="flex items-center gap-2">
+                  Cover Art *
+                  <span className="text-xs text-muted-foreground font-normal">(Required: 3000 x 3000 pixels)</span>
+                </Label>
+                <div ref={coverArtRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {imagePreview ? (
                     <div className="space-y-4">
                       <img
@@ -505,6 +582,7 @@ const UploadRelease = () => {
                         onClick={() => {
                           setImagePreview(null);
                           setFormData({ ...formData, coverArt: null });
+                          sessionStorage.removeItem("pendingCoverArtName");
                         }}
                       >
                         Remove Image
@@ -512,6 +590,11 @@ const UploadRelease = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
+                      {showReattachPrompt && previousFileName && (
+                        <p className="text-sm text-primary font-medium">
+                          Please re-attach: {previousFileName}
+                        </p>
+                      )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
                         <Label
@@ -522,7 +605,7 @@ const UploadRelease = () => {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Image must be exactly 3000x3000 pixels
+                        Image must be exactly 3000 x 3000 pixels
                       </p>
                     </div>
                   )}
@@ -532,14 +615,22 @@ const UploadRelease = () => {
                     accept="image/*"
                     onChange={handleImageChange}
                     className="hidden"
+                    ref={coverArtRef}
+                    disabled={validatingImage}
                   />
                 </div>
+                {validatingImage && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Validating image dimensions...
+                  </p>
+                )}
               </div>
 
               {/* Audio File */}
               <div className="space-y-3">
                 <Label htmlFor="audioFile">Music Audio File *</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <div ref={audioFileRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {formData.audioFile ? (
                     <div className="space-y-4">
                       <Music className="mx-auto h-12 w-12 text-primary" />
@@ -547,7 +638,7 @@ const UploadRelease = () => {
                       <p className="text-xs text-muted-foreground">
                         {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
-                      
+
                       {/* Audio Upload Progress */}
                       {isUploadingAudio && (
                         <div className="space-y-2 mt-4">
@@ -558,12 +649,13 @@ const UploadRelease = () => {
                           <Progress value={audioUploadProgress} className="h-2" />
                         </div>
                       )}
-                      
+
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => {
                           setFormData({ ...formData, audioFile: null });
+                          sessionStorage.removeItem("pendingAudioFileName");
                         }}
                         disabled={isUploadingAudio}
                       >
@@ -572,6 +664,11 @@ const UploadRelease = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
+                      {showReattachPrompt && sessionStorage.getItem("pendingAudioFileName") && (
+                        <p className="text-sm text-primary font-medium">
+                          Please re-attach: {sessionStorage.getItem("pendingAudioFileName")}
+                        </p>
+                      )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
                         <Label
@@ -592,6 +689,7 @@ const UploadRelease = () => {
                     accept="audio/*"
                     onChange={handleAudioChange}
                     className="hidden"
+                    ref={audioFileRef}
                   />
                 </div>
               </div>
@@ -629,11 +727,20 @@ const UploadRelease = () => {
               )}
 
               {/* Submit Button */}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || validatingImage || isUploadingAudio}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving release...
+                  </>
+                ) : validatingImage ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Validating image...
                   </>
                 ) : (
                   "Save & Continue to Payment"
