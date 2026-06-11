@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle2, Loader2, Music } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Music, Phone, Zap } from "lucide-react";
 
 type Platform = "spotify" | "boomplay";
+
+const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
+const PAYMENT_AMOUNT = 50;
 
 const META: Record<Platform, { title: string; subtitle: string; color: string; emoji: string; defaultPhone: string }> = {
   spotify: {
@@ -34,9 +36,14 @@ const VerifyClaim = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [platform, setPlatform] = useState<Platform | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [paymentPhone, setPaymentPhone] = useState("");
+
+  // two-step flow: "form" | "payment"
+  const [step, setStep] = useState<"form" | "payment">("form");
 
   const [form, setForm] = useState({
     artistName: "",
@@ -58,6 +65,19 @@ const VerifyClaim = () => {
       }
       setUser(session.user);
       setForm((f) => ({ ...f, email: session.user.email || "" }));
+
+      // pre-fill payment phone from profile if available
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single()
+        .then(({ data: profileData }) => {
+          setProfile(profileData);
+          if (profileData?.phone_number) {
+            setPaymentPhone(profileData.phone_number);
+          }
+        });
     });
   }, [navigate]);
 
@@ -65,9 +85,11 @@ const VerifyClaim = () => {
     setPlatform(p);
     setForm((f) => ({ ...f, phone: META[p].defaultPhone }));
     setSubmitted(false);
+    setStep("form");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1: validate form, advance to payment
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !platform) return;
 
@@ -88,39 +110,118 @@ const VerifyClaim = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${platform}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("verification-screenshots")
-        .upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
+    setStep("payment");
+  };
 
-      const { error: insErr } = await supabase.from("artist_verifications").insert({
-        user_id: user.id,
-        platform,
-        artist_name: form.artistName,
-        legal_name: form.legalName,
-        platform_email: form.email,
-        payment_phone_number: form.phone,
-        distributor_name: form.distributor,
-        spotify_url: platform === "spotify" ? form.spotifyUrl : null,
-        instagram_url: form.socialUrl,
-        additional_notes: form.notes || null,
-        screenshot_url: path,
-        status: "pending",
-        payment_status: "not_required",
-      // FIX: Removed `as any` — suppressed TypeScript on the insert payload
+  // Step 2: upload files + insert record after payment succeeds
+  const submitVerification = async (transactionId: string, paymentStatus: "verified" | "pending") => {
+    const ext = file!.name.split(".").pop();
+    const path = `${user.id}/${platform}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("verification-screenshots")
+      .upload(path, file!, { upsert: false });
+    if (upErr) throw upErr;
+
+    const { error: insErr } = await supabase.from("artist_verifications").insert({
+      user_id: user.id,
+      platform,
+      artist_name: form.artistName,
+      legal_name: form.legalName,
+      platform_email: form.email,
+      payment_phone_number: form.phone,
+      distributor_name: form.distributor,
+      spotify_url: platform === "spotify" ? form.spotifyUrl : null,
+      instagram_url: form.socialUrl,
+      additional_notes: form.notes || null,
+      screenshot_url: path,
+      status: "pending",
+      payment_status: paymentStatus === "verified" ? "paid" : "pending",
+    });
+    if (insErr) throw insErr;
+
+    // Record the payment
+    await supabase.from("release_payments").insert({
+      user_id: user.id,
+      amount: PAYMENT_AMOUNT,
+      payment_method: "lenco_inline",
+      phone_number: paymentPhone,
+      transaction_id: transactionId,
+      status: paymentStatus,
+      verified_at: paymentStatus === "verified" ? new Date().toISOString() : null,
+    });
+
+    setSubmitted(true);
+  };
+
+  // Step 2: trigger Lenco payment
+  const handlePayment = () => {
+    if (!paymentPhone.trim()) {
+      toast({
+        title: "Phone number required",
+        description: "Please enter your phone number before proceeding.",
+        variant: "destructive",
       });
-      if (insErr) throw insErr;
-
-      setSubmitted(true);
-    } catch (err: any) {
-      toast({ title: "Submission failed", description: err.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
+      return;
     }
+
+    if (typeof LencoPay === "undefined") {
+      toast({
+        title: "Error",
+        description: "Payment system is loading. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    const reference = `verification-${user.id}-${Date.now()}`;
+
+    LencoPay.getPaid({
+      key: LENCO_PUBLIC_KEY,
+      reference,
+      email: user.email,
+      amount: PAYMENT_AMOUNT,
+      currency: "ZMW",
+      channels: ["card", "mobile-money"],
+      customer: {
+        firstName: profile?.full_name?.split(" ")[0] || "Customer",
+        lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
+        phone: paymentPhone,
+      },
+      onSuccess: async (response) => {
+        try {
+          await submitVerification(response.reference, "verified");
+          toast({
+            title: "Payment Successful!",
+            description: "Your verification request has been submitted.",
+          });
+        } catch (err: any) {
+          toast({ title: "Submission failed", description: err.message, variant: "destructive" });
+        } finally {
+          setLoading(false);
+        }
+      },
+      onClose: () => {
+        setLoading(false);
+        toast({
+          title: "Payment Cancelled",
+          description: "You closed the payment window. No charge was made.",
+        });
+      },
+      onConfirmationPending: async () => {
+        try {
+          await submitVerification(reference, "pending");
+          toast({
+            title: "Payment Submitted!",
+            description: "Your payment will be verified shortly.",
+          });
+        } catch (err: any) {
+          toast({ title: "Submission failed", description: err.message, variant: "destructive" });
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   if (submitted) {
@@ -175,6 +276,74 @@ const VerifyClaim = () => {
     );
   }
 
+  // Payment step
+  if (step === "payment") {
+    return (
+      <div className="min-h-screen bg-gradient-hero">
+        <Navbar user={user} />
+        <div className="container mx-auto px-4 pt-24 pb-12">
+          <div className="max-w-lg mx-auto">
+            <Button variant="ghost" onClick={() => setStep("form")} className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to form
+            </Button>
+            <Card className="shadow-card">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Artist Verification Payment</CardTitle>
+                <CardDescription className="text-3xl font-bold text-foreground mt-2">
+                  K{PAYMENT_AMOUNT}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="paymentPhone" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    Phone Number
+                  </Label>
+                  <Input
+                    id="paymentPhone"
+                    type="tel"
+                    placeholder="e.g. 0971234567"
+                    value={paymentPhone}
+                    onChange={(e) => setPaymentPhone(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the phone number associated with your mobile money account.
+                  </p>
+                </div>
+
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+                  <h3 className="font-semibold mb-2 text-primary">Secure Checkout</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Pay securely via Mobile Money or Card. Click the button below to open the payment window.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handlePayment}
+                  className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold py-6 text-lg"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="mr-2 h-5 w-5" />
+                      Pay K{PAYMENT_AMOUNT}
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Form step
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
@@ -190,7 +359,7 @@ const VerifyClaim = () => {
             <CardDescription>{META[platform].subtitle}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleFormSubmit} className="space-y-4">
               <div>
                 <Label>Artist Name (as it appears on {platform === "spotify" ? "Spotify" : "Boomplay"}) *</Label>
                 <Input value={form.artistName} onChange={(e) => setForm({ ...form, artistName: e.target.value })} required />
@@ -249,9 +418,8 @@ const VerifyClaim = () => {
                 <Label>Additional Notes (optional)</Label>
                 <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
-              <Button type="submit" variant="hero" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Submit {platform === "spotify" ? "Spotify" : "Boomplay"} Verification
+              <Button type="submit" variant="hero" className="w-full">
+                Continue to Payment (K{PAYMENT_AMOUNT})
               </Button>
             </form>
           </CardContent>
