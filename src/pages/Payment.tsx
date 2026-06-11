@@ -1,178 +1,282 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Loader2, Phone, Zap } from "lucide-react";
+
 import { Navbar } from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Zap, Phone } from "lucide-react";
 
-// Declaring LencoPay on the window object to handle TypeScript errors cleanly
+import type { User } from "@supabase/supabase-js";
+
 declare global {
   interface Window {
     LencoPay?: {
-      getPaid: (config: any) => void;
+      getPaid: (config: Record<string, any>) => void;
     };
   }
 }
 
-const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
+const LENCO_PUBLIC_KEY =
+  import.meta.env.VITE_LENCO_PUBLIC_KEY ||
+  "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
-const Payment = () => {
+const PAYMENT_AMOUNT = 50;
+
+interface Profile {
+  id: string;
+  full_name?: string;
+  phone_number?: string;
+}
+
+export default function Payment() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const paymentType = searchParams.get("type") || "release";
   const releaseId = searchParams.get("releaseId");
 
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const paymentLabel =
+    paymentType === "verification"
+      ? "Artist Verification"
+      : "Release Upload";
+
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  const paymentAmount = 50;
-  const paymentLabel = paymentType === "verification" ? "Artist Verification" : "Release Upload";
+  const [initializing, setInitializing] = useState(true);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    checkUser();
+    initializePage();
   }, []);
 
-  const checkUser = async () => {
+  async function initializePage() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session?.user) {
         navigate("/auth");
         return;
       }
+
       setUser(session.user);
 
-      const { data: profileData } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      setProfile(profileData);
-      if (profileData?.phone_number) {
-        setPhoneNumber(profileData.phone_number);
+      if (error) throw error;
+
+      setProfile(data);
+
+      if (data?.phone_number) {
+        setPhoneNumber(data.phone_number);
       }
     } catch (error) {
-      console.error("Error during authentication check:", error);
-    }
-  };
+      console.error(error);
 
-  const savePaymentAndRedirect = async (transactionId: string, status: "verified" | "pending") => {
-    const { error: dbError } = await supabase.from("release_payments").insert({
-      user_id: user.id,
-      amount: paymentAmount,
-      payment_method: "lenco_inline",
-      phone_number: phoneNumber,
-      transaction_id: transactionId,
-      status,
-      verified_at: status === "verified" ? new Date().toISOString() : null,
-    });
-
-    if (dbError) {
-      console.error("Database error:", dbError);
-    }
-
-    // For release payments, flip the saved release from 'unpaid' to 'pending'
-    if (paymentType === "release" && releaseId) {
-      const { error: releaseErr } = await supabase
-        .from("music_releases")
-        .update({ status: "pending" })
-        .eq("id", releaseId)
-        .eq("user_id", user.id);
-        
-      if (releaseErr) {
-        console.error("Failed to update release status:", releaseErr);
-        toast({
-          title: "Release status update failed",
-          description: "Payment recorded, but we couldn't mark your release as pending. Contact support.",
-          variant: "destructive",
-        });
-      }
-    }
-
-    toast({
-      title: status === "verified" ? "Payment Successful!" : "Payment Submitted!",
-      description: status === "verified"
-        ? "Your release is now pending review. Redirecting..."
-        : "Your payment will be verified shortly. Redirecting...",
-    });
-
-    if (paymentType === "verification") {
-      sessionStorage.setItem("pendingVerificationPayment", "completed");
-      navigate("/verify");
-    } else {
-      navigate("/dashboard");
-    }
-  };
-
-  const handlePayment = () => {
-    if (!phoneNumber.trim()) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your phone number before proceeding.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (typeof window.LencoPay === "undefined") {
       toast({
         title: "Error",
-        description: "Payment system is loading. Please try again.",
+        description: "Failed to load account information.",
+        variant: "destructive",
+      });
+    } finally {
+      setInitializing(false);
+    }
+  }
+
+  function validatePhone(phone: string) {
+    const zambiaPhoneRegex = /^(?:\+260|0)?(95|96|97|76|77)\d{7}$/;
+    return zambiaPhoneRegex.test(phone);
+  }
+
+  async function savePayment(
+    transactionId: string,
+    status: "verified" | "pending"
+  ) {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("release_payments")
+      .insert({
+        user_id: user.id,
+        amount: PAYMENT_AMOUNT,
+        payment_method: "lenco_inline",
+        phone_number: phoneNumber,
+        transaction_id: transactionId,
+        status,
+        verified_at:
+          status === "verified"
+            ? new Date().toISOString()
+            : null,
+      });
+
+    if (error) throw error;
+  }
+
+  async function updateReleaseStatus() {
+    if (!releaseId || !user) return;
+
+    const { error } = await supabase
+      .from("music_releases")
+      .update({
+        status: "pending",
+      })
+      .eq("id", releaseId)
+      .eq("user_id", user.id)
+      .eq("status", "unpaid");
+
+    if (error) {
+      console.error(error);
+    }
+  }
+
+  async function handlePaymentSuccess(
+    transactionId: string,
+    status: "verified" | "pending"
+  ) {
+    try {
+      await savePayment(transactionId, status);
+
+      if (paymentType === "release") {
+        await updateReleaseStatus();
+      }
+
+      toast({
+        title:
+          status === "verified"
+            ? "Payment Successful"
+            : "Payment Submitted",
+        description:
+          status === "verified"
+            ? "Your release is pending review."
+            : "Payment confirmation is pending.",
+      });
+
+      if (paymentType === "verification") {
+        sessionStorage.setItem(
+          "pendingVerificationPayment",
+          "completed"
+        );
+
+        navigate("/verify");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+
+      toast({
+        title: "Error",
+        description: "Failed to save payment information.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  function handlePayment() {
+    if (processing) return;
+
+    if (!user) return;
+
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "Phone Number Required",
+        description: "Please enter your mobile money number.",
         variant: "destructive",
       });
       return;
     }
 
-    setLoading(true);
-    const reference = `${paymentType}-${user.id}-${Date.now()}`;
+    if (!validatePhone(phoneNumber)) {
+      toast({
+        title: "Invalid Phone Number",
+        description:
+          "Please enter a valid Zambian mobile number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!window.LencoPay) {
+      toast({
+        title: "Payment System Not Ready",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProcessing(true);
+
+    const reference = `${paymentType}-${crypto.randomUUID()}`;
 
     window.LencoPay.getPaid({
       key: LENCO_PUBLIC_KEY,
       reference,
-      email: user.email,
-      amount: paymentAmount,
+      amount: PAYMENT_AMOUNT,
       currency: "ZMW",
+      email: user.email,
+
       channels: ["card", "mobile-money"],
+
       customer: {
-        firstName: profile?.full_name?.split(" ")[0] || "Customer",
-        lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
+        firstName:
+          profile?.full_name?.split(" ")[0] || "Customer",
+
+        lastName:
+          profile?.full_name?.split(" ").slice(1).join(" ") || "",
+
         phone: phoneNumber,
       },
+
       onSuccess: async (response: any) => {
-        try {
-          await savePaymentAndRedirect(response.reference, "verified");
-        } catch (error) {
-          console.error("Error saving successful payment:", error);
-        } finally {
-          setLoading(false);
-        }
+        await handlePaymentSuccess(
+          response.reference,
+          "verified"
+        );
+
+        setProcessing(false);
       },
+
+      onConfirmationPending: async () => {
+        await handlePaymentSuccess(
+          reference,
+          "pending"
+        );
+
+        setProcessing(false);
+      },
+
       onClose: () => {
-        setLoading(false);
+        setProcessing(false);
+
         toast({
           title: "Payment Cancelled",
-          description: "You closed the payment window. No charge was made.",
+          description:
+            "The payment window was closed.",
         });
       },
-      onConfirmationPending: async () => {
-        try {
-          await savePaymentAndRedirect(reference, "pending");
-        } catch (error) {
-          console.error("Error saving pending payment:", error);
-        } finally {
-          setLoading(false);
-        }
-      },
     });
-  };
+  }
 
-  if (!user) {
+  if (initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -183,46 +287,63 @@ const Payment = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
+
       <div className="container mx-auto px-4 pt-24 pb-12">
         <div className="max-w-lg mx-auto">
           <Card className="shadow-card">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">{paymentLabel} Payment</CardTitle>
-              <CardDescription className="text-3xl font-bold text-foreground mt-2">
-                K{paymentAmount}
+              <CardTitle className="text-2xl">
+                {paymentLabel} Payment
+              </CardTitle>
+
+              <CardDescription className="text-3xl font-bold mt-2">
+                K{PAYMENT_AMOUNT}
               </CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2">
+                <Label
+                  htmlFor="phone"
+                  className="flex items-center gap-2"
+                >
                   <Phone className="h-4 w-4" />
                   Phone Number
                 </Label>
+
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="e.g. 0971234567"
+                  placeholder="0971234567"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e) =>
+                    setPhoneNumber(e.target.value)
+                  }
                 />
+
                 <p className="text-xs text-muted-foreground">
-                  Enter the phone number associated with your mobile money account.
+                  Enter the number linked to your
+                  mobile money account.
                 </p>
               </div>
 
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                <h3 className="font-semibold mb-2 text-primary">Secure Checkout</h3>
+                <h3 className="font-semibold text-primary mb-2">
+                  Secure Checkout
+                </h3>
+
                 <p className="text-sm text-muted-foreground">
-                  Pay securely via Mobile Money or Card. Click the button below to open the payment window.
+                  Pay securely using Mobile Money
+                  or Card.
                 </p>
               </div>
 
               <Button
+                className="w-full py-6 text-lg"
+                disabled={processing}
                 onClick={handlePayment}
-                className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold py-6 text-lg"
-                disabled={loading}
               >
-                {loading ? (
+                {processing ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Processing...
@@ -230,7 +351,7 @@ const Payment = () => {
                 ) : (
                   <>
                     <Zap className="mr-2 h-5 w-5" />
-                    Pay K{paymentAmount}
+                    Pay K{PAYMENT_AMOUNT}
                   </>
                 )}
               </Button>
@@ -240,6 +361,4 @@ const Payment = () => {
       </div>
     </div>
   );
-};
-
-export default Payment;
+}
