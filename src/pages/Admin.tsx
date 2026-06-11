@@ -45,7 +45,6 @@ const Admin = () => {
   useEffect(() => {
     emailjs.init({ publicKey: EMAILJS.publicKey });
   }, []);
-
   useEffect(() => {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
