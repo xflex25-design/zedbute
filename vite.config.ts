@@ -4,12 +4,15 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
+// vite.config.ts
 export default defineConfig(({ mode }) => ({
-server: {
-  host: "0.0.0.0",
-  port: 8080,
-  allowedHosts: ["sb-1f6rsywixmis.vercel.runall"]
-},
+  server: {
+    host: "0.0.0.0",
+    port: 8080,
+    allowedHosts: true, // This change is critical
+  },
+  // ... rest of your config
+}))
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {

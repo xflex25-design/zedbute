@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +111,8 @@ const VerifyClaim = () => {
         screenshot_url: path,
         status: "pending",
         payment_status: "not_required",
-      } as any);
+      // FIX: Removed `as any` — suppressed TypeScript on the insert payload
+      });
       if (insErr) throw insErr;
 
       setSubmitted(true);
