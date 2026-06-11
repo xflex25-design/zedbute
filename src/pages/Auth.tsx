@@ -1,6 +1,3 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +39,28 @@ useEffect(() => {
       navigate("/dashboard");
     }
   });
-
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        navigate("/dashboard");
+      }
+    };
+    checkUser();
+  }, [navigate]);
+useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setResetStep("set_new_password");
+        } else if (event === "SIGNED_IN" && session) {
+          navigate("/dashboard");
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+=======
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_IN" && session) {
       navigate("/dashboard");
@@ -54,6 +72,7 @@ useEffect(() => {
 
   return () => subscription.unsubscribe();
 }, [navigate]);
+>>>>>>> b6fc6ea5333095834950881d2e0992f53e9fe695
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
     if (val && !val.startsWith("+") && /^\d/.test(val)) {
@@ -521,5 +540,12 @@ if (error) {
     </div>
   );
 };
+<<<<<<< HEAD
+
+export default Auth;import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+=======
 export default Auth;
+>>>>>>> b6fc6ea5333095834950881d2e0992f53e9fe695
 
