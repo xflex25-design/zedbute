@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Zap, Phone } from "lucide-react";
-// FIX 1: Removed unused `import { promise } from "zod"` — not a valid export for this usage
+
+// FIX: Declare LencoPay globally to resolve TypeScript "Cannot find name 'LencoPay'" compilation error
+declare global {
+  const LencoPay: any;
+}
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
@@ -131,10 +135,7 @@ const Payment = () => {
         lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
         phone: phoneNumber,
       },
-      // FIX 2: Wrapped in try/finally so setLoading(false) always runs even if savePaymentAndRedirect throws.
-      // FIX 3 (same block): Removed dead `await new Promise(res=>setTimeout(res,300))` — navigation
-      //        was already triggered by savePaymentAndRedirect before it ran.
-      onSuccess: async (response) => {
+      onSuccess: async (response: any) => {
         try {
           await savePaymentAndRedirect(response.reference, "verified");
         } finally {
@@ -148,7 +149,6 @@ const Payment = () => {
           description: "You closed the payment window. No charge was made.",
         });
       },
-      // FIX 4: Added `await` so errors from savePaymentAndRedirect aren't silently swallowed.
       onConfirmationPending: async () => {
         try {
           await savePaymentAndRedirect(reference, "pending");
