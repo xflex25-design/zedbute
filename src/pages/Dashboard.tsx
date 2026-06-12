@@ -1,3 +1,4 @@
+
 type Range = "7d" | "30d" | "12m";
 
 // Mock stat cards data
@@ -44,6 +45,15 @@ const DATA_7D = [
   { label: "Sun", streams: 157 },
 ];
 
+// Mock releases data with Zambian artist names
+const MOCK_RELEASES = [
+  { id: "1", title: "Location", artist: "Yo Maps", type: "Single", releaseDate: "2026-05-15", platforms: "Spotify, Apple Music, Boomplay", streams: 4523, cover: "https://images.unsplash.com/photo-1493225457124-a321fcb1b455?w=100&h=100&fit=crop", status: "Live" },
+  { id: "2", title: "Bon Appétit", artist: "Chef 187", type: "EP", releaseDate: "2026-04-20", platforms: "Spotify, Apple Music, YouTube Music", streams: 3891, cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop", status: "Live" },
+  { id: "3", title: "King Cobra", artist: "Slapdee", type: "Album", releaseDate: "2026-06-01", platforms: "Spotify, Apple Music, Boomplay, Deezer", streams: 2156, cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b645?w=100&h=100&fit=crop", status: "Processing" },
+  { id: "4", title: "Money Maker", artist: "Macky 2", type: "Single", releaseDate: "2026-05-28", platforms: "Spotify, Apple Music", streams: 1872, cover: "https://images.unsplash.com/photo-1459749411175-04bf5ebc9e38?w=100&h=100&fit=crop", status: "Pending" },
+  { id: "5", title: "Mr. Tay", artist: "Tay Grin", type: "Single", releaseDate: "2026-06-05", platforms: "Spotify, Boomplay, YouTube Music", streams: 405, cover: "https://images.unsplash.com/photo-1504898770365-14f4f50d6dd4?w=100&h=100&fit=crop", status: "Pending" },
+];
+
 const statusVariant = (status: string) => {
   switch (status) {
     case "Live":
@@ -60,8 +70,6 @@ const statusVariant = (status: string) => {
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
-  const [releases, setReleases] = useState<any[]>([]);
-  const [releasesLoading, setReleasesLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<Range>("12m");
   const navigate = useNavigate();
@@ -77,15 +85,6 @@ const Dashboard = () => {
           setProfile(data);
           setLoading(false);
         });
-        supabase
-          .from("releases")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false })
-          .then(({ data }) => {
-            setReleases(data ?? []);
-            setReleasesLoading(false);
-          });
       } else {
         setLoading(false);
         navigate("/auth");
@@ -129,7 +128,6 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-7xl">
-
         {/* Welcome header */}
         <div className="mb-6">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">
@@ -140,46 +138,16 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Action prompt — Upload or Claim */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {/* Upload a Release */}
-          <button
-            onClick={() => navigate("/upload-release")}
-            className="group relative overflow-hidden rounded-xl border border-primary/30 bg-primary/5 p-5 text-left transition-all hover:bg-primary/10 hover:border-primary/60 hover:shadow-glow focus:outline-none"
-          >
-            <div className="flex items-start gap-4">
-              <div className="h-11 w-11 shrink-0 rounded-lg bg-primary/15 flex items-center justify-center group-hover:bg-primary/25 transition-colors">
-                <Upload className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-bold text-base leading-tight">Upload a Release</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Distribute a new single, EP, or album to streaming platforms.
-                </p>
-              </div>
-            </div>
-          </button>
+        {/* Hero CTA - Create Artist */}
+        <Button
+          onClick={() => navigate("/verify-claim")}
+          className="w-full mb-8 rounded-xl bg-gradient-primary px-6 py-5 text-base sm:text-lg font-bold text-primary-foreground shadow-glow hover:opacity-95 transition-opacity flex items-center justify-center gap-2"
+        >
+          <Plus className="h-5 w-5" />
+          Create Artist
+        </Button>
 
-          {/* Claim / Verify Artist */}
-          <button
-            onClick={() => navigate("/verify-claim")}
-            className="group relative overflow-hidden rounded-xl border border-secondary/30 bg-secondary/5 p-5 text-left transition-all hover:bg-secondary/10 hover:border-secondary/60 hover:shadow-md focus:outline-none"
-          >
-            <div className="flex items-start gap-4">
-              <div className="h-11 w-11 shrink-0 rounded-lg bg-secondary/15 flex items-center justify-center group-hover:bg-secondary/25 transition-colors">
-                <BadgeCheck className="h-5 w-5 text-secondary" />
-              </div>
-              <div>
-                <p className="font-bold text-base leading-tight">Claim Artist Profile</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Already on streaming platforms? Verify and take ownership of your profile.
-                </p>
-              </div>
-            </div>
-          </button>
-        </div>
-
-        {/* Stat cards */}
+        {/* Stat cards - 4 cards with alternating primary/secondary accents */}
         <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto sm:overflow-visible">
           <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-max sm:min-w-0">
             {[
@@ -259,8 +227,19 @@ const Dashboard = () => {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                  <XAxis
+                    dataKey="label"
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <Tooltip
                     contentStyle={{
                       background: "hsl(var(--popover))",
@@ -269,7 +248,13 @@ const Dashboard = () => {
                       color: "hsl(var(--popover-foreground))",
                     }}
                   />
-                  <Area type="monotone" dataKey="streams" stroke="url(#streamLine)" strokeWidth={3} fill="url(#streamFill)" />
+                  <Area
+                    type="monotone"
+                    dataKey="streams"
+                    stroke="url(#streamLine)"
+                    strokeWidth={3}
+                    fill="url(#streamFill)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -290,110 +275,78 @@ const Dashboard = () => {
               </Button>
             </div>
 
-            {releasesLoading ? (
-              <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
-                Loading releases...
-              </div>
-            ) : releases.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center gap-4">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Disc className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <p className="font-semibold text-base">No releases yet</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Upload your first release to get started.
-                  </p>
-                </div>
-                <Button variant="hero" size="sm" onClick={() => navigate("/upload-release")}>
-                  <Plus className="h-4 w-4" />
-                  Upload Release
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Desktop: Table */}
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cover</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Release Date</TableHead>
-                        <TableHead>Platforms</TableHead>
-                        <TableHead className="text-right">Streams</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {releases.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell>
-                            {r.cover_url ? (
-                              <img src={r.cover_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
-                            ) : (
-                              <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                                <Disc className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <p className="font-medium">{r.title}</p>
-                            <p className="text-xs text-muted-foreground">{r.artist}</p>
-                          </TableCell>
-                          <TableCell><Badge variant="outline">{r.type}</Badge></TableCell>
-                          <TableCell>{r.release_date}</TableCell>
-                          <TableCell className="text-xs">{r.platforms}</TableCell>
-                          <TableCell className="text-right font-medium">{(r.streams ?? 0).toLocaleString()}</TableCell>
-                          <TableCell><Badge className={statusVariant(r.status)}>{r.status}</Badge></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Mobile: Cards */}
-                <div className="md:hidden space-y-4">
-                  {releases.map((r) => (
-                    <div key={r.id} className="rounded-lg border border-border bg-background p-4 space-y-3">
-                      <div className="flex items-start gap-3">
-                        {r.cover_url ? (
-                          <img src={r.cover_url} alt={r.title} className="w-14 h-14 rounded object-cover shrink-0" />
-                        ) : (
-                          <div className="w-14 h-14 rounded bg-muted flex items-center justify-center shrink-0">
-                            <Disc className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">{r.title}</p>
-                          <p className="text-sm text-muted-foreground">{r.artist}</p>
-                        </div>
+            {/* Desktop: Table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cover</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Release Date</TableHead>
+                    <TableHead>Platforms</TableHead>
+                    <TableHead className="text-right">Streams</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_RELEASES.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <img src={r.cover} alt={r.title} className="w-10 h-10 rounded object-cover" />
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium">{r.title}</p>
+                        <p className="text-xs text-muted-foreground">{r.artist}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{r.type}</Badge>
+                      </TableCell>
+                      <TableCell>{r.releaseDate}</TableCell>
+                      <TableCell className="text-xs">{r.platforms}</TableCell>
+                      <TableCell className="text-right font-medium">{r.streams.toLocaleString()}</TableCell>
+                      <TableCell>
                         <Badge className={statusVariant(r.status)}>{r.status}</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Type</p>
-                          <p className="font-medium">{r.type}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Release Date</p>
-                          <p className="font-medium">{r.release_date}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <p className="text-muted-foreground">Platforms</p>
-                          <p className="font-medium text-xs">{r.platforms}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Streams</p>
-                          <p className="font-medium">{(r.streams ?? 0).toLocaleString()}</p>
-                        </div>
-                      </div>
-                    </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile: Cards */}
+            <div className="md:hidden space-y-4">
+              {MOCK_RELEASES.map((r) => (
+                <div key={r.id} className="rounded-lg border border-border bg-background p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <img src={r.cover} alt={r.title} className="w-14 h-14 rounded object-cover shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{r.title}</p>
+                      <p className="text-sm text-muted-foreground">{r.artist}</p>
+                    </div>
+                    <Badge className={statusVariant(r.status)}>{r.status}</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Type</p>
+                      <p className="font-medium">{r.type}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Release Date</p>
+                      <p className="font-medium">{r.releaseDate}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-muted-foreground">Platforms</p>
+                      <p className="font-medium text-xs">{r.platforms}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Streams</p>
+                      <p className="font-medium">{r.streams.toLocaleString()}</p>
+                    </div>
+                  </div>
                 </div>
-              </>
-            )}
+              ))}
+            </div>
           </div>
         </Card>
       </div>
