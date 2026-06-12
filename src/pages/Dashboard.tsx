@@ -1,4 +1,3 @@
-
 type Range = "7d" | "30d" | "12m";
 
 // Mock stat cards data
