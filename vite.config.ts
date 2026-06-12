@@ -4,6 +4,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Expose both VITE_ and NEXT_PUBLIC_ prefixed env vars to the client.
+  // This project's Supabase/public env vars use the NEXT_PUBLIC_ prefix.
+  // NOTE: never add a prefix that would leak server-only secrets (e.g. SUPABASE_SERVICE_ROLE_KEY).
+  envPrefix: ["VITE_", "NEXT_PUBLIC_"],
   server: {
     host: "0.0.0.0",
     port: 8080,
