@@ -156,16 +156,15 @@ const Index = () => {
 
         {/* Artists We've Worked With */}
 {[
-  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP ", artist: "Emcee zm" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP", artist: "Emcee zm" },
   { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
-  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "birthday to you", artist: "Bambiwamafruities" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "Birthday to You", artist: "Bambiwamafruities" },
   { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
-  { src: "", title: "BARS AFTER BARS", artist: "Dope suvage" }, // this one is for y
-  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP ", artist: "Emcee zm" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP", artist: "Emcee zm" },
   { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
-  { src: "/images/rockners.jpg", title: "birthday to you", artist: "Bambiwamafruities" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "Birthday to You", artist: "Bambiwamafruities" }, // only works if you have this locally
   { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
-  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260613-WA0107.jpg", title: "BARS AFTER BARS", artist: "Dope suvage" }, // this one is for you
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260613-WA0107.jpg", title: "Bars After Bars", artist: "Dope suvage" }
 ].map((a, index) => (
   <div
     key={index}
