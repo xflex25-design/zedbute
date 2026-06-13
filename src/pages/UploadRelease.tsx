@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -402,8 +403,9 @@ const UploadRelease = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Navbar user={user} />
+      <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
