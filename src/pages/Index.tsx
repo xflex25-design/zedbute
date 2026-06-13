@@ -155,46 +155,32 @@ const Index = () => {
         </section>
 
         {/* Artists We've Worked With */}
-   {/* Artists We've Worked With */}
-<section className="py-12 sm:py-16 lg:py-20 px-4 bg-background">
-  <div className="container mx-auto">
-    <div className="text-center mb-10">
-      <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3">
-        Artists We've Worked With
-      </h2>
-      <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-        Real Zambian releases distributed worldwide through ZedBute
-      </p>
+{[
+  { src: "/images/mpakaFye.jpg", title: "Mpaka Fye", artist: "Emi ft Sensedanger" },
+  { src: "/images/youAreHoly.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
+  { src: "/images/rockners.jpg", title: "Rockner's Music Vibe", artist: "Rockner" },
+  { src: "/images/iceFamZm.jpg", title: "Ice Fam ZM", artist: "Ice Fam" },
+  { src: "/images/zedbute.jpg", title: "ZedBute Showcase", artist: "Zed Bute" }, // this one is for you
+].map((a, index) => (
+  <div
+    key={index}
+    className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-shadow"
+  >
+    <div className="aspect-square overflow-hidden bg-muted">
+      <img
+        src={a.src}
+        alt={`${a.title} by ${a.artist} – distributed by ZedBute`}
+        loading="lazy"
+        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+      />
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-      {[
-        { src: "", title: "", artist: "" },
-        { src: "", title: "", artist: "" },
-        { src: "", title: "", artist: "" },
-        { src: "", title: "", artist: "" },
-        { src: "", title: "", artist: "" }, // this one is for you
-      ].map((a) => (
-        <div
-          key={a.title}
-          className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-shadow"
-        >
-          <div className="aspect-square overflow-hidden bg-muted">
-            <img
-              src={a.src}
-              alt={`${a.title} by ${a.artist} – distributed by ZedBute`}
-              loading="lazy"
-              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          </div>
-          <div className="p-4 bg-card">
-            <p className="font-bold text-lg">{a.title}</p>
-            <p className="text-sm text-muted-foreground">{a.artist}</p>
-          </div>
-        </div>
-      ))}
+    <div className="p-4 bg-card">
+      <p className="font-bold text-lg">{a.title}</p>
+      <p className="text-sm text-muted-foreground">{a.artist}</p>
     </div>
   </div>
-</section>
+))}
+
 
         </section>
 
