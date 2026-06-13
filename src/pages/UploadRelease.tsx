@@ -56,7 +56,10 @@ const UploadRelease = () => {
   const [validatingImage, setValidatingImage] = useState(false);
   const [showReattachPrompt, setShowReattachPrompt] = useState(false);
   const [previousFileName, setPreviousFileName] = useState<string | null>(null);
+  const [savedAudioFileName, setSavedAudioFileName] = useState<string | null>(null);
+  const coverScrollRef = useRef<HTMLDivElement>(null);
   const coverArtRef = useRef<HTMLInputElement>(null);
+  const audioScrollRef = useRef<HTMLDivElement>(null);
   const audioFileRef = useRef<HTMLInputElement>(null);
 
   // Ref to track interval for cleanup
@@ -94,18 +97,17 @@ const UploadRelease = () => {
 
     if (pendingPayment === "completed") {
       sessionStorage.removeItem("pendingReleasePayment");
-      // Show re-attach prompt if file names were saved but files are missing
       if (savedCoverName || savedAudioName) {
         setShowReattachPrompt(true);
         setPreviousFileName(savedCoverName);
+        setSavedAudioFileName(savedAudioName);
         toast({
           title: "Re-attach your files",
           description: "Please re-upload your cover art and audio file to complete your release.",
           variant: "default",
         });
-        // Scroll to upload section
         setTimeout(() => {
-          coverArtRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          coverScrollRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         }, 100);
       }
     }
@@ -568,7 +570,7 @@ const UploadRelease = () => {
                   Cover Art *
                   <span className="text-xs text-muted-foreground font-normal">(Required: 3000 x 3000 pixels)</span>
                 </Label>
-                <div ref={coverArtRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {imagePreview ? (
                     <div className="space-y-4">
                       <img
@@ -630,7 +632,7 @@ const UploadRelease = () => {
               {/* Audio File */}
               <div className="space-y-3">
                 <Label htmlFor="audioFile">Music Audio File *</Label>
-                <div ref={audioFileRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <div ref={audioScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {formData.audioFile ? (
                     <div className="space-y-4">
                       <Music className="mx-auto h-12 w-12 text-primary" />
@@ -656,6 +658,7 @@ const UploadRelease = () => {
                         onClick={() => {
                           setFormData({ ...formData, audioFile: null });
                           sessionStorage.removeItem("pendingAudioFileName");
+                          setSavedAudioFileName(null);
                         }}
                         disabled={isUploadingAudio}
                       >
@@ -664,9 +667,9 @@ const UploadRelease = () => {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {showReattachPrompt && sessionStorage.getItem("pendingAudioFileName") && (
+                      {showReattachPrompt && savedAudioFileName && (
                         <p className="text-sm text-primary font-medium">
-                          Please re-attach: {sessionStorage.getItem("pendingAudioFileName")}
+                          Please re-attach: {savedAudioFileName}
                         </p>
                       )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />

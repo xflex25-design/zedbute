@@ -21,25 +21,43 @@ import {
   Upload,
 } from "lucide-react";
 
-// Mock releases data
-const MOCK_RELEASES = [
-  { id: "1", title: "Location", artist: "Yo Maps", type: "Single", releaseDate: "2026-05-15", platforms: "Spotify, Apple Music, Boomplay", streams: 4523, cover: "https://images.unsplash.com/photo-1493225457124-a321fcb1b455?w=100&h=100&fit=crop", status: "Live" },
-  { id: "2", title: "Bon Appétit", artist: "Chef 187", type: "EP", releaseDate: "2026-04-20", platforms: "Spotify, Apple Music, YouTube Music", streams: 3891, cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&h=100&fit=crop", status: "Live" },
-  { id: "3", title: "King Cobra", artist: "Slapdee", type: "Album", releaseDate: "2026-06-01", platforms: "Spotify, Apple Music, Boomplay, Deezer", streams: 2156, cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b645?w=100&h=100&fit=crop", status: "Processing" },
-  { id: "4", title: "Money Maker", artist: "Macky 2", type: "Single", releaseDate: "2026-05-28", platforms: "Spotify, Apple Music", streams: 1872, cover: "https://images.unsplash.com/photo-1459749411175-04bf5ebc9e38?w=100&h=100&fit=crop", status: "Pending" },
-  { id: "5", title: "Mr. Tay", artist: "Tay Grin", type: "Single", releaseDate: "2026-06-05", platforms: "Spotify, Boomplay, YouTube Music", streams: 405, cover: "https://images.unsplash.com/photo-1504898770365-14f4f50d6dd4?w=100&h=100&fit=crop", status: "Pending" },
-];
+type Release = {
+  id: string;
+  title: string;
+  artist_name: string;
+  release_type: string | null;
+  release_date: string | null;
+  cover_art_url: string | null;
+  status: string | null;
+  genre: string | null;
+};
 
-const statusVariant = (status: string) => {
+const statusVariant = (status: string | null) => {
   switch (status) {
-    case "Live":
+    case "live":
+    case "distributed":
       return "bg-green-500/15 text-green-600 border-green-500/30";
-    case "Processing":
+    case "processing":
       return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
-    case "Pending":
-      return "bg-gray-500/15 text-gray-600 border-gray-500/30";
+    case "unpaid":
+    case "pending":
+      return "bg-gray-500/15 text-gray-500 border-gray-500/30";
+    case "rejected":
+      return "bg-red-500/15 text-red-600 border-red-500/30";
     default:
       return "bg-muted text-muted-foreground border-border";
+  }
+};
+
+const statusLabel = (status: string | null) => {
+  switch (status) {
+    case "live": return "Live";
+    case "distributed": return "Distributed";
+    case "processing": return "Processing";
+    case "unpaid": return "Unpaid";
+    case "pending": return "Pending";
+    case "rejected": return "Rejected";
+    default: return status ?? "Unknown";
   }
 };
 
@@ -60,8 +78,30 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
+  const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const fetchUserData = async (userId: string) => {
+    const [{ data: profileData }, { data: verificationData }, { data: releasesData }] =
+      await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase
+          .from("artist_verifications")
+          .select("status, artist_name")
+          .eq("user_id", userId)
+          .maybeSingle(),
+        supabase
+          .from("music_releases")
+          .select("id, title, artist_name, release_type, release_date, cover_art_url, status, genre")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false }),
+      ]);
+
+    setProfile(profileData);
+    setVerification(verificationData);
+    setReleases(releasesData ?? []);
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -70,15 +110,8 @@ const Dashboard = () => {
       if (ignore) return;
       if (session) {
         setUser(session.user);
-        Promise.all([
-          supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
-          supabase.from("artist_verifications").select("status, artist_name").eq("user_id", session.user.id).maybeSingle(),
-        ]).then(([{ data: profileData }, { data: verificationData }]) => {
-          if (!ignore) {
-            setProfile(profileData);
-            setVerification(verificationData);
-            setLoading(false);
-          }
+        fetchUserData(session.user.id).finally(() => {
+          if (!ignore) setLoading(false);
         });
       } else {
         setLoading(false);
@@ -90,8 +123,7 @@ const Dashboard = () => {
       if (ignore) return;
       if (session) {
         setUser(session.user);
-        supabase.from("profiles").select("*").eq("id", session.user.id).maybeSingle().then(({ data }) => setProfile(data));
-        supabase.from("artist_verifications").select("status, artist_name").eq("user_id", session.user.id).maybeSingle().then(({ data }) => setVerification(data));
+        fetchUserData(session.user.id);
       } else if (event === "SIGNED_OUT") {
         navigate("/auth");
       }
@@ -148,13 +180,19 @@ const Dashboard = () => {
                 )}
               </div>
               {verification.status === "pending" && (
-                <p className="text-xs text-muted-foreground">Your application is under review. We'll notify you once it's processed.</p>
+                <p className="text-xs text-muted-foreground">
+                  Your application is under review. We'll notify you once it's processed.
+                </p>
               )}
               {verification.status === "approved" && (
-                <p className="text-xs text-green-600">You are a verified artist. Premium distribution features are unlocked.</p>
+                <p className="text-xs text-green-600">
+                  You are a verified artist. Premium distribution features are unlocked.
+                </p>
               )}
               {verification.status === "rejected" && (
-                <p className="text-xs text-red-500">Your application was rejected. You may reapply with updated information.</p>
+                <p className="text-xs text-red-500">
+                  Your application was rejected. You may reapply with updated information.
+                </p>
               )}
             </div>
           ) : (
@@ -219,78 +257,118 @@ const Dashboard = () => {
             </div>
             <p className="text-xs text-muted-foreground mb-4">All submitted releases</p>
 
-            {/* Desktop: Table */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cover</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Release Date</TableHead>
-                    <TableHead>Platforms</TableHead>
-                    <TableHead className="text-right">Streams</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {MOCK_RELEASES.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>
-                        <img src={r.cover} alt={r.title} className="w-10 h-10 rounded object-cover" />
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{r.title}</p>
-                        <p className="text-xs text-muted-foreground">{r.artist}</p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{r.type}</Badge>
-                      </TableCell>
-                      <TableCell>{r.releaseDate}</TableCell>
-                      <TableCell className="text-xs">{r.platforms}</TableCell>
-                      <TableCell className="text-right font-medium">{r.streams.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge className={statusVariant(r.status)}>{r.status}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Mobile: Cards */}
-            <div className="md:hidden space-y-4">
-              {MOCK_RELEASES.map((r) => (
-                <div key={r.id} className="rounded-lg border border-border bg-background p-4 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <img src={r.cover} alt={r.title} className="w-14 h-14 rounded object-cover shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{r.title}</p>
-                      <p className="text-sm text-muted-foreground">{r.artist}</p>
-                    </div>
-                    <Badge className={statusVariant(r.status)}>{r.status}</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Type</p>
-                      <p className="font-medium">{r.type}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Release Date</p>
-                      <p className="font-medium">{r.releaseDate}</p>
-                    </div>
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground">Platforms</p>
-                      <p className="font-medium text-xs">{r.platforms}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Streams</p>
-                      <p className="font-medium">{r.streams.toLocaleString()}</p>
-                    </div>
-                  </div>
+            {releases.length === 0 ? (
+              <div className="text-center py-10 space-y-3">
+                <Disc className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No releases yet</p>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/upload-release")}
+                  className="rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:opacity-90"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Upload your first release
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Desktop: Table */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Cover</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Release Date</TableHead>
+                        <TableHead>Genre</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {releases.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell>
+                            {r.cover_art_url ? (
+                              <img
+                                src={r.cover_art_url}
+                                alt={r.title}
+                                className="w-10 h-10 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                                <Music className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <p className="font-medium">{r.title}</p>
+                            <p className="text-xs text-muted-foreground">{r.artist_name}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {r.release_type ?? "Single"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{r.release_date ?? "—"}</TableCell>
+                          <TableCell>{r.genre ?? "—"}</TableCell>
+                          <TableCell>
+                            <Badge className={statusVariant(r.status)}>
+                              {statusLabel(r.status)}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              ))}
-            </div>
+
+                {/* Mobile: Cards */}
+                <div className="md:hidden space-y-4">
+                  {releases.map((r) => (
+                    <div
+                      key={r.id}
+                      className="rounded-lg border border-border bg-background p-4 space-y-3"
+                    >
+                      <div className="flex items-start gap-3">
+                        {r.cover_art_url ? (
+                          <img
+                            src={r.cover_art_url}
+                            alt={r.title}
+                            className="w-14 h-14 rounded object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 rounded bg-muted flex items-center justify-center shrink-0">
+                            <Music className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{r.title}</p>
+                          <p className="text-sm text-muted-foreground">{r.artist_name}</p>
+                        </div>
+                        <Badge className={statusVariant(r.status)}>
+                          {statusLabel(r.status)}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Type</p>
+                          <p className="font-medium capitalize">{r.release_type ?? "Single"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Release Date</p>
+                          <p className="font-medium">{r.release_date ?? "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Genre</p>
+                          <p className="font-medium">{r.genre ?? "—"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
