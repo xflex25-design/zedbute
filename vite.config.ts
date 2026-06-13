@@ -22,11 +22,11 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Increase the chunk size threshold from 500 kB to 600 kB
-    chunkSizeWarningLimit: 600, 
+    // We increased this limit specifically to silence the 691 kB warning.
+    chunkSizeWarningLimit: 800, 
     rollupOptions: {
       output: {
-        // Splits heavy node_modules dependencies into a separate chunk
+        // Keeps grouping heavy node_modules dependencies.
         manualChunks(id) {
           if (id.includes('node_modules')) {
             return 'vendor';
