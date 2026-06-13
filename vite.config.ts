@@ -21,5 +21,18 @@ export default defineConfig(({ mode }) => ({
       "@": "/src",
     },
   },
+  build: {
+    // Increase the chunk size threshold from 500 kB to 600 kB
+    chunkSizeWarningLimit: 600, 
+    rollupOptions: {
+      output: {
+        // Splits heavy node_modules dependencies into a separate chunk
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 }));
-
