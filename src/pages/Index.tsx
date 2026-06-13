@@ -171,7 +171,6 @@ const Index = () => {
                 { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/Gioconda_(copia_del_Museo_del_Prado_restaurada).jpg", title: "Mona Lisa", artist: "Wizzo zm" },
                 { src:"https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/1764965608368.jpg", title: "mpaka fye", artist: "Emi ft sensedanger" },
                 { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/InShot_20260613_172906691.jpg", title: "You let me dawn", artist: "Lildney ft jea stones" },
-                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
                 { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260613-WA0107.jpg", title: "Bars After Bars", artist: "Dope suvage" }
               ].map((a, index) => (
                 <div
