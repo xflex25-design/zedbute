@@ -156,11 +156,11 @@ const Index = () => {
 
         {/* Artists We've Worked With */}
 {[
-  { src: "/images/mpakaFye.jpg", title: "Mpaka Fye", artist: "Emi ft Sensedanger" },
-  { src: "/images/youAreHoly.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
-  { src: "/images/rockners.jpg", title: "Rockner's Music Vibe", artist: "Rockner" },
-  { src: "/images/iceFamZm.jpg", title: "Ice Fam ZM", artist: "Ice Fam" },
-  { src: "/images/zedbute.jpg", title: "ZedBute Showcase", artist: "Zed Bute" }, // this one is for you
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP ", artist: "Emcee zm" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
+  { src: "/images/rockners.jpg", title: "birthday to you", artist: "Bambiwamafruities" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
+  { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260613-WA0107.jpg", title: "BARS AFTER BARS", artist: "Dope suvage" }, // this one is for you
 ].map((a, index) => (
   <div
     key={index}
