@@ -63,60 +63,44 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const features = [
-    { icon: Globe, title: "Global Distribution", description: "Reach 150+ streaming platforms worldwide including Spotify, Apple Music, and more" },
-    { icon: TrendingUp, title: "100% Royalties", description: "Keep all your earnings. We never take a percentage of your royalties" },
-    { icon: Shield, title: "Artist Verification", description: "Get verified and build credibility with your audience and platforms" },
-    { icon: Users, title: "Team Features", description: "Collaborate with your team, split payments, and manage multiple artists" },
-    { icon: Sparkles, title: "Advanced Analytics", description: "Track your performance with detailed insights and real-time data" },
-    { icon: Music, title: "Unlimited Releases", description: "Upload as many singles, EPs, and albums as you want with no limits" },
-  ];
-
-  return (
-    <>
-      <Helmet>
-        <meta name="google-site-verification" content="google5381a056419580bb" />
-      </Helmet>
-      <div className="min-h-screen bg-background">
-        <Navbar user={user} />
-        
-        {/* Hero Section */}
-        <section
-          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
-          style={{
-            backgroundImage: `linear-gradient(rgba(220, 25, 5, 0.8), rgba(220, 25, 5, 0.9)), url(${heroBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-foreground leading-tight">
-              Distribute Your Music
-              <span className="block bg-gradient-primary bg-clip-text text-transparent">
-                To The World
-              </span>
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/90 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">
-              Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
-            </p>
-            <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                variant="hero"
-                onClick={() => navigate(user ? "/dashboard" : "/auth")}
-                className="text-base sm:text-lg px-6 sm:px-8"
-              >
-                {user ? "Go to Dashboard" : "Start Distributing"}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/pricing")}
-                className="text-base sm:text-lg px-6 sm:px-8 bg-background/20 backdrop-blur-sm border-foreground/20 hover:bg-background/30"
-              >
-                View Pricing
-              </Button>
+{/* Artists We've Worked With */}
+        <section className="py-12 sm:py-16 lg:py-20 px-4 bg-muted/50">
+          <div className="container mx-auto">
+            <div className="text-center mb-10 sm:mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Artists We've Worked With</h2>
+              <p className="text-muted-foreground">Trending releases distributed globally via ZedBute</p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+              {[
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP", artist: "Emcee zm" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "Birthday to You", artist: "Bambiwamafruities" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP", artist: "Emcee zm" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260604-WA0239.jpg", title: "Birthday to You", artist: "Bambiwamafruities" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/20260606_081535.jpg", title: "Baoyo", artist: "Ice Fam" },
+                { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260613-WA0107.jpg", title: "Bars After Bars", artist: "Dope suvage" }
+              ].map((a, index) => (
+                <div
+                  key={index}
+                  className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-shadow"
+                >
+                  <div className="aspect-square overflow-hidden bg-muted">
+                    <img
+                      src={a.src}
+                      alt={`${a.title} by ${a.artist} – distributed by ZedBute`}
+                      loading="lazy"
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 bg-card">
+                    <p className="font-bold text-lg">{a.title}</p>
+                    <p className="text-sm text-muted-foreground">{a.artist}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </section>
