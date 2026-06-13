@@ -22,17 +22,21 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // We increased this limit specifically to silence the 691 kB warning.
-    chunkSizeWarningLimit: 800, 
+    // 1. We group heavy libraries (from node_modules) into a separate chunk.
     rollupOptions: {
       output: {
-        // Keeps grouping heavy node_modules dependencies.
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            // We group dynamic lovavble-tagger in a separate chunk.
+            if (id.includes('lovable-tagger')) {
+               return 'tagger';
+            }
             return 'vendor';
           }
         }
       }
-    }
+    },
+    // 2. We increase the limit to 700 to accept the heavy vendor chunk.
+    chunkSizeWarningLimit: 700
   }
 }));
