@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import {
   BadgeCheck,
+  CreditCard,
   Disc,
   Music,
   Plus,
@@ -257,6 +258,19 @@ const Dashboard = () => {
             </div>
             <p className="text-xs text-muted-foreground mb-4">All submitted releases</p>
 
+            {/* Unpaid releases banner */}
+            {releases.some((r) => r.status === "unpaid") && (
+              <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+                <CreditCard className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-amber-600">Payment required</p>
+                  <p className="text-xs text-amber-600/80 mt-0.5">
+                    You have unpaid releases. Click <strong>Pay Now</strong> to complete your submission.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {releases.length === 0 ? (
               <div className="text-center py-10 space-y-3">
                 <Disc className="mx-auto h-10 w-10 text-muted-foreground/40" />
@@ -287,7 +301,11 @@ const Dashboard = () => {
                     </TableHeader>
                     <TableBody>
                       {releases.map((r) => (
-                        <TableRow key={r.id}>
+                        <TableRow
+                          key={r.id}
+                          className={r.status === "unpaid" ? "cursor-pointer hover:bg-amber-500/5" : ""}
+                          onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
+                        >
                           <TableCell>
                             {r.cover_art_url ? (
                               <img
@@ -313,9 +331,24 @@ const Dashboard = () => {
                           <TableCell>{r.release_date ?? "—"}</TableCell>
                           <TableCell>{r.genre ?? "—"}</TableCell>
                           <TableCell>
-                            <Badge className={statusVariant(r.status)}>
-                              {statusLabel(r.status)}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={statusVariant(r.status)}>
+                                {statusLabel(r.status)}
+                              </Badge>
+                              {r.status === "unpaid" && (
+                                <Button
+                                  size="sm"
+                                  className="h-6 px-2 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/payment?type=release&releaseId=${r.id}`);
+                                  }}
+                                >
+                                  <CreditCard className="h-3 w-3 mr-1" />
+                                  Pay Now
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -328,7 +361,12 @@ const Dashboard = () => {
                   {releases.map((r) => (
                     <div
                       key={r.id}
-                      className="rounded-lg border border-border bg-background p-4 space-y-3"
+                      className={`rounded-lg border bg-background p-4 space-y-3 ${
+                        r.status === "unpaid"
+                          ? "border-amber-500/40 cursor-pointer active:bg-amber-500/5"
+                          : "border-border"
+                      }`}
+                      onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
                     >
                       <div className="flex items-start gap-3">
                         {r.cover_art_url ? (
@@ -364,6 +402,19 @@ const Dashboard = () => {
                           <p className="font-medium">{r.genre ?? "—"}</p>
                         </div>
                       </div>
+                      {r.status === "unpaid" && (
+                        <Button
+                          size="sm"
+                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/payment?type=release&releaseId=${r.id}`);
+                          }}
+                        >
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          Complete Payment — K50
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>
