@@ -9,9 +9,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CircleCheck as CheckCircle2, ImagePlus, Loader as Loader2, Music, Phone, Trash2, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  CircleCheck as CheckCircle2,
+  ImagePlus,
+  Loader as Loader2,
+  Music,
+  Phone,
+  Search,
+  Trash2,
+  Zap,
+} from "lucide-react";
 
 type Platform = "spotify" | "boomplay";
+
+interface MBArtist {
+  id: string;
+  name: string;
+  country?: string;
+  type?: string;
+  score?: number;
+}
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 const PAYMENT_AMOUNT = 50;
@@ -34,18 +53,20 @@ const COUNTRY_CODES = [
   { code: "+44",  label: "GB +44"  },
 ];
 
-const META: Record<Platform, { title: string; subtitle: string; color: string; emoji: string }> = {
+const META: Record<Platform, { title: string; subtitle: string; gradient: string; border: string; badge: string }> = {
   spotify: {
     title: "Spotify for Artists Verification",
     subtitle: "We'll submit your claim to Spotify for Artists on your behalf.",
-    color: "border-green-500",
-    emoji: "🟢",
+    gradient: "from-emerald-950/60 to-emerald-900/30",
+    border: "border-emerald-500/60 hover:border-emerald-400",
+    badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   },
   boomplay: {
     title: "Boomplay for Artists Verification",
     subtitle: "Claim your official Boomplay artist profile.",
-    color: "border-blue-500",
-    emoji: "🔵",
+    gradient: "from-blue-950/60 to-blue-900/30",
+    border: "border-blue-500/60 hover:border-blue-400",
+    badge: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   },
 };
 
@@ -53,6 +74,8 @@ const VerifyClaim = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const screenshotInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -60,8 +83,13 @@ const VerifyClaim = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paymentPhone, setPaymentPhone] = useState("");
-
   const [step, setStep] = useState<"form" | "payment">("form");
+
+  // MusicBrainz search
+  const [artistSearch, setArtistSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<MBArtist[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const [form, setForm] = useState({
     artistName: "",
@@ -69,9 +97,7 @@ const VerifyClaim = () => {
     boomplayUrl: "",
     legalName: "",
     email: "",
-    // Spotify: full phone with country code typed by user
     phone: "+260",
-    // Boomplay: split into country code + local digits
     phoneCountry: "+260",
     phoneLocal: "",
     distributor: "ZedBute",
@@ -82,15 +108,12 @@ const VerifyClaim = () => {
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
+  // Auth + profile load
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
+      if (!session) { navigate("/auth"); return; }
       setUser(session.user);
       setForm((f) => ({ ...f, email: session.user.email || "" }));
-
       supabase
         .from("profiles")
         .select("*")
@@ -103,12 +126,58 @@ const VerifyClaim = () => {
     });
   }, [navigate]);
 
+  // Debounced MusicBrainz search
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    if (!artistSearch.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    searchTimeoutRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(
+          `https://musicbrainz.org/ws/2/artist/?query=${encodeURIComponent(artistSearch)}&limit=7&fmt=json`,
+          { headers: { "User-Agent": "Zedbute/1.0 ( info@zedbute.com )" } }
+        );
+        const data = await res.json();
+        setSearchResults(data.artists || []);
+        setShowDropdown(true);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500);
+    return () => { if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current); };
+  }, [artistSearch]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const selectArtistResult = (artist: MBArtist) => {
+    setForm((f) => ({ ...f, artistName: artist.name }));
+    setArtistSearch(artist.name);
+    setShowDropdown(false);
+  };
+
   const selectPlatform = (p: Platform) => {
     setPlatform(p);
     setSubmitted(false);
     setStep("form");
     setFile(null);
     setFilePreview(null);
+    setArtistSearch("");
+    setSearchResults([]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -136,48 +205,36 @@ const VerifyClaim = () => {
     if (!user || !platform) return;
 
     if (!form.artistName.trim()) {
-      toast({ title: "Artist name required", variant: "destructive" });
-      return;
+      toast({ title: "Artist name required", variant: "destructive" }); return;
     }
     if (!form.email.trim()) {
-      toast({ title: "Email required", variant: "destructive" });
-      return;
+      toast({ title: "Email required", variant: "destructive" }); return;
     }
 
     if (platform === "spotify") {
       if (!form.spotifyUrl.trim()) {
-        toast({ title: "Spotify URL required", variant: "destructive" });
-        return;
+        toast({ title: "Spotify URL required", variant: "destructive" }); return;
       }
       if (!form.legalName.trim()) {
-        toast({ title: "Legal name required", variant: "destructive" });
-        return;
+        toast({ title: "Legal name required", variant: "destructive" }); return;
       }
       if (!form.phone.trim()) {
-        toast({ title: "Phone number required", variant: "destructive" });
-        return;
+        toast({ title: "Phone number required", variant: "destructive" }); return;
       }
       if (!form.socialUrl.trim()) {
-        toast({ title: "Social media URL required", variant: "destructive" });
-        return;
+        toast({ title: "Social media URL required", variant: "destructive" }); return;
       }
     }
 
-    if (platform === "boomplay") {
-      if (!form.phoneLocal.trim()) {
-        toast({ title: "Mobile number required", description: "Please enter your phone number.", variant: "destructive" });
-        return;
-      }
+    if (platform === "boomplay" && !form.phoneLocal.trim()) {
+      toast({ title: "Mobile number required", description: "Please enter your phone number.", variant: "destructive" }); return;
     }
 
     if (!form.distributor.trim()) {
-      toast({ title: "Distributor name required", variant: "destructive" });
-      return;
+      toast({ title: "Distributor name required", variant: "destructive" }); return;
     }
-
     if (!file) {
-      toast({ title: "Screenshot required", description: "Please upload a social media screenshot.", variant: "destructive" });
-      return;
+      toast({ title: "Screenshot required", description: "Please upload a social media screenshot.", variant: "destructive" }); return;
     }
 
     setStep("payment");
@@ -225,17 +282,10 @@ const VerifyClaim = () => {
 
   const handlePayment = () => {
     if (!paymentPhone.trim()) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your mobile money number.",
-        variant: "destructive",
-      });
-      return;
+      toast({ title: "Phone number required", description: "Please enter your mobile money number.", variant: "destructive" }); return;
     }
-
     if (typeof LencoPay === "undefined") {
-      toast({ title: "Payment system loading", description: "Please try again in a moment.", variant: "destructive" });
-      return;
+      toast({ title: "Payment system loading", description: "Please try again in a moment.", variant: "destructive" }); return;
     }
 
     setLoading(true);
@@ -259,9 +309,7 @@ const VerifyClaim = () => {
           toast({ title: "Payment Successful!", description: "Your verification request has been submitted." });
         } catch (err: any) {
           toast({ title: "Submission failed", description: err.message, variant: "destructive" });
-        } finally {
-          setLoading(false);
-        }
+        } finally { setLoading(false); }
       },
       onClose: () => {
         setLoading(false);
@@ -273,14 +321,12 @@ const VerifyClaim = () => {
           toast({ title: "Payment Submitted!", description: "Your payment will be verified shortly." });
         } catch (err: any) {
           toast({ title: "Submission failed", description: err.message, variant: "destructive" });
-        } finally {
-          setLoading(false);
-        }
+        } finally { setLoading(false); }
       },
     });
   };
 
-  // ── Success screen ──────────────────────────────────────────────────────────
+  // ── Success ─────────────────────────────────────────────────────────────────
   if (submitted) {
     return (
       <div className="min-h-screen bg-gradient-hero">
@@ -288,7 +334,7 @@ const VerifyClaim = () => {
         <div className="container mx-auto px-4 pt-24 max-w-xl">
           <Card className="shadow-card">
             <CardContent className="pt-8 text-center space-y-4">
-              <CheckCircle2 className="h-16 w-16 mx-auto text-green-500" />
+              <CheckCircle2 className="h-16 w-16 mx-auto text-emerald-500" />
               <h2 className="text-2xl font-bold">Submitted!</h2>
               <p className="text-muted-foreground">
                 Your verification request has been submitted. Our team will review it and get back to you within 2–5 business days.
@@ -301,7 +347,7 @@ const VerifyClaim = () => {
     );
   }
 
-  // ── Platform picker ─────────────────────────────────────────────────────────
+  // ── Platform picker ──────────────────────────────────────────────────────────
   if (!platform) {
     return (
       <div className="min-h-screen bg-gradient-hero">
@@ -313,17 +359,21 @@ const VerifyClaim = () => {
             {(["spotify", "boomplay"] as Platform[]).map((p) => (
               <Card
                 key={p}
-                className={`shadow-card hover:shadow-glow cursor-pointer transition-all border-2 ${META[p].color}`}
+                className={`shadow-card cursor-pointer transition-all duration-200 border-2 ${META[p].border} overflow-hidden`}
                 onClick={() => selectPlatform(p)}
               >
-                <CardHeader>
-                  <div className="text-5xl mb-2">{META[p].emoji}</div>
-                  <CardTitle>{p === "spotify" ? "Spotify Artist Verification" : "Boomplay Artist Verification"}</CardTitle>
-                  <CardDescription>
+                <div className={`bg-gradient-to-br ${META[p].gradient} p-6`}>
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${META[p].badge} mb-3`}>
+                    {p === "spotify" ? "Spotify" : "Boomplay"} for Artists
+                  </span>
+                  <CardTitle className="text-xl mb-1">
+                    {p === "spotify" ? "Spotify Artist Verification" : "Boomplay Artist Verification"}
+                  </CardTitle>
+                  <CardDescription className="text-sm">
                     Claim your official artist profile on {p === "spotify" ? "Spotify" : "Boomplay"}.
                   </CardDescription>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <CardContent className="pt-4 pb-5">
                   <Button className="w-full" variant="hero">Start Verification</Button>
                 </CardContent>
               </Card>
@@ -334,7 +384,7 @@ const VerifyClaim = () => {
     );
   }
 
-  // ── Payment step ────────────────────────────────────────────────────────────
+  // ── Payment step ─────────────────────────────────────────────────────────────
   if (step === "payment") {
     return (
       <div className="min-h-screen bg-gradient-hero">
@@ -371,9 +421,7 @@ const VerifyClaim = () => {
 
                 <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
                   <h3 className="font-semibold mb-2 text-primary">Secure Checkout</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Pay securely via Mobile Money or Card.
-                  </p>
+                  <p className="text-sm text-muted-foreground">Pay securely via Mobile Money or Card.</p>
                 </div>
 
                 <Button
@@ -395,7 +443,7 @@ const VerifyClaim = () => {
     );
   }
 
-  // ── Form step ───────────────────────────────────────────────────────────────
+  // ── Form step ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
@@ -405,15 +453,70 @@ const VerifyClaim = () => {
         </Button>
 
         <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-5 w-5" /> {META[platform].title}
-            </CardTitle>
-            <CardDescription>{META[platform].subtitle}</CardDescription>
-          </CardHeader>
+          <div className={`bg-gradient-to-br ${META[platform].gradient} px-6 py-5 rounded-t-xl border-b border-border`}>
+            <div className="flex items-center gap-2">
+              <Music className="h-5 w-5" />
+              <h2 className="text-lg font-semibold">{META[platform].title}</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{META[platform].subtitle}</p>
+          </div>
 
-          <CardContent>
+          <CardContent className="pt-6">
             <form onSubmit={handleFormSubmit} className="space-y-5">
+
+              {/* ── MusicBrainz Artist Search ── */}
+              <div className="space-y-1.5" ref={searchContainerRef}>
+                <Label className="flex items-center gap-1.5">
+                  <Search className="h-3.5 w-3.5" />
+                  Search Artist on MusicBrainz
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    className="pl-9 pr-9"
+                    placeholder={`Search for your ${platform === "spotify" ? "Spotify" : "Boomplay"} artist name...`}
+                    value={artistSearch}
+                    onChange={(e) => setArtistSearch(e.target.value)}
+                    onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+                    autoComplete="off"
+                  />
+                  {isSearching && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+
+                  {/* Results dropdown */}
+                  {showDropdown && searchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-xl overflow-hidden">
+                      {searchResults.map((artist) => (
+                        <button
+                          key={artist.id}
+                          type="button"
+                          className="w-full px-4 py-3 text-left hover:bg-muted transition-colors border-b border-border last:border-0 flex items-center justify-between gap-3 group"
+                          onClick={() => selectArtistResult(artist)}
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{artist.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {artist.type || "Artist"}
+                              {artist.country ? ` · ${artist.country}` : ""}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 group-hover:text-foreground transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showDropdown && !isSearching && artistSearch.trim() && searchResults.length === 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-xl px-4 py-3">
+                      <p className="text-sm text-muted-foreground">No artists found. Type your name manually below.</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Search to auto-fill your artist name, or enter it manually in the field below.
+                </p>
+              </div>
 
               {/* ── Artist Name ── */}
               <div className="space-y-1.5">
@@ -451,7 +554,7 @@ const VerifyClaim = () => {
                 </>
               )}
 
-              {/* ── Boomplay-only: profile URL ── */}
+              {/* ── Boomplay profile URL ── */}
               {platform === "boomplay" && (
                 <div className="space-y-1.5">
                   <Label>Boomplay Artist Profile URL (optional)</Label>
@@ -533,7 +636,7 @@ const VerifyClaim = () => {
                 />
               </div>
 
-              {/* ── Social URL (Spotify only) ── */}
+              {/* ── Social URL — Spotify only ── */}
               {platform === "spotify" && (
                 <div className="space-y-1.5">
                   <Label>Social Media Profile URL (Instagram, Twitter, or Facebook) *</Label>
@@ -550,7 +653,7 @@ const VerifyClaim = () => {
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">
                   {platform === "boomplay" ? "Your SNS Account" : "Social Media Screenshot"}
-                  <span className="text-destructive">*</span>
+                  <span className="text-destructive ml-0.5">*</span>
                 </Label>
                 <p className="text-xs text-muted-foreground -mt-1">
                   Size: Maximum 5MB. Format: jpg/png/jpeg.
