@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from 'react-helmet-async';
+import  HelmetProvider  from 'react-helmet-async';
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -12,6 +12,7 @@ import VerifyClaim from "./pages/VerifyClaim";
 import Admin from "./pages/Admin";
 import UploadRelease from "./pages/UploadRelease";
 import Pricing from "./pages/Pricing";
+import ReleaseSuccess from "./pages/ReleaseSuccess";
 import Payment from "./pages/Payment";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
@@ -21,7 +22,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <HelmetProvider>
+    <HelmetProvider context={{}}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/upload-release" element={<UploadRelease />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/release-success" element={<ReleaseSuccess />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />

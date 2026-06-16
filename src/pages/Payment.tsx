@@ -182,7 +182,7 @@ export default function Payment() {
 
         navigate("/verify");
       } else {
-        navigate("/dashboard");
+        navigate("/release-success");
       }
     } catch (error) {
       console.error(error);
