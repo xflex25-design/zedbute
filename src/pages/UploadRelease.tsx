@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader as Loader2, Upload, Music, CircleAlert as AlertCircle, Calendar as CalendarIcon, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, addWeeks } from "date-fns";
+import { format, addWeeks, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { FormProgress } from "@/components/FormProgress";
@@ -235,7 +235,7 @@ const UploadRelease = () => {
       return;
     }
 
-    setLoading(true);
+    loading(true);
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -467,41 +467,76 @@ const UploadRelease = () => {
               {/* Release Date */}
               <div className="space-y-2">
                 <Label>Release Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.releaseDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.releaseDate ? format(formData.releaseDate, "PPP") : <span>Pick a release date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.releaseDate}
-                      onSelect={(date) => {
-                        if (date && date < addWeeks(new Date(), 2)) {
-                          toast({
-                            title: "Invalid Release Date",
-                            description: "Please select a date at least 2 weeks from today.",
-                            variant: "destructive",
-                          });
-                          return;
-                        }
-                        setFormData({ ...formData, releaseDate: date });
-                      }}
-                      disabled={(date) => date < new Date() || date > addWeeks(new Date(), 2)}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
+                <RadioGroup
+                  value={formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") : ""}
+                  onValueChange={(value) => {
+                    if (value === "custom") return;
+                    setFormData({ ...formData, releaseDate: new Date(value) });
+                  }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+                >
+                  <div 
+                    className={cn(
+                      "flex items-center justify-between space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors",
+                      formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") === format(addWeeks(new Date(), 2), "yyyy-MM-dd") && "border-primary bg-primary/5"
+                    )}
+                    onClick={() => setFormData({ ...formData, releaseDate: addWeeks(new Date(), 2) })}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem 
+                        value={format(addWeeks(new Date(), 2), "yyyy-MM-dd")} 
+                        id="two-weeks" 
+                        checked={formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") === format(addWeeks(new Date(), 2), "yyyy-MM-dd") : false}
+                      />
+                      <div>
+                        <Label htmlFor="two-weeks" className="cursor-pointer font-medium block">Earliest Available (2 Weeks)</Label>
+                        <span className="text-xs text-muted-foreground">Recommended for maximum delivery success</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div 
+                        className={cn(
+                          "flex items-center justify-between space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors",
+                          formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") && "border-primary bg-primary/5"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2 w-full">
+                          <RadioGroupItem 
+                            value="custom" 
+                            id="custom-date" 
+                            checked={formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") : false}
+                          />
+                          <div className="flex items-center justify-between w-full">
+                            <div>
+                              <Label htmlFor="custom-date" className="cursor-pointer font-medium block">Specific Date</Label>
+                              <span className="text-xs text-muted-foreground">
+                                {formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") 
+                                  ? format(formData.releaseDate, "PPP") 
+                                  : "Choose a custom day"}
+                              </span>
+                            </div>
+                            <CalendarIcon className="h-4 w-4 ml-auto text-muted-foreground" />
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar
+                        mode="single"
+                        selected={formData.releaseDate}
+                        onSelect={(date) => date && setFormData({ ...formData, releaseDate: date })}
+                        disabled={(date) => date < new Date() || date > addWeeks(new Date(), 2)}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </RadioGroup>
+
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border mt-2">
                   <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
                     Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission.
