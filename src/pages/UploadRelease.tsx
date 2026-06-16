@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +69,7 @@ const UploadRelease = () => {
     artistName: "",
     releaseType: "single",
     genre: "",
-    releaseDate: undefined as Date | undefined,
+    releaseDate: addWeeks(new Date(), 2) as Date | undefined,
     coverArt: null as File | null,
     audioFile: null as File | null,
     rightsConfirmed: false,
@@ -495,9 +494,9 @@ const UploadRelease = () => {
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                   <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    You can only select a release date within the next <strong className="text-foreground">2 weeks</strong>.
+                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission.
                     {formData.releaseDate && (
-                      <span> Selected date: <strong className="text-primary">{format(formData.releaseDate, "PPP")}</strong></span>
+                      <span> Estimated live date: <strong className="text-primary">{format(formData.releaseDate, "PPP")}</strong></span>
                     )}
                   </p>
                 </div>
