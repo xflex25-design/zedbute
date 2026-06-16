@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,8 +63,6 @@ const UploadRelease = () => {
   const coverArtRef = useRef<HTMLInputElement>(null);
   const audioScrollRef = useRef<HTMLDivElement>(null);
   const audioFileRef = useRef<HTMLInputElement>(null);
-
-  // Ref to track interval for cleanup
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [formData, setFormData] = useState({
@@ -77,7 +76,6 @@ const UploadRelease = () => {
     rightsConfirmed: false,
   });
 
-  // Cleanup interval on unmount
   useEffect(() => {
     return () => {
       if (progressIntervalRef.current) {
@@ -90,7 +88,6 @@ const UploadRelease = () => {
     checkUser();
   }, []);
 
-  // Check for return from payment flow
   useEffect(() => {
     const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
     const savedCoverName = sessionStorage.getItem("pendingCoverArtName");
@@ -171,10 +168,8 @@ const UploadRelease = () => {
     if (isValid) {
       setFormData({ ...formData, coverArt: file });
       setImagePreview(URL.createObjectURL(file));
-      // Save file name for potential re-attach prompt
       sessionStorage.setItem("pendingCoverArtName", file.name);
     } else {
-      // Don't clear the input - keep previous file if exists
       e.target.value = "";
     }
   };
@@ -194,7 +189,6 @@ const UploadRelease = () => {
     }
 
     setFormData({ ...formData, audioFile: file });
-    // Save file name for potential re-attach prompt
     sessionStorage.setItem("pendingAudioFileName", file.name);
   };
 
@@ -210,74 +204,35 @@ const UploadRelease = () => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      toast({
-        title: "Missing Title",
-        description: "Please enter a release title",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Title", description: "Please enter a release title", variant: "destructive" });
       return;
     }
-
     if (!formData.artistName.trim()) {
-      toast({
-        title: "Missing Artist Name",
-        description: "Please enter the artist name",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Artist Name", description: "Please enter the artist name", variant: "destructive" });
       return;
     }
-
     if (selectedLanguages.length === 0) {
-      toast({
-        title: "No Language Selected",
-        description: "Please select at least one language",
-        variant: "destructive",
-      });
+      toast({ title: "No Language Selected", description: "Please select at least one language", variant: "destructive" });
       return;
     }
-
     if (!formData.genre) {
-      toast({
-        title: "No Genre Selected",
-        description: "Please select a genre",
-        variant: "destructive",
-      });
+      toast({ title: "No Genre Selected", description: "Please select a genre", variant: "destructive" });
       return;
     }
-
     if (!formData.coverArt) {
-      toast({
-        title: "No Cover Art",
-        description: "Please upload cover art (3000x3000 pixels)",
-        variant: "destructive",
-      });
+      toast({ title: "No Cover Art", description: "Please upload cover art (3000x3000 pixels)", variant: "destructive" });
       return;
     }
-
     if (!formData.audioFile) {
-      toast({
-        title: "No Audio File",
-        description: "Please upload your music audio file",
-        variant: "destructive",
-      });
+      toast({ title: "No Audio File", description: "Please upload your music audio file", variant: "destructive" });
       return;
     }
-
     if (!formData.releaseDate) {
-      toast({
-        title: "Missing Release Date",
-        description: "Please pick a release date",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Release Date", description: "Please pick a release date", variant: "destructive" });
       return;
     }
-
     if (!formData.rightsConfirmed) {
-      toast({
-        title: "Rights Confirmation Required",
-        description: "You must confirm that you own the rights to this music",
-        variant: "destructive",
-      });
+      toast({ title: "Rights Confirmation Required", description: "You must confirm that you own the rights to this music", variant: "destructive" });
       return;
     }
 
@@ -286,7 +241,6 @@ const UploadRelease = () => {
     setUploadProgress(0);
 
     try {
-      // 1) Upload cover art
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
@@ -299,18 +253,13 @@ const UploadRelease = () => {
 
       setUploadProgress(30);
 
-      // 2) Upload audio with proper interval cleanup
       setIsUploadingAudio(true);
       setAudioUploadProgress(0);
       const audioExt = formData.audioFile!.name.split(".").pop();
       const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
 
-      // Clear any existing interval
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
 
-      // Track progress with ref for cleanup
       progressIntervalRef.current = setInterval(() => {
         setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 300);
@@ -319,7 +268,6 @@ const UploadRelease = () => {
         .from("audio-files")
         .upload(audioFileName, formData.audioFile!);
 
-      // Clear interval after upload completes
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -339,7 +287,6 @@ const UploadRelease = () => {
 
       setUploadProgress(70);
 
-      // 3) Insert release as 'unpaid' BEFORE navigating to payment
       const { data: inserted, error: insertError } = await supabase
         .from("music_releases")
         .insert({
@@ -368,9 +315,7 @@ const UploadRelease = () => {
         description: "Redirecting you to complete payment...",
       });
 
-      // Set pending payment flag before navigating
       sessionStorage.setItem("pendingReleasePayment", "started");
-
       navigate(`/payment?type=release&releaseId=${inserted.id}`);
 
     } catch (error: any) {
@@ -386,7 +331,6 @@ const UploadRelease = () => {
       setUploadProgress(0);
       setAudioUploadProgress(0);
       setIsUploadingAudio(false);
-      // Ensure interval is cleaned up
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -436,6 +380,7 @@ const UploadRelease = () => {
               ]}
             />
             <form onSubmit={handleSubmit} className="space-y-6">
+
               {/* Artist Name */}
               <div className="space-y-2">
                 <Label htmlFor="artistName">Artist Name *</Label>
@@ -489,21 +434,15 @@ const UploadRelease = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="single" id="single" />
-                    <Label htmlFor="single" className="cursor-pointer font-normal">
-                      Single
-                    </Label>
+                    <Label htmlFor="single" className="cursor-pointer font-normal">Single</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="ep" id="ep" />
-                    <Label htmlFor="ep" className="cursor-pointer font-normal">
-                      EP
-                    </Label>
+                    <Label htmlFor="ep" className="cursor-pointer font-normal">EP</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="album" id="album" />
-                    <Label htmlFor="album" className="cursor-pointer font-normal">
-                      Album
-                    </Label>
+                    <Label htmlFor="album" className="cursor-pointer font-normal">Album</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -520,9 +459,7 @@ const UploadRelease = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-background z-50">
                     {GENRES.map((genre) => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre}
-                      </SelectItem>
+                      <SelectItem key={genre} value={genre}>{genre}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -549,7 +486,7 @@ const UploadRelease = () => {
                       mode="single"
                       selected={formData.releaseDate}
                       onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => date < new Date() || date > addWeeks(new Date(), 2)}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
@@ -558,9 +495,9 @@ const UploadRelease = () => {
                 <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
                   <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground">
-                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission.
+                    You can only select a release date within the next <strong className="text-foreground">2 weeks</strong>.
                     {formData.releaseDate && (
-                      <span> Estimated live date: <strong className="text-primary">{format(addWeeks(formData.releaseDate, 2), "PPP")}</strong></span>
+                      <span> Selected date: <strong className="text-primary">{format(formData.releaseDate, "PPP")}</strong></span>
                     )}
                   </p>
                 </div>
@@ -575,11 +512,7 @@ const UploadRelease = () => {
                 <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {imagePreview ? (
                     <div className="space-y-4">
-                      <img
-                        src={imagePreview}
-                        alt="Cover preview"
-                        className="mx-auto max-w-xs rounded-lg"
-                      />
+                      <img src={imagePreview} alt="Cover preview" className="mx-auto max-w-xs rounded-lg" />
                       <Button
                         type="button"
                         variant="outline"
@@ -595,22 +528,15 @@ const UploadRelease = () => {
                   ) : (
                     <div className="space-y-2">
                       {showReattachPrompt && previousFileName && (
-                        <p className="text-sm text-primary font-medium">
-                          Please re-attach: {previousFileName}
-                        </p>
+                        <p className="text-sm text-primary font-medium">Please re-attach: {previousFileName}</p>
                       )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
-                        <Label
-                          htmlFor="coverArt"
-                          className="cursor-pointer text-primary hover:underline"
-                        >
+                        <Label htmlFor="coverArt" className="cursor-pointer text-primary hover:underline">
                           Click to upload
                         </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Image must be exactly 3000 x 3000 pixels
-                      </p>
+                      <p className="text-xs text-muted-foreground">Image must be exactly 3000 x 3000 pixels</p>
                     </div>
                   )}
                   <Input
@@ -642,8 +568,6 @@ const UploadRelease = () => {
                       <p className="text-xs text-muted-foreground">
                         {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
-
-                      {/* Audio Upload Progress */}
                       {isUploadingAudio && (
                         <div className="space-y-2 mt-4">
                           <div className="flex items-center justify-between text-sm">
@@ -653,7 +577,6 @@ const UploadRelease = () => {
                           <Progress value={audioUploadProgress} className="h-2" />
                         </div>
                       )}
-
                       <Button
                         type="button"
                         variant="outline"
@@ -670,22 +593,15 @@ const UploadRelease = () => {
                   ) : (
                     <div className="space-y-2">
                       {showReattachPrompt && savedAudioFileName && (
-                        <p className="text-sm text-primary font-medium">
-                          Please re-attach: {savedAudioFileName}
-                        </p>
+                        <p className="text-sm text-primary font-medium">Please re-attach: {savedAudioFileName}</p>
                       )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
-                        <Label
-                          htmlFor="audioFile"
-                          className="cursor-pointer text-primary hover:underline"
-                        >
+                        <Label htmlFor="audioFile" className="cursor-pointer text-primary hover:underline">
                           Click to upload
                         </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Upload MP3, WAV, or other audio formats
-                      </p>
+                      <p className="text-xs text-muted-foreground">Upload MP3, WAV, or other audio formats</p>
                     </div>
                   )}
                   <Input

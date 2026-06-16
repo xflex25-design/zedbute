@@ -17,7 +17,7 @@ const ReleaseSuccess = () => {
             distributed within <strong>2 weeks</strong>.
           </p>
           <p className="text-sm text-muted-foreground">
-            You'll receive a notification once your music is live on Boomplay and Spotify.
+            You'll receive a notification once your music is live on all platforms within 2 weeks.
           </p>
           <Button className="w-full mt-4" onClick={() => navigate("/dashboard")}>
             Go to Dashboard
