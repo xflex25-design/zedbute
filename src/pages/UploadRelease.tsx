@@ -484,7 +484,17 @@ const UploadRelease = () => {
                     <Calendar
                       mode="single"
                       selected={formData.releaseDate}
-                      onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
+                      onSelect={(date) => {
+                        if (date && date < addWeeks(new Date(), 2)) {
+                          toast({
+                            title: "Invalid Release Date",
+                            description: "Please select a date at least 2 weeks from today.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setFormData({ ...formData, releaseDate: date });
+                      }}
                       disabled={(date) => date < new Date() || date > addWeeks(new Date(), 2)}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
