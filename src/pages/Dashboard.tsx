@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
@@ -146,10 +147,22 @@ const Dashboard = () => {
       </div>
     );
   }
+const firstName = profile?.full_name?.split(" ")[0] ?? "";
 
-  const firstName = profile?.full_name?.split(" ")[0] ?? "";
+return (
+  <>
+    <Helmet>
+      <title>ZedBute | Dashboard</title>
+      <meta
+        name="description"
+        content="Manage your releases, payments, and artist profile from the ZedBute dashboard."
+      />
+      <link
+        rel="canonical"
+        href="https://zedbute.vercel.app/dashboard"
+      />
+    </Helmet>
 
-  return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-2xl">
@@ -425,6 +438,7 @@ const Dashboard = () => {
 
       </div>
     </div>
+  </>
   );
 };
 
