@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://zedbute-net.lovable.app/</loc>
+    <loc>https://zedbute.vercel.app/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/pricing</loc>
+    <loc>https://zedbute.vercel.app/pricing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/blog</loc>
+    <loc>https://zedbute.vercel.app/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/blog/why-zambian-artists-should-distribute-music-online-in-2026</loc>
+    <loc>https://zedbute.vercel.app/blog/why-zambian-artists-should-distribute-music-online-in-2026</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/auth</loc>
+    <loc>https://zedbute.vercel.app/auth</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/upload-release</loc>
+    <loc>https://zedbute.vercel.app/upload-release</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://zedbute-net.lovable.app/verify</loc>
+    <loc>https://zedbute.vercel.app/verify</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

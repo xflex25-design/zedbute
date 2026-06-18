@@ -15,7 +15,7 @@ const BlogPost = () => {
   useSEO({
     title: post ? `${post.title} | ZedBute Blog` : "Blog Post | ZedBute",
     description: post?.description ?? "ZedBute blog post.",
-    canonical: post ? `https://zedbute-net.lovable.app/blog/${post.slug}` : undefined,
+    canonical: post ? `https://zedbute.vercel.app/blog/${post.slug}` : undefined,
   });
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const BlogPost = () => {
       description: post.description,
       author: { "@type": "Organization", name: post.author },
       datePublished: post.date,
-      mainEntityOfPage: `https://zedbute-net.lovable.app/blog/${post.slug}`,
+      mainEntityOfPage: `https://zedbute.vercel.app/blog/${post.slug}`,
     });
     document.head.appendChild(ld);
     return () => { document.head.removeChild(ld); };
