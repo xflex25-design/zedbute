@@ -74,27 +74,26 @@ VALUES (
 );
 ```
 4. Repeat to reach $100
-5. Visit `/royalties` (or wherever you mount the RoyaltyDashboard component)
+5. Visit your royalty dashboard page
 6. You should see:
    - Balance < $100: Progress bar showing "Reach $100 to enable withdrawals"
    - Balance ≥ $100: Charts and "Request Withdrawal" button appear
 
 ## File Structure
 ```
-├── src/
-│   ├── lib/
-│   │   ├── supabase.ts          # Supabase client
-│   │   └── royalty.ts           # Query and action utilities
-│   ├── components/royalty/
-│   │   ├── RoyaltyDashboard.tsx # Main dashboard component
-│   │   ├── RoyaltyChart.tsx     # Recharts visualization
-│   │   ├── WithdrawalButton.tsx # Withdrawal modal
-│   │   └── BankSettings.tsx     # Bank details form
-├── supabase/migrations/
-│   └── 001_create_royalty_schema.sql
-├── docs/
-│   └── ROYALTY_SYSTEM.md        # This file
-└── .env.example
+src/
+├── lib/
+│   ├── supabase.ts          # Supabase client
+│   └── royalty.ts           # Query and action utilities
+├── components/royalty/
+│   ├── RoyaltyDashboard.tsx # Main dashboard component
+│   ├── RoyaltyChart.tsx     # Recharts visualization
+│   ├── WithdrawalButton.tsx # Withdrawal modal
+│   └── BankSettings.tsx     # Bank details form
+supabase/migrations/
+└── 001_create_royalty_schema.sql
+docs/
+└── ROYALTY_SYSTEM.md        # This file
 ```
 
 ## Components
@@ -160,7 +159,7 @@ Returns withdrawal request history.
 Returns grouped analytics data for charts.
 
 ### requestWithdrawal(userId: string, amount: number)
-Server-side withdrawal request with validation.
+Client-side withdrawal request with validation.
 
 ### updateBankDetails(userId: string, ...details)
 Updates user's bank account information.
@@ -172,7 +171,7 @@ Updates user's bank account information.
 ✅ Bank details encrypted at rest (Supabase)
 ✅ User can only access own data
 ✅ Withdrawal amount verified against balance
-✅ Admin notifications logged (ready for Resend)
+✅ Admin notifications ready (logs to console)
 
 ## Future Integrations
 
@@ -180,7 +179,7 @@ Updates user's bank account information.
 Replace the withdrawal notification in `src/lib/royalty.ts`:
 ```typescript
 // TODO: Replace with Lenco API call
-const lenco = new LencoClient(process.env.VITE_LENCO_API_KEY);
+const lenco = new LencoClient(import.meta.env.VITE_LENCO_API_KEY);
 await lenco.payouts.create({
   amount: withdrawal.amount,
   bankDetails: {
@@ -193,7 +192,7 @@ await lenco.payouts.create({
 ### Resend Email Notifications
 ```typescript
 import { Resend } from 'resend';
-const resend = new Resend(process.env.VITE_RESEND_API_KEY);
+const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
 await resend.emails.send({
   from: 'noreply@zedbute.com',
   to: adminEmail,
@@ -201,14 +200,6 @@ await resend.emails.send({
   html: /* email template */
 });
 ```
-
-## Admin Dashboard
-
-When ready to add admin controls:
-1. Create new page: `src/pages/admin/withdrawals.tsx`
-2. Add admin RLS policy to `withdrawal_requests` table
-3. Display pending withdrawals with status update capability
-4. Add export functionality for accounting
 
 ## Troubleshooting
 
