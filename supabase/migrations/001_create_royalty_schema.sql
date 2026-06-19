@@ -93,7 +93,7 @@ CREATE POLICY "Users can view their own royalty records"
 
 CREATE POLICY "Admin can insert royalty records"
   ON public.royalty_records FOR INSERT
-  WITH CHECK (true); -- You'll restrict this via application logic
+  WITH CHECK (true);
 
 -- RLS Policies for withdrawal_requests
 CREATE POLICY "Users can view their own withdrawal requests"
