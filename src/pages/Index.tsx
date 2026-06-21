@@ -213,11 +213,9 @@ const Index = () => {
           </div>
         </section>
 
-import heroBg from "@/assets/hero-bg.jpg";
-
         {/* CTA Section */}
         <section
-          className="py-12 sm:py-16 lg:py-20 px-4 relative"
+          className="py-20 sm:py-24 lg:py-32 px-4 relative"
           style={{
             backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/Yo-Maps-Hello-Video.jpg)`,
             backgroundSize: 'cover',
