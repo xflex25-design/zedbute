@@ -15,7 +15,7 @@ const Blog = () => {
     title: "ZedBute Blog | Music Distribution Tips for Zambian Artists",
     description:
       "Insights, guides and tips on music distribution, streaming, and growing your career as an independent Zambian artist.",
-    canonical: "https://zedbute.vercel.app/blog",
+    canonical: "https://zedbute.vercel.app/",
     keywords: "Zambian music blog, music distribution tips, independent artist guide, Spotify Zambia",
   });
 

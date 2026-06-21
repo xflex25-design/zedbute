@@ -159,7 +159,7 @@ return (
       />
       <link
         rel="canonical"
-        href="https://zedbute.vercel.app/dashboard"
+        href="https://zedbute.vercel.app/"
       />
     </Helmet>
 

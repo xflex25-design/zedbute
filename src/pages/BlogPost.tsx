@@ -15,7 +15,7 @@ const BlogPost = () => {
   useSEO({
     title: post ? `${post.title} | ZedBute Blog` : "Blog Post | ZedBute",
     description: post?.description ?? "ZedBute blog post.",
-    canonical: post ? `https://zedbute.vercel.app/blog/${post.slug}` : undefined,
+    canonical: "https://zedbute.vercel.app/",
   });
 
   useEffect(() => {

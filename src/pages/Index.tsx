@@ -29,7 +29,7 @@ const Index = () => {
   useSEO({
     title: "ZedBute | Music Distribution for Zambian & Independent Artists",
     description: "Distribute your music to Spotify, Apple Music, TikTok & 150+ platforms. Keep 100% of your royalties. Built for Zambian and independent artists.",
-    canonical: "https://zedbute.vercel.app",
+    canonical: "https://zedbute.vercel.app/",
     keywords: "music distribution, distribute music free, keep 100% royalties, independent artist music distribution, Zambian music distribution",
   });
 
