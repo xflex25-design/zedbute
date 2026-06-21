@@ -26,6 +26,7 @@ import {
   Upload,
   Wallet,
   ArrowUpRight,
+  TrendingUp,
 } from "lucide-react";
 
 type Release = {
@@ -88,6 +89,14 @@ const Dashboard = () => {
   const [releases, setReleases] = useState<Release[]>([]);
   const [royalties, setRoyalties] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
+  const [promotions, setPromotions] = useState<any[]>([]);
+  const [loadingPromotions, setLoadingPromotions] = useState(false);
+  const [promotingReleaseId, setPromotingReleaseId] = useState<string | null>(null);
+  const [showPromoForm, setShowPromoForm] = useState(false);
+  const [promoSocials, setPromoSocials] = useState("");
+  const [promoAudience, setPromoAudience] = useState("");
+  const [promoMessage, setPromoMessage] = useState("");
+  const [submittingPromo, setSubmittingPromo] = useState(false);
   const [loadingRoyalties, setLoadingRoyalties] = useState(false);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -141,29 +150,46 @@ const Dashboard = () => {
     setLoadingRoyalties(false);
   };
 
-  const handleWithdraw = async () => {
-    if (!user || !withdrawAmount || parseFloat(withdrawAmount) <= 0) return;
-    setSubmittingWithdraw(true);
-    const { error } = await supabase.from("withdrawal_requests").insert({
-      user_id: user.id,
-      amount: parseFloat(withdrawAmount),
-      bank_name: withdrawBank,
-      bank_account_number: withdrawAccount,
-      bank_code: withdrawCode,
-      status: "pending",
-    });
+  const fetchPromotions = async (userId: string) => {
+    setLoadingPromotions(true);
+    const { data: promosData } = await supabase
+      .from("promotions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setPromotions(promosData ?? []);
+    setLoadingPromotions(false);
+  };
+
+  const handlePromote = async (releaseId: string) => {
+    if (!user) return;
+    setSubmittingPromo(true);
+    const { data: promo, error } = await supabase
+      .from("promotions")
+      .insert({
+        user_id: user.id,
+        release_id: releaseId,
+        amount: 20.00,
+        status: "pending",
+        social_handles: promoSocials,
+        target_audience: promoAudience,
+        message: promoMessage,
+      })
+      .select()
+      .single();
+
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Withdrawal requested", description: "Your request has been submitted." });
-      setShowWithdrawForm(false);
-      setWithdrawAmount("");
-      setWithdrawBank("");
-      setWithdrawAccount("");
-      setWithdrawCode("");
-      fetchRoyaltyData(user.id);
+      toast({ title: "Promotion submitted!", description: "Complete the K20 payment to activate your promotion." });
+      setShowPromoForm(false);
+      setPromoSocials("");
+      setPromoAudience("");
+      setPromoMessage("");
+      setPromotingReleaseId(null);
+      navigate(`/payment?type=promotion&promotionId=${promo.id}`);
     }
-    setSubmittingWithdraw(false);
+    setSubmittingPromo(false);
   };
 
   useEffect(() => {
@@ -177,6 +203,7 @@ const Dashboard = () => {
           if (!ignore) setLoading(false);
         });
         fetchRoyaltyData(session.user.id);
+        fetchPromotions(session.user.id);
       } else {
         setLoading(false);
         navigate("/auth");
@@ -189,6 +216,7 @@ const Dashboard = () => {
         setUser(session.user);
         fetchUserData(session.user.id);
         fetchRoyaltyData(session.user.id);
+        fetchPromotions(session.user.id);
       } else if (event === "SIGNED_OUT") {
         navigate("/auth");
       }
@@ -649,6 +677,83 @@ return (
             )}
           </div>
         </Card>
+
+        {/* Promote Your Releases */}
+        {releases.length > 0 && (
+          <Card className="bg-card border border-border rounded-2xl mt-6">
+            <div className="p-5">
+              <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Promote Your Releases
+              </h2>
+              <p className="text-xs text-muted-foreground mb-4">Pay K20 to promote any release on ZedBute home page</p>
+
+              {!promotingReleaseId ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {releases.map((r) => {
+                    const isPromoted = promotions.some((p) => p.release_id === r.id && p.status === "active");
+                    const hasPending = promotions.some((p) => p.release_id === r.id && p.status === "pending");
+                    return (
+                      <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {r.cover_art_url ? (
+                            <img src={r.cover_art_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
+                          ) : (
+                            <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                              <Music className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{r.title}</p>
+                            <p className="text-xs text-muted-foreground">{r.status}</p>
+                          </div>
+                        </div>
+                        {isPromoted ? (
+                          <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Promoted</Badge>
+                        ) : hasPending ? (
+                          <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => setPromotingReleaseId(r.id)}
+                            className="rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs"
+                          >
+                            Promote — K20
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-background p-4 space-y-3">
+                  <p className="text-sm font-medium">Promote Release</p>
+                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 to get featured on the home page for 7 days.</p>
+                  <div className="space-y-2">
+                    <div>
+                      <Label htmlFor="promoSocials">Social Handles (optional)</Label>
+                      <Input id="promoSocials" placeholder="@artistname" value={promoSocials} onChange={(e) => setPromoSocials(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label htmlFor="promoAudience">Target Audience</Label>
+                      <Input id="promoAudience" placeholder="e.g., Zambian music lovers, Hip Hop fans" value={promoAudience} onChange={(e) => setPromoAudience(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label htmlFor="promoMessage">Promotion Message</Label>
+                      <Input id="promoMessage" placeholder="Check out my new release!" value={promoMessage} onChange={(e) => setPromoMessage(e.target.value)} />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button onClick={() => handlePromote(promotingReleaseId)} disabled={submittingPromo} className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+                        {submittingPromo ? "Submitting..." : "Proceed to Pay K20"}
+                      </Button>
+                      <Button variant="outline" onClick={() => { setPromotingReleaseId(null); setShowPromoForm(false); }} className="flex-1">Cancel</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
       </div>
     </div>

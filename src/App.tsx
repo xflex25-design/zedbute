@@ -17,6 +17,7 @@ import Payment from "./pages/Payment";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Royalties from "./pages/Royalties";
+import AdminPromotions from "./pages/AdminPromotions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/verify" element={<Verify />} />
             <Route path="/verify-claim" element={<VerifyClaim />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/promotions" element={<AdminPromotions />} />
             <Route path="/upload-release" element={<UploadRelease />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/release-success" element={<ReleaseSuccess />} />

@@ -32,7 +32,7 @@ const LENCO_PUBLIC_KEY =
   import.meta.env.VITE_LENCO_PUBLIC_KEY ||
   "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
-const PAYMENT_AMOUNT = 50;
+const PAYMENT_AMOUNT = paymentType === "promotion" ? 20 : 50;
 
 interface Profile {
   id: string;
@@ -46,11 +46,14 @@ export default function Payment() {
 
   const paymentType = searchParams.get("type") || "release";
   const releaseId = searchParams.get("releaseId");
+  const promotionId = searchParams.get("promotionId");
 
   const paymentLabel =
     paymentType === "verification"
       ? "Artist Verification"
-      : "Release Upload";
+      : paymentType === "promotion"
+        ? "Promote Release"
+        : "Release Upload";
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -148,11 +151,39 @@ export default function Payment() {
     }
   }
 
+  async function savePromotionPayment(transactionId: string, status: "verified" | "pending") {
+    if (!user || !promotionId) return;
+    const { error } = await supabase.from("promotion_payments").insert({
+      promotion_id: promotionId,
+      user_id: user.id,
+      amount: 20,
+      payment_method: "lenco_inline",
+      transaction_id: transactionId,
+      status,
+      payment_proof: null,
+      verified_at: status === "verified" ? new Date().toISOString() : null,
+    });
+    if (error) throw error;
+    if (status === "verified") {
+      await supabase.from("promotions").update({ status: "active", start_date: new Date().toISOString().split("T")[0], end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0] }).eq("id", promotionId);
+    }
+  }
+
   async function handlePaymentSuccess(
     transactionId: string,
     status: "verified" | "pending"
   ) {
     try {
+      if (paymentType === "promotion") {
+        await savePromotionPayment(transactionId, status);
+        toast({
+          title: status === "verified" ? "Promotion Activated!" : "Promotion Payment Submitted",
+          description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
+        });
+        navigate("/dashboard");
+        return;
+      }
+
       await savePayment(transactionId, status);
 
       if (paymentType === "release") {

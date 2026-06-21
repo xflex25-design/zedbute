@@ -436,6 +436,132 @@ export type Database = {
           },
         ]
       }
+      promotion_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_method: string
+          payment_proof: string | null
+          promotion_id: string
+          status: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          payment_proof?: string | null
+          promotion_id: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payment_proof?: string | null
+          promotion_id?: string
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_payments_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          end_date: string | null
+          id: string
+          message: string | null
+          payment_proof: string | null
+          release_id: string
+          social_handles: string | null
+          start_date: string | null
+          status: string
+          target_audience: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          message?: string | null
+          payment_proof?: string | null
+          release_id: string
+          social_handles?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          message?: string | null
+          payment_proof?: string | null
+          release_id?: string
+          social_handles?: string | null
+          start_date?: string | null
+          status?: string
+          target_audience?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotions_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "music_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_stats: {
         Row: {
           created_at: string
