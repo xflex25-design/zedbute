@@ -16,6 +16,7 @@ import ReleaseSuccess from "./pages/ReleaseSuccess";
 import Payment from "./pages/Payment";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Royalties from "./pages/Royalties";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/release-success" element={<ReleaseSuccess />} />
             <Route path="/payment" element={<Payment />} />
+            <Route path="/royalties" element={<Royalties />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="*" element={<NotFound />} />
