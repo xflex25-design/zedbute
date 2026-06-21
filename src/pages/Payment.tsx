@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 import type { User } from "@supabase/supabase-js";
+import emailjs from "@emailjs/browser";
 
 declare global {
   interface Window {
@@ -173,6 +174,31 @@ export default function Payment() {
             ? "Your release is pending review."
             : "Payment confirmation is pending.",
       });
+
+      if (paymentType === "release" && status === "verified") {
+        try {
+          const { data: release } = await supabase
+            .from("music_releases")
+            .select("title")
+            .eq("id", releaseId)
+            .single();
+
+          if (release && user?.email) {
+            emailjs.send(
+              "service_m5ipkn6",
+              "template_h6m0hkf",
+              {
+                to_email: user.email,
+                title: "Your release has been submitted!",
+                message: `Hi,\n\nYour release "${release.title}" has been successfully submitted. It will be reviewed and distributed within 2 weeks.\n\nThank you for using ZedBute.`,
+              },
+              "y6dBkyYNeiQ5-ONrT"
+            );
+          }
+        } catch (e) {
+          console.error("Upload confirmation email failed:", e);
+        }
+      }
 
       if (paymentType === "verification") {
         sessionStorage.setItem(

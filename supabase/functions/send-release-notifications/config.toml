@@ -1,0 +1,3 @@
+name = "send-release-notifications"
+main = "index.ts"
+compatibility_date = "2023-10-25"

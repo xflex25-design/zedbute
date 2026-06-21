@@ -86,6 +86,7 @@ const Admin = () => {
       const updates: any = { upload_progress: newProgress };
       if (newProgress === 100 && release.status !== "distributed") {
         updates.status = "distributed";
+        updates.distributed_at = new Date().toISOString();
       }
       const { error } = await supabase.from("music_releases").update(updates).eq("id", release.id);
       if (error) throw error;
@@ -105,7 +106,7 @@ const Admin = () => {
               .from("music_releases")
               .update({ completion_email_sent_at: new Date().toISOString() })
               .eq("id", release.id);
-            setBanner(`✅ Completion email sent to ${release.profile_email}`);
+            setBanner(`Completion email sent to ${release.profile_email}`);
             setTimeout(() => setBanner(null), 5000);
           } catch (emailErr: any) {
             toast({
