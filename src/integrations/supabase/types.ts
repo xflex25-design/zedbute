@@ -267,6 +267,101 @@ export type Database = {
         }
         Relationships: []
       }
+      royalty_records: {
+        Row: {
+          created_at: string
+          date_earned: string
+          id: string
+          amount: number
+          song_id: string
+          source: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date_earned?: string
+          id?: string
+          song_id: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date_earned?: string
+          id?: string
+          song_id?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "royalty_records_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "royalty_records_song_id_fkey"
+            columns: ["song_id"]
+            isOneToOne: false
+            referencedRelation: "songs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      songs: {
+        Row: {
+          artist_id: string
+          created_at: string
+          genre: string | null
+          id: string
+          isrc: string | null
+          metadata: Json | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist_id: string
+          created_at?: string
+          genre?: string | null
+          id?: string
+          isrc?: string | null
+          metadata?: Json | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist_id?: string
+          created_at?: string
+          genre?: string | null
+          id?: string
+          isrc?: string | null
+          metadata?: Json | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "songs_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -287,6 +382,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          bank_account_number: string
+          bank_code: string
+          bank_name: string
+          created_at: string
+          id: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          bank_account_number: string
+          bank_code: string
+          bank_name: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          bank_account_number?: string
+          bank_code?: string
+          bank_name?: string
+          created_at?: string
+          id?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_stats: {
         Row: {
