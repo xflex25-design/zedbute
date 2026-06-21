@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.airtel-money-payment]
 verify_jwt = false
+
+[functions.send-release-notifications]
+verify_jwt = false
