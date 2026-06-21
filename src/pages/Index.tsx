@@ -213,9 +213,18 @@ const Index = () => {
           </div>
         </section>
 
+import heroBg from "@/assets/hero-bg.jpg";
+
         {/* CTA Section */}
-        <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-primary">
-          <div className="container mx-auto text-center">
+        <section
+          className="py-12 sm:py-16 lg:py-20 px-4 relative"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(${heroBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="container mx-auto text-center relative z-10">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-primary-foreground">
               Ready to Share Your Music?
             </h2>
