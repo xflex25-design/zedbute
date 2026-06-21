@@ -32,8 +32,6 @@ const LENCO_PUBLIC_KEY =
   import.meta.env.VITE_LENCO_PUBLIC_KEY ||
   "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
-const PAYMENT_AMOUNT = paymentType === "promotion" ? 20 : 50;
-
 interface Profile {
   id: string;
   full_name?: string;
@@ -54,6 +52,8 @@ export default function Payment() {
       : paymentType === "promotion"
         ? "Promote Release"
         : "Release Upload";
+
+  const paymentAmount = paymentType === "promotion" ? 20 : 50;
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -120,7 +120,7 @@ export default function Payment() {
       .from("release_payments")
       .insert({
         user_id: user.id,
-        amount: PAYMENT_AMOUNT,
+        amount: paymentAmount,
         payment_method: "lenco_inline",
         phone_number: phoneNumber,
         transaction_id: transactionId,
@@ -292,7 +292,7 @@ export default function Payment() {
     window.LencoPay.getPaid({
       key: LENCO_PUBLIC_KEY,
       reference,
-      amount: PAYMENT_AMOUNT,
+      amount: paymentAmount,
       currency: "ZMW",
       email: user.email,
 
@@ -363,7 +363,7 @@ export default function Payment() {
               </CardTitle>
 
               <CardDescription className="text-3xl font-bold mt-2">
-                K{PAYMENT_AMOUNT}
+                K{paymentAmount}
               </CardDescription>
             </CardHeader>
 
@@ -417,7 +417,7 @@ export default function Payment() {
                 ) : (
                   <>
                     <Zap className="mr-2 h-5 w-5" />
-                    Pay K{PAYMENT_AMOUNT}
+                    Pay K{paymentAmount}
                   </>
                 )}
               </Button>
