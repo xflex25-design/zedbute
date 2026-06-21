@@ -186,7 +186,7 @@ const Royalties = () => {
                 <p className={`text-2xl font-bold ${available >= 100 ? "text-green-600" : "text-foreground"}`}>
                   ${available.toFixed(2)}
                 </p>
-                {available >= 100 && (
+                {available >= 100 ? (
                   <Button
                     onClick={() => setShowWithdrawForm(true)}
                     className="mt-3 w-full rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-semibold hover:opacity-90"
@@ -194,6 +194,8 @@ const Royalties = () => {
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     Request Withdrawal
                   </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground mt-2">Minimum withdrawal: <strong>$100.00</strong></p>
                 )}
               </CardContent>
             </Card>

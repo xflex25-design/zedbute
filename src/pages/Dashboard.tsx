@@ -376,6 +376,8 @@ return (
                   </div>
                 </div>
 
+                <p className="text-xs text-muted-foreground mb-2">Minimum withdrawal: <strong>$100.00</strong></p>
+
                 {!showWithdrawForm && (
                   <Button
                     onClick={() => setShowWithdrawForm(true)}
