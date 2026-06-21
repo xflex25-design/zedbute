@@ -219,7 +219,7 @@ import heroBg from "@/assets/hero-bg.jpg";
         <section
           className="py-12 sm:py-16 lg:py-20 px-4 relative"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(${heroBg})`,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/Yo-Maps-Hello-Video.jpg)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
