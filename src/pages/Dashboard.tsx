@@ -682,11 +682,11 @@ return (
         {releases.length > 0 && (
           <Card className="bg-card border border-border rounded-2xl mt-6">
             <div className="p-5">
-              <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Promote Your Releases
+                Promote Your Music
               </h2>
-              <p className="text-xs text-muted-foreground mb-4">Pay K20 to promote any release on ZedBute home page</p>
+              <p className="text-xs text-muted-foreground mb-4">Pay K20 to get featured on our homepage AND Boomplay playlist</p>
 
               {!promotingReleaseId ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -728,7 +728,7 @@ return (
               ) : (
                 <div className="rounded-lg border border-border bg-background p-4 space-y-3">
                   <p className="text-sm font-medium">Promote Release</p>
-                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 to get featured on the home page for 7 days.</p>
+                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 to get featured on the homepage AND Boomplay playlist for 7 days.</p>
                   <div className="space-y-2">
                     <div>
                       <Label htmlFor="promoSocials">Social Handles (optional)</Label>
