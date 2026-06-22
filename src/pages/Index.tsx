@@ -85,19 +85,19 @@ const Index = () => {
         <section
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/OIP%20(1).webp)`,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/OIP%20(1).webp)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
         >
           <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-foreground leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg leading-tight">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 To The World
               </span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/90 mb-6 sm:mb-8 max-w-3xl mx-auto px-2">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 sm:mb-8 max-w-3xl mx-auto px-2 drop-shadow">
               Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
             </p>
             <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
@@ -105,7 +105,7 @@ const Index = () => {
                 size="lg"
                 variant="hero"
                 onClick={() => navigate(user ? "/dashboard" : "/auth")}
-                className="text-base sm:text-lg px-6 sm:px-8"
+                className="text-base sm:text-lg px-6 sm:px-8 shadow-lg"
               >
                 {user ? "Go to Dashboard" : "Start Distributing"}
               </Button>
@@ -113,7 +113,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/pricing")}
-                className="text-base sm:text-lg px-6 sm:px-8 bg-background/20 backdrop-blur-sm border-foreground/20 hover:bg-background/30"
+                className="text-base sm:text-lg px-6 sm:px-8 bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 shadow-lg"
               >
                 View Pricing
               </Button>
