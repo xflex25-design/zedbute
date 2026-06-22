@@ -85,7 +85,7 @@ const Index = () => {
         <section
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/OIP%20(1).webp)`,
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/OIP%20(1).webp)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
