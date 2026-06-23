@@ -348,7 +348,7 @@ const UploadRelease = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} />
-      <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
+      <div className="max-w-3xl mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-12">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -408,15 +408,15 @@ const UploadRelease = () => {
               {/* Language Selection */}
               <div className="space-y-3">
                 <Label>Language(s) *</Label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {LANGUAGES.map((language) => (
-                    <div key={language} className="flex items-center space-x-2">
+                    <div key={language} className="flex items-center space-x-2 min-w-0">
                       <Checkbox
                         id={language}
                         checked={selectedLanguages.includes(language)}
                         onCheckedChange={() => handleLanguageToggle(language)}
                       />
-                      <Label htmlFor={language} className="cursor-pointer font-normal">
+                      <Label htmlFor={language} className="cursor-pointer font-normal truncate">
                         {language}
                       </Label>
                     </div>
@@ -477,18 +477,19 @@ const UploadRelease = () => {
                 >
                   <div 
                     className={cn(
-                      "flex items-center justify-between space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors",
+                      "flex items-center justify-between space-x-2 rounded-lg border p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors",
                       formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") === format(addWeeks(new Date(), 2), "yyyy-MM-dd") && "border-primary bg-primary/5"
                     )}
                     onClick={() => setFormData({ ...formData, releaseDate: addWeeks(new Date(), 2) })}
                   >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 min-w-0">
                       <RadioGroupItem 
                         value={format(addWeeks(new Date(), 2), "yyyy-MM-dd")} 
                         id="two-weeks" 
                         checked={formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") === format(addWeeks(new Date(), 2), "yyyy-MM-dd") : false}
+                        className="shrink-0"
                       />
-                      <div>
+                      <div className="min-w-0">
                         <Label htmlFor="two-weeks" className="cursor-pointer font-medium block">Earliest Available (2 Weeks)</Label>
                         <span className="text-xs text-muted-foreground">Recommended for maximum delivery success</span>
                       </div>
@@ -499,26 +500,27 @@ const UploadRelease = () => {
                     <PopoverTrigger asChild>
                       <div 
                         className={cn(
-                          "flex items-center justify-between space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors",
+                          "flex items-center justify-between space-x-2 rounded-lg border p-3 sm:p-4 cursor-pointer hover:bg-accent/50 transition-colors",
                           formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") && "border-primary bg-primary/5"
                         )}
                       >
-                        <div className="flex items-center space-x-2 w-full">
+                        <div className="flex items-center space-x-2 w-full min-w-0">
                           <RadioGroupItem 
                             value="custom" 
                             id="custom-date" 
                             checked={formData.releaseDate ? format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") : false}
+                            className="shrink-0"
                           />
-                          <div className="flex items-center justify-between w-full">
-                            <div>
-                              <Label htmlFor="custom-date" className="cursor-pointer font-medium block">Specific Date</Label>
-                              <span className="text-xs text-muted-foreground">
+                          <div className="flex items-center justify-between w-full gap-2 min-w-0">
+                            <div className="min-w-0">
+                              <Label htmlFor="custom-date" className="cursor-pointer font-medium block truncate">Specific Date</Label>
+                              <span className="text-xs text-muted-foreground line-clamp-1 break-all">
                                 {formData.releaseDate && format(formData.releaseDate, "yyyy-MM-dd") !== format(addWeeks(new Date(), 2), "yyyy-MM-dd") 
                                   ? format(formData.releaseDate, "PPP") 
                                   : "Choose a custom day"}
                               </span>
                             </div>
-                            <CalendarIcon className="h-4 w-4 ml-auto text-muted-foreground" />
+                            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                           </div>
                         </div>
                       </div>
@@ -549,14 +551,14 @@ const UploadRelease = () => {
 
               {/* Cover Art */}
               <div className="space-y-3">
-                <Label htmlFor="coverArt" className="flex items-center gap-2">
+                <Label htmlFor="coverArt" className="flex items-center gap-2 flex-wrap">
                   Cover Art *
                   <span className="text-xs text-muted-foreground font-normal">(Required: minimum 1400 x 1400 pixels)</span>
                 </Label>
-                <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 text-center">
                   {imagePreview ? (
                     <div className="space-y-4">
-                      <img src={imagePreview} alt="Cover preview" className="mx-auto max-w-xs rounded-lg" />
+                      <img src={imagePreview} alt="Cover preview" className="mx-auto w-full max-w-[200px] sm:max-w-xs rounded-lg" />
                       <Button
                         type="button"
                         variant="outline"
@@ -572,7 +574,7 @@ const UploadRelease = () => {
                   ) : (
                     <div className="space-y-2">
                       {showReattachPrompt && previousFileName && (
-                        <p className="text-sm text-primary font-medium">Please re-attach: {previousFileName}</p>
+                        <p className="text-sm text-primary font-medium break-words px-2">Please re-attach: {previousFileName}</p>
                       )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
@@ -604,19 +606,19 @@ const UploadRelease = () => {
               {/* Audio File */}
               <div className="space-y-3">
                 <Label htmlFor="audioFile">Music Audio File *</Label>
-                <div ref={audioScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                <div ref={audioScrollRef} className="border-2 border-dashed border-border rounded-lg p-4 sm:p-6 text-center">
                   {formData.audioFile ? (
                     <div className="space-y-4">
                       <Music className="mx-auto h-12 w-12 text-primary" />
-                      <p className="text-sm font-medium">{formData.audioFile.name}</p>
+                      <p className="text-sm font-medium truncate px-2">{formData.audioFile.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                       {isUploadingAudio && (
                         <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center justify-between text-sm gap-2">
                             <span className="text-muted-foreground">Uploading audio...</span>
-                            <span className="font-medium">{audioUploadProgress}%</span>
+                            <span className="font-medium shrink-0">{audioUploadProgress}%</span>
                           </div>
                           <Progress value={audioUploadProgress} className="h-2" />
                         </div>
@@ -637,7 +639,7 @@ const UploadRelease = () => {
                   ) : (
                     <div className="space-y-2">
                       {showReattachPrompt && savedAudioFileName && (
-                        <p className="text-sm text-primary font-medium">Please re-attach: {savedAudioFileName}</p>
+                        <p className="text-sm text-primary font-medium break-words px-2">Please re-attach: {savedAudioFileName}</p>
                       )}
                       <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                       <div className="text-sm text-muted-foreground">
@@ -660,17 +662,18 @@ const UploadRelease = () => {
               </div>
 
               {/* Rights Confirmation */}
-              <div className="flex items-start space-x-3 rounded-lg border border-border p-4 bg-muted/50">
+              <div className="flex items-start space-x-3 rounded-lg border border-border p-3 sm:p-4 bg-muted/50">
                 <Checkbox
                   id="rights"
                   checked={formData.rightsConfirmed}
                   onCheckedChange={(checked) =>
                     setFormData({ ...formData, rightsConfirmed: checked as boolean })
                   }
+                  className="shrink-0 mt-0.5"
                 />
-                <div className="space-y-1">
-                  <Label htmlFor="rights" className="cursor-pointer flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
+                <div className="space-y-1 min-w-0">
+                  <Label htmlFor="rights" className="cursor-pointer flex items-center gap-2 flex-wrap">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
                     I own the rights to this music *
                   </Label>
                   <p className="text-sm text-muted-foreground">
@@ -683,9 +686,9 @@ const UploadRelease = () => {
               {/* Upload Progress */}
               {isUploading && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center justify-between text-sm gap-2">
                     <span className="text-muted-foreground">Uploading...</span>
-                    <span className="font-medium">{uploadProgress}%</span>
+                    <span className="font-medium shrink-0">{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
