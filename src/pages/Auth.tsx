@@ -8,36 +8,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Music2, ArrowLeft, Phone, Mail } from "lucide-react";
+import { Music2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { z } from "zod";
 
-const cleanPhone = (val: string) => val.replace(/[\s\-()]/g, "");
-
 const authSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }).max(255).optional(),
-  phone: z.string().regex(/^\+260\d{9}$/, { message: "Phone must be in format +260XXXXXXXXX" }).optional(),
+  email: z.string().email({ message: "Invalid email address" }).max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
   fullName: z.string().trim().max(100).optional(),
-}).refine(data => data.email || data.phone, {
-  message: "Either email or phone number is required"
 });
 
-type ResetStep = "idle" | "choose_method" | "enter_email" | "enter_phone" | "verify_otp" | "set_new_password";
+type ResetStep = "idle" | "enter_email" | "set_new_password";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [usePhone, setUsePhone] = useState(false);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
   const [newPassword, setNewPassword] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [resetPhone, setResetPhone] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,103 +51,53 @@ const Auth = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val && !val.startsWith("+") && /^\d/.test(val)) {
-      if (val.startsWith("260")) {
-        val = "+" + val;
-      } else if (val.startsWith("0")) {
-        val = "+260" + val.slice(1);
-      } else {
-        val = "+260" + val;
-      }
-    }
-    setPhone(cleanPhone(val));
-  };
-
-  const handleResetPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val && !val.startsWith("+") && /^\d/.test(val)) {
-      if (val.startsWith("260")) {
-        val = "+" + val;
-      } else if (val.startsWith("0")) {
-        val = "+260" + val.slice(1);
-      } else {
-        val = "+260" + val;
-      }
-    }
-    setResetPhone(cleanPhone(val));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const cleanedPhone = cleanPhone(phone);
       const validationData = {
-        email: usePhone ? undefined : email,
-        phone: usePhone ? cleanedPhone : undefined,
+        email,
         password,
         fullName: !isLogin ? fullName : undefined,
       };
       authSchema.parse(validationData);
       if (isLogin) {
-        const credentials = usePhone
-          ? { phone: cleanedPhone, password }
-          : { email, password };
-        const { error } = await supabase.auth.signInWithPassword(credentials);
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           toast({
             title: "Login failed",
             description: error.message.includes("Invalid")
-              ? `Invalid ${usePhone ? "phone number" : "email"} or password. Please try again.`
+              ? "Invalid email or password. Please try again."
               : error.message,
             variant: "destructive",
           });
         } else {
           toast({ title: "Welcome back!", description: "You've successfully logged in." });
-          // FIX 3: Was `window.location.href = "/dashboard"` — use navigate() instead
           navigate("/dashboard");
         }
       } else {
-        const signUpData = usePhone
-          ? {
-              phone: cleanedPhone,
-              password,
-              options: { data: { full_name: fullName } },
-            }
-          : {
-              email,
-              password,
-              options: {
-                emailRedirectTo: `${window.location.origin}/`,
-                data: { full_name: fullName },
-              },
-            };
-
-        const { error, data } = await supabase.auth.signUp(signUpData);
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { full_name: fullName },
+          },
+        });
 
         if (error) {
           const isRegistered = error.message.includes("already registered");
           toast({
             title: isRegistered ? "Account exists" : "Error",
             description: isRegistered
-              ? `This ${usePhone ? "phone number" : "email"} is already registered. Please login instead.`
+              ? "This email is already registered. Please login instead."
               : error.message,
             variant: "destructive",
           });
         } else {
-          if (usePhone && data.user) {
-            await supabase
-              .from("profiles")
-              .update({ phone_number: cleanedPhone })
-              .eq("id", data.user.id);
-          }
           toast({
             title: "Account created!",
-            description: usePhone
-              ? "You can now login with your phone number."
-              : "Please check your email to verify your account, then login.",
+            description: "Please check your email to verify your account, then login.",
           });
           setIsLogin(true);
         }
@@ -201,58 +141,6 @@ const Auth = () => {
     }
   };
 
-  const handlePhoneOtpSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleaned = cleanPhone(resetPhone);
-    if (!/^\+260\d{9}$/.test(cleaned)) {
-      toast({ title: "Invalid phone", description: "Phone must be in format +260XXXXXXXXX", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({ phone: cleaned });
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        toast({
-          title: "Code sent!",
-          description: "Enter the 6-digit code we sent to your phone.",
-        });
-        setResetStep("verify_otp");
-      }
-    } catch {
-      toast({ title: "Error", description: "Failed to send SMS. Please try again.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otpCode.length !== 6) {
-      toast({ title: "Invalid code", description: "Please enter the full 6-digit code.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone: cleanPhone(resetPhone),
-        token: otpCode,
-        type: "sms",
-      });
-      if (error) {
-        toast({ title: "Verification failed", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Phone verified!", description: "Now set your new password." });
-        setResetStep("set_new_password");
-      }
-    } catch {
-      toast({ title: "Error", description: "Verification failed.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
@@ -268,7 +156,6 @@ const Auth = () => {
         toast({ title: "Password updated!", description: "You can now login with your new password." });
         setResetStep("idle");
         setNewPassword("");
-        setOtpCode("");
         await supabase.auth.signOut();
         setIsLogin(true);
       }
@@ -280,9 +167,8 @@ const Auth = () => {
   };
 
   const goBack = () => {
-    if (resetStep === "verify_otp") setResetStep("enter_phone");
-    else if (resetStep === "enter_phone" || resetStep === "enter_email") setResetStep("choose_method");
-    else { setResetStep("idle"); setNewPassword(""); setOtpCode(""); }
+    if (resetStep === "enter_email") setResetStep("idle");
+    else { setResetStep("idle"); setNewPassword(""); }
   };
 
   // Set new password screen
@@ -315,88 +201,19 @@ const Auth = () => {
     );
   }
 
-  // Verify OTP screen
-  if (resetStep === "verify_otp") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-        <Card className="w-full max-w-md shadow-card">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
-            <CardTitle className="text-2xl">Enter Verification Code</CardTitle>
-            <CardDescription>We sent a 6-digit code to {resetPhone}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-              <Button type="submit" className="w-full" variant="hero" disabled={loading || otpCode.length !== 6}>
-                {loading ? "Verifying..." : "Verify Code"}
-              </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <Card className="w-full max-w-md shadow-card">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
           <CardTitle className="text-2xl">
-            {resetStep === "choose_method" ? "Reset Password"
-              : resetStep === "enter_email" ? "Reset via Email"
-              : resetStep === "enter_phone" ? "Reset via SMS"
-              : isLogin ? "Welcome Back" : "Create Account"}
+            {resetStep === "enter_email" ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
           <CardDescription>
-            {resetStep === "choose_method" ? "Choose how you'd like to recover your account"
-              : resetStep === "enter_email" ? "We'll send a recovery link to your email"
-              : resetStep === "enter_phone" ? "We'll send a verification code via SMS"
-              : isLogin ? "Login to access your music distribution dashboard"
-              : "Start distributing your music worldwide"}
+            {resetStep === "enter_email" ? "Enter your email to reset your password" : isLogin ? "Login to access your music distribution dashboard" : "Start distributing your music worldwide"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Choose recovery method */}
-          {resetStep === "choose_method" && (
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-3 h-14"
-                onClick={() => setResetStep("enter_email")}>
-                <Mail className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">Reset via Email</p>
-                  <p className="text-xs text-muted-foreground">Receive a recovery link in your inbox</p>
-                </div>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-3 h-14"
-                onClick={() => setResetStep("enter_phone")}>
-                <Phone className="h-5 w-5 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">Reset via SMS</p>
-                  <p className="text-xs text-muted-foreground">Receive a 6-digit code on your phone</p>
-                </div>
-              </Button>
-              <Button type="button" variant="ghost" className="w-full mt-2" onClick={goBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
-              </Button>
-            </div>
-          )}
-
           {/* Email reset form */}
           {resetStep === "enter_email" && (
             <form onSubmit={handleEmailReset} className="space-y-4">
@@ -407,24 +224,6 @@ const Auth = () => {
               </div>
               <Button type="submit" className="w-full" variant="hero" disabled={loading}>
                 {loading ? "Sending..." : "Send Recovery Link"}
-              </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-            </form>
-          )}
-
-          {/* Phone reset form */}
-          {resetStep === "enter_phone" && (
-            <form onSubmit={handlePhoneOtpSend} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-phone">Phone Number</Label>
-                <Input id="reset-phone" type="tel" placeholder="+260XXXXXXXXX" value={resetPhone}
-                  onChange={handleResetPhoneChange} required maxLength={13} />
-                <p className="text-xs text-muted-foreground">Format: +260 followed by 9 digits</p>
-              </div>
-              <Button type="submit" className="w-full" variant="hero" disabled={loading}>
-                {loading ? "Sending..." : "Send Recovery Code"}
               </Button>
               <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -443,7 +242,6 @@ const Auth = () => {
                   const { error } = await supabase.auth.signInWithOAuth({
                     provider: "google",
                     options: {
-                      // FIX 4: Was `/auth` — caused a redirect loop back to login page
                       redirectTo: `${window.location.origin}/dashboard`,
                     },
                   });
@@ -472,36 +270,15 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name</Label>
                     <Input id="fullName" type="text" placeholder="John Doe" value={fullName}
-                      onChange={(e) => setFullName(e.target.value)} required={!isLogin} maxLength={100} />
+                      onChange={(e) => setFullName(e.target.value)} required maxLength={100} />
                   </div>
                 )}
 
-                <div className="flex items-center justify-center gap-2 text-sm">
-                  <button type="button" onClick={() => setUsePhone(false)}
-                    className={`px-3 py-1 rounded-md transition-colors ${!usePhone ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                    Email
-                  </button>
-                  <span className="text-muted-foreground">or</span>
-                  <button type="button" onClick={() => setUsePhone(true)}
-                    className={`px-3 py-1 rounded-md transition-colors ${usePhone ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                    Phone
-                  </button>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="you@example.com" value={email}
+                    onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
                 </div>
-
-                {usePhone ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" placeholder="+260XXXXXXXXX" value={phone}
-                      onChange={handlePhoneChange} required maxLength={13} />
-                    <p className="text-xs text-muted-foreground">Format: +260 followed by 9 digits</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="you@example.com" value={email}
-                      onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
-                  </div>
-                )}
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input id="password" type="password" placeholder="••••••••" value={password}
@@ -513,7 +290,7 @@ const Auth = () => {
               </form>
               {isLogin && (
                 <div className="mt-2 text-center">
-                  <button type="button" onClick={() => setResetStep("choose_method")}
+                  <button type="button" onClick={() => setResetStep("enter_email")}
                     className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     Forgot password?
                   </button>

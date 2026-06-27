@@ -111,12 +111,12 @@ const UploadRelease = () => {
   }, [toast]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) {
       navigate("/auth");
       return;
     }
-    setUser(user);
+    setUser(authUser);
     setAuthChecked(true);
   };
 
@@ -124,11 +124,11 @@ const UploadRelease = () => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const isValid = img.width === 3000 && img.height === 3000;
+        const isValid = img.width >= 1400 && img.height >= 1400;
         if (!isValid) {
           toast({
-            title: "Invalid Image Dimensions",
-            description: "Cover art must be exactly 3000x3000 pixels. Please upload a correctly sized image.",
+            title: "Invalid Image Size",
+            description: "Cover art must be at least 1400x1400 pixels. Smaller images may be rejected by platforms.",
             variant: "destructive",
           });
         }
@@ -219,7 +219,7 @@ const UploadRelease = () => {
       return;
     }
     if (!formData.coverArt) {
-      toast({ title: "No Cover Art", description: "Please upload cover art (3000x3000 pixels)", variant: "destructive" });
+      toast({ title: "No Cover Art", description: "Please upload cover art (minimum 1400x1400 pixels)", variant: "destructive" });
       return;
     }
     if (!formData.audioFile) {
@@ -289,7 +289,7 @@ const UploadRelease = () => {
       const { data: inserted, error: insertError } = await supabase
         .from("music_releases")
         .insert({
-          user_id: user.id,
+          user_id: user.profileId || user.id,
           title: formData.title,
           artist_name: formData.artistName,
           language: selectedLanguages,
@@ -551,7 +551,7 @@ const UploadRelease = () => {
               <div className="space-y-3">
                 <Label htmlFor="coverArt" className="flex items-center gap-2">
                   Cover Art *
-                  <span className="text-xs text-muted-foreground font-normal">(Required: 3000 x 3000 pixels)</span>
+                  <span className="text-xs text-muted-foreground font-normal">(Required: minimum 1400 x 1400 pixels)</span>
                 </Label>
                 <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {imagePreview ? (
@@ -580,7 +580,7 @@ const UploadRelease = () => {
                           Click to upload
                         </Label>
                       </div>
-                      <p className="text-xs text-muted-foreground">Image must be exactly 3000 x 3000 pixels</p>
+                      <p className="text-xs text-muted-foreground">Image must be at least 1400 x 1400 pixels</p>
                     </div>
                   )}
                   <Input
