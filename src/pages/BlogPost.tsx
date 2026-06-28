@@ -46,9 +46,9 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} />
-      <main className="container mx-auto px-4 pt-24 pb-16">
-        <article className="max-w-3xl mx-auto">
-          <Button asChild variant="ghost" className="mb-6">
+      <main className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-16">
+        <article className="max-w-2xl sm:max-w-3xl mx-auto">
+          <Button asChild variant="ghost" className="mb-4 sm:mb-6">
             <Link to="/blog"><ArrowLeft className="h-4 w-4" /> Back to Blog</Link>
           </Button>
 

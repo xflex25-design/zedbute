@@ -201,67 +201,71 @@ const Royalties = () => {
             </Card>
           </div>
 
-          {/* Withdrawal Form */}
-          {showWithdrawForm && (
-            <Card className="bg-card border border-border rounded-2xl mb-8">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold mb-4">Request Withdrawal</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="withdrawAmount">Amount (USD)</Label>
-                    <Input
-                      id="withdrawAmount"
-                      type="number"
-                      placeholder="100.00"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      min="100"
-                      step="0.01"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="withdrawBank">Bank Name</Label>
-                    <Input
-                      id="withdrawBank"
-                      placeholder="e.g., Zanaco"
-                      value={withdrawBank}
-                      onChange={(e) => setWithdrawBank(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="withdrawAccount">Account Number</Label>
-                    <Input
-                      id="withdrawAccount"
-                      placeholder="Account number"
-                      value={withdrawAccount}
-                      onChange={(e) => setWithdrawAccount(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="withdrawCode">Bank Code / SWIFT</Label>
-                    <Input
-                      id="withdrawCode"
-                      placeholder="ZABA"
-                      value={withdrawCode}
-                      onChange={(e) => setWithdrawCode(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <Button
-                    onClick={handleWithdraw}
-                    disabled={submittingWithdraw || available < 100}
-                    className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white"
-                  >
-                    {submittingWithdraw ? "Submitting..." : "Submit Request"}
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowWithdrawForm(false)} className="flex-1">
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+{/* Withdrawal Form */}
+           {showWithdrawForm && (
+             <Card className="bg-card border border-border rounded-2xl mb-6 sm:mb-8">
+               <CardContent className="p-4 sm:p-6">
+                 <h2 className="text-lg font-semibold mb-3 sm:mb-4">Request Withdrawal</h2>
+                 <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
+                   <div>
+                     <Label htmlFor="withdrawAmount" className="text-sm">Amount (USD)</Label>
+                     <Input
+                       id="withdrawAmount"
+                       type="number"
+                       placeholder="100.00"
+                       value={withdrawAmount}
+                       onChange={(e) => setWithdrawAmount(e.target.value)}
+                       min="100"
+                       step="0.01"
+                       className="h-10 mt-1"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="withdrawBank" className="text-sm">Bank Name</Label>
+                     <Input
+                       id="withdrawBank"
+                       placeholder="e.g., Zanaco"
+                       value={withdrawBank}
+                       onChange={(e) => setWithdrawBank(e.target.value)}
+                       className="h-10 mt-1"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="withdrawAccount" className="text-sm">Account Number</Label>
+                     <Input
+                       id="withdrawAccount"
+                       placeholder="Account number"
+                       value={withdrawAccount}
+                       onChange={(e) => setWithdrawAccount(e.target.value)}
+                       className="h-10 mt-1"
+                     />
+                   </div>
+                   <div>
+                     <Label htmlFor="withdrawCode" className="text-sm">Bank Code / SWIFT</Label>
+                     <Input
+                       id="withdrawCode"
+                       placeholder="ZABA"
+                       value={withdrawCode}
+                       onChange={(e) => setWithdrawCode(e.target.value)}
+                       className="h-10 mt-1"
+                     />
+                   </div>
+                 </div>
+                 <div className="flex flex-col xs:flex-row gap-2 mt-4">
+                   <Button
+                     onClick={handleWithdraw}
+                     disabled={submittingWithdraw || available < 100}
+                     className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white h-10"
+                   >
+                     {submittingWithdraw ? "Submitting..." : "Submit Request"}
+                   </Button>
+                   <Button variant="outline" onClick={() => setShowWithdrawForm(false)} className="flex-1 h-10">
+                     Cancel
+                   </Button>
+                 </div>
+               </CardContent>
+             </Card>
+           )}
 
           {/* Royalty History */}
           <Card className="bg-card border border-border rounded-2xl mb-8">

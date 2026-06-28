@@ -85,72 +85,85 @@ const AdminPromotions = () => {
               <p className="text-sm text-muted-foreground text-center py-10">No promotions yet</p>
             ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Release</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {promotions.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {p.music_releases?.cover_art_url ? (
-                            <img src={p.music_releases.cover_art_url} alt={p.music_releases.title} className="w-8 h-8 rounded object-cover" />
-                          ) : (
-                            <div className="w-8 h-8 rounded bg-muted flex items-center justify-center"><Eye className="h-4 w-4" /></div>
-                          )}
-                          <div>
-                            <p className="text-sm font-medium">{p.music_releases?.title || "Unknown"}</p>
-                            <p className="text-xs text-muted-foreground">{p.music_releases?.artist_name}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">K{p.amount.toFixed(2)}</TableCell>
-                      <TableCell>
-                        {p.promotion_payments?.length > 0 ? (
-                          <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Paid</Badge>
-                        ) : (
-                          <Badge variant="outline">No payment</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={
-                          p.status === "active" ? "bg-green-500/15 text-green-600 border-green-500/30" :
-                            p.status === "paid" ? "bg-blue-500/15 text-blue-600 border-blue-500/30" :
-                              p.status === "pending" ? "bg-yellow-500/15 text-yellow-600 border-yellow-500/30" :
-                                p.status === "rejected" ? "bg-red-500/15 text-red-600 border-red-500/30" :
-                                  "bg-gray-500/15 text-gray-600 border-gray-500/30"
-                        }>{p.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{new Date(p.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          {p.status === "pending" && (
-                            <>
-                              <Button size="sm" onClick={() => updateStatus(p.id, "active")} className="h-8 px-2 text-xs bg-green-500 hover:bg-green-600 text-white">
-                                <CheckCircle className="h-3 w-3 mr-1" /> Approve
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => updateStatus(p.id, "rejected")} className="h-8 px-2 text-xs">
-                                <XCircle className="h-3 w-3 mr-1" /> Reject
-                              </Button>
-                            </>
-                          )}
-                          {p.status === "active" && (
-                            <Button size="sm" variant="outline" onClick={() => updateStatus(p.id, "expired")} className="h-8 px-2 text-xs">
-                              Mark Expired
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+<thead>
+                   <TableRow>
+                     <TableHead className="hidden sm:table-cell">Release</TableHead>
+                     <TableHead>Amount</TableHead>
+                     <TableHead className="hidden sm:table-cell">Payment</TableHead>
+                     <TableHead>Status</TableHead>
+                     <TableHead className="hidden sm:table-cell">Date</TableHead>
+                     <TableHead>Actions</TableHead>
+                   </TableRow>
+                 </thead>
+<TableBody>
+                   {promotions.map((p) => (
+                     <TableRow key={p.id}>
+                       <TableCell className="sm:hidden">
+                         <div className="flex items-center gap-2">
+                           {p.music_releases?.cover_art_url ? (
+                             <img src={p.music_releases.cover_art_url} alt={p.music_releases.title} className="w-8 h-8 rounded object-cover" />
+                           ) : (
+                             <div className="w-8 h-8 rounded bg-muted flex items-center justify-center"><Eye className="h-4 w-4" /></div>
+                           )}
+                           <div>
+                             <p className="text-sm font-medium">{p.music_releases?.title || "Unknown"}</p>
+                             <p className="text-xs text-muted-foreground">{p.music_releases?.artist_name}</p>
+                           </div>
+                         </div>
+                       </TableCell>
+                       <TableCell className="hidden sm:table-cell">
+                         <div className="flex items-center gap-2">
+                           {p.music_releases?.cover_art_url ? (
+                             <img src={p.music_releases.cover_art_url} alt={p.music_releases.title} className="w-8 h-8 rounded object-cover" />
+                           ) : (
+                             <div className="w-8 h-8 rounded bg-muted flex items-center justify-center"><Eye className="h-4 w-4" /></div>
+                           )}
+                           <div>
+                             <p className="text-sm font-medium">{p.music_releases?.title || "Unknown"}</p>
+                             <p className="text-xs text-muted-foreground">{p.music_releases?.artist_name}</p>
+                           </div>
+                         </div>
+                       </TableCell>
+                       <TableCell className="text-sm font-medium">K{p.amount.toFixed(2)}</TableCell>
+                       <TableCell className="hidden sm:table-cell">
+                         {p.promotion_payments?.length > 0 ? (
+                           <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Paid</Badge>
+                         ) : (
+                           <Badge variant="outline">No payment</Badge>
+                         )}
+                       </TableCell>
+                       <TableCell>
+                         <Badge className={
+                           p.status === "active" ? "bg-green-500/15 text-green-600 border-green-500/30" :
+                             p.status === "paid" ? "bg-blue-500/15 text-blue-600 border-blue-500/30" :
+                               p.status === "pending" ? "bg-yellow-500/15 text-yellow-600 border-yellow-500/30" :
+                                 p.status === "rejected" ? "bg-red-500/15 text-red-600 border-red-500/30" :
+                                   "bg-gray-500/15 text-gray-600 border-gray-500/30"
+                         }>{p.status}</Badge>
+                       </TableCell>
+                       <TableCell className="hidden sm:table-cell text-sm">{new Date(p.created_at).toLocaleDateString()}</TableCell>
+                       <TableCell>
+                         <div className="flex flex-col xs:flex-row gap-1 xs:gap-2">
+                           {p.status === "pending" && (
+                             <>
+                               <Button size="sm" onClick={() => updateStatus(p.id, "active")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs bg-green-500 hover:bg-green-600 text-white">
+                                 <CheckCircle className="h-2.5 w-2.5 xs:h-3 xs:w-3 mr-0.5 xs:mr-1" /> Approve
+                               </Button>
+                               <Button size="sm" variant="outline" onClick={() => updateStatus(p.id, "rejected")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs">
+                                 <XCircle className="h-2.5 w-2.5 xs:h-3 xs:w-3 mr-0.5 xs:mr-1" /> Reject
+                               </Button>
+                             </>
+                           )}
+                           {p.status === "active" && (
+                             <Button size="sm" variant="outline" onClick={() => updateStatus(p.id, "expired")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs">
+                               Mark Expired
+                             </Button>
+                           )}
+                         </div>
+                       </TableCell>
+                     </TableRow>
+                   ))}
+                 </TableBody>
               </Table>
             )}
           </CardContent>

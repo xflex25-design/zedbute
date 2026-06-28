@@ -39,31 +39,31 @@ const platforms = [
 
 export const PlatformLogos = () => {
   return (
-    <section className="py-10 sm:py-14 px-4" style={{ backgroundColor: "white" }}>
+    <section className="py-8 sm:py-10 px-4" style={{ backgroundColor: "white" }}>
       <div className="container mx-auto">
         <p className="text-center text-sm sm:text-base text-gray-500 mb-6 sm:mb-8 font-medium uppercase tracking-widest">
           Distribute to 150+ platforms including
         </p>
-        <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12">
-          {platforms.map((platform) => (
-            <div
-              key={platform.name}
-              className="flex flex-col items-center gap-2 group"
-            >
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 bg-white shadow-md border border-gray-100 group-hover:shadow-xl"
-                style={{
-                  color: platform.color,
-                }}
-              >
-                {platform.icon}
-              </div>
-              <span className="text-[10px] sm:text-xs text-gray-600 group-hover:text-gray-900 font-medium transition-colors">
-                {platform.name}
-              </span>
-            </div>
-          ))}
-        </div>
+<div className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+           {platforms.map((platform) => (
+             <div
+               key={platform.name}
+               className="flex flex-col items-center gap-1.5 sm:gap-2 group"
+             >
+               <div
+                 className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 bg-white shadow-md border border-gray-100 group-hover:shadow-xl"
+                 style={{
+                   color: platform.color,
+                 }}
+               >
+                 {platform.icon}
+               </div>
+               <span className="text-[10px] sm:text-xs text-gray-600 group-hover:text-gray-900 font-medium transition-colors text-center leading-tight max-w-[60px] sm:max-w-[80px]">
+                 {platform.name}
+               </span>
+             </div>
+           ))}
+         </div>
       </div>
     </section>
   );

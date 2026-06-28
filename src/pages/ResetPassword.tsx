@@ -63,31 +63,35 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-md shadow-card">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
-          <CardTitle className="text-2xl">Set New Password</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-sm sm:max-w-md shadow-card">
+        <CardHeader className="text-center px-4 sm:px-6">
+          <div className="flex justify-center mb-4"><Music2 className="h-10 w-10 sm:h-12 sm:w-12 text-primary" /></div>
+          <CardTitle className="text-xl sm:text-2xl">Set New Password</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             {showForm ? "Enter your new password below" : "Loading..."}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           {showForm ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password" className="text-sm">New Password</Label>
                 <Input id="new-password" type="password" placeholder="••••••••" value={password}
-                  onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100} />
+                  onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100}
+                  className="h-10"
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirm-password" className="text-sm">Confirm Password</Label>
                 <Input id="confirm-password" type="password" placeholder="••••••••" value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100} />
+                  onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100}
+                  className="h-10"
+                />
               </div>
-              <Button type="submit" className="w-full" variant="hero" disabled={loading}>
+              <Button type="submit" className="w-full h-10" variant="hero" disabled={loading}>
                 {loading ? "Updating..." : "Update Password"}
               </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={() => navigate("/auth")}>
+              <Button type="button" variant="ghost" className="w-full h-10" onClick={() => navigate("/auth")}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
               </Button>
             </form>

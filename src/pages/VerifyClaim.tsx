@@ -581,52 +581,47 @@ const VerifyClaim = () => {
                 />
               </div>
 
-              {/* ── Mobile Number ── */}
+{/* ── Mobile Number ── */}
               <div className="space-y-1.5">
                 <Label>
                   {platform === "boomplay" ? "Mobile Number *" : "Phone Number (with country code) *"}
                 </Label>
 
-                {platform === "boomplay" ? (
-                  <div className="flex gap-2">
-                    <Select
-                      value={form.phoneCountry}
-                      onValueChange={(v) => setForm({ ...form, phoneCountry: v })}
-                    >
-                      <SelectTrigger className="w-36 shrink-0 bg-background">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        {COUNTRY_CODES.map(({ code, label }) => (
-                          <SelectItem key={code} value={code}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
+                <div className={platform === "boomplay" ? "flex flex-col sm:flex-row gap-2" : "w-full"}>
+                   {platform === "boomplay" && (
+                     <Select
+                       value={form.phoneCountry}
+                       onValueChange={(v) => setForm({ ...form, phoneCountry: v })}
+                     >
+                       <SelectTrigger className="w-full sm:w-36 shrink-0 bg-background">
+                         <SelectValue />
+                       </SelectTrigger>
+                       <SelectContent className="bg-background z-50">
+                         {COUNTRY_CODES.map(({ code, label }) => (
+                           <SelectItem key={code} value={code}>{label}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   )}
+<Input
                       type="tel"
-                      placeholder="712345678"
-                      value={form.phoneLocal}
-                      onChange={(e) => setForm({ ...form, phoneLocal: e.target.value.replace(/\D/g, "") })}
-                      className="flex-1"
+                      placeholder={platform === "boomplay" ? "712345678" : "+260..."}
+                      value={platform === "boomplay" ? form.phoneLocal : form.phone}
+                      onChange={(e) => platform === "boomplay" 
+                        ? setForm({ ...form, phoneLocal: e.target.value.replace(/\D/g, "") })
+                        : setForm({ ...form, phone: e.target.value })}
+                      className="flex-1 h-10"
                     />
                   </div>
-                ) : (
-                  <Input
-                    type="tel"
-                    placeholder="+260..."
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  />
-                )}
 
-                {platform === "boomplay" && form.phoneLocal && (
-                  <p className="text-xs text-muted-foreground">
-                    Full number: {form.phoneCountry}{form.phoneLocal}
-                  </p>
-                )}
-              </div>
+                  {platform === "boomplay" && form.phoneLocal && (
+                    <p className="text-xs text-muted-foreground">
+                      Full number: {form.phoneCountry}{form.phoneLocal}
+                    </p>
+                  )}
+                </div>
 
-              {/* ── Distributor Name ── */}
+                {/* ── Distributor Name ── */}
               <div className="space-y-1.5">
                 <Label>Distributor Name *</Label>
                 <Input

@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,7 +28,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // FIX 1: Removed duplicate/nested useEffect blocks — replaced with two clean ones
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/dashboard");
@@ -60,6 +57,7 @@ const Auth = () => {
       authSchema.parse(validationData);
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
+        console.log("Supabase login error:", error);
         if (error) {
           toast({
             title: "Login failed",
@@ -165,7 +163,6 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Email reset form */}
           {resetStep === "enter_email" && (
             <form onSubmit={handleEmailReset} className="space-y-4">
               <div className="space-y-2">
@@ -182,7 +179,6 @@ const Auth = () => {
             </form>
           )}
 
-          {/* Main login/signup form */}
           {resetStep === "idle" && (
             <>
               <Button

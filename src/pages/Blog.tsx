@@ -28,8 +28,8 @@ const Blog = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar user={user} />
-      <main className="container mx-auto px-4 pt-24 pb-16">
-        <header className="max-w-3xl mx-auto text-center mb-12">
+      <main className="container mx-auto px-4 pt-24 pb-8 sm:pb-16">
+        <header className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             ZedBute <span className="bg-gradient-primary bg-clip-text text-transparent">Blog</span>
           </h1>
@@ -38,7 +38,7 @@ const Blog = () => {
           </p>
         </header>
 
-        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        <section className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {blogPosts.map((post) => (
             <Card key={post.slug} className="flex flex-col hover:shadow-glow transition-all">
               <CardHeader>

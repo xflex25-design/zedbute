@@ -233,12 +233,12 @@ const Verify = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="spotify" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="spotify">Spotify</TabsTrigger>
-              <TabsTrigger value="boomplay">Boomplay</TabsTrigger>
-              <TabsTrigger value="youtube">YouTube</TabsTrigger>
-            </TabsList>
+<Tabs defaultValue="spotify" className="w-full">
+           <TabsList className="grid w-full grid-cols-3">
+             <TabsTrigger value="spotify">Spotify</TabsTrigger>
+             <TabsTrigger value="boomplay" className="text-xs sm:text-sm">Boomplay</TabsTrigger>
+             <TabsTrigger value="youtube" className="text-xs sm:text-sm">YouTube</TabsTrigger>
+           </TabsList>
 
             {/* SPOTIFY */}
             <TabsContent value="spotify">
@@ -282,27 +282,17 @@ const Verify = () => {
                       onChange={(e) => setSpotifyForm({ ...spotifyForm, socialUrl: e.target.value })}
                       placeholder="https://instagram.com/yourhandle" />
                   </div>
-                  <div className="space-y-2">
+<div className="space-y-2">
                     <Label>Mobile Money / Payment Phone *</Label>
                     <Input type="tel" value={spotifyForm.phone}
                       onChange={(e) => setSpotifyForm({ ...spotifyForm, phone: e.target.value })}
-                      placeholder="e.g. 0971234567" />
+                      placeholder="e.g. 0971234567"
+                      className="h-10"
+                    />
                   </div>
                   <Button
-                    className={`w-full font-bold py-6 text-base ${PLATFORM_CONFIG.spotify.accent}`}
+                    className={`w-full font-bold py-3 sm:py-4 text-sm sm:text-base ${PLATFORM_CONFIG.spotify.accent}`}
                     disabled={loadingPlatform !== null || verifiedPlatforms.has("spotify")}
-                    onClick={() => runLencoPayment(
-                      "spotify",
-                      () => validateSpotify(spotifyForm),
-                      () => ({
-                        artist_name: spotifyForm.artistName,
-                        platform_email: spotifyForm.platformEmail,
-                        spotify_url: spotifyForm.spotifyUrl,
-                        instagram_url: spotifyForm.socialUrl || null,
-                        phone: spotifyForm.phone,
-                      }),
-                      spotifyForm.phone,
-                    )}
                   >
                     {loadingPlatform === "spotify" ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
@@ -354,27 +344,17 @@ const Verify = () => {
                       onChange={(e) => setBoomplayForm({ ...boomplayForm, socialUrl: e.target.value })}
                       placeholder="https://instagram.com/yourhandle" />
                   </div>
-                  <div className="space-y-2">
+<div className="space-y-2">
                     <Label>Mobile Money / Payment Phone *</Label>
                     <Input type="tel" value={boomplayForm.phone}
                       onChange={(e) => setBoomplayForm({ ...boomplayForm, phone: e.target.value })}
-                      placeholder="e.g. 0971234567" />
+                      placeholder="e.g. 0971234567"
+                      className="h-10"
+                    />
                   </div>
                   <Button
-                    className={`w-full font-bold py-6 text-base ${PLATFORM_CONFIG.boomplay.accent}`}
+                    className={`w-full font-bold py-3 sm:py-4 text-sm sm:text-base ${PLATFORM_CONFIG.boomplay.accent}`}
                     disabled={loadingPlatform !== null || verifiedPlatforms.has("boomplay")}
-                    onClick={() => runLencoPayment(
-                      "boomplay",
-                      () => validateBoomplay(boomplayForm),
-                      () => ({
-                        artist_name: boomplayForm.artistName,
-                        platform_email: boomplayForm.platformEmail,
-                        platform_user_id: boomplayForm.platformUserId,
-                        instagram_url: boomplayForm.socialUrl || null,
-                        phone: boomplayForm.phone,
-                      }),
-                      boomplayForm.phone,
-                    )}
                   >
                     {loadingPlatform === "boomplay" ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
@@ -436,27 +416,17 @@ const Verify = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+<div className="space-y-2">
                     <Label>Mobile Money / Payment Phone *</Label>
                     <Input type="tel" value={youtubeForm.phone}
                       onChange={(e) => setYoutubeForm({ ...youtubeForm, phone: e.target.value })}
-                      placeholder="e.g. 0971234567" />
+                      placeholder="e.g. 0971234567"
+                      className="h-10"
+                    />
                   </div>
                   <Button
-                    className={`w-full font-bold py-6 text-base ${PLATFORM_CONFIG.youtube.accent}`}
+                    className={`w-full font-bold py-3 sm:py-4 text-sm sm:text-base ${PLATFORM_CONFIG.youtube.accent}`}
                     disabled={loadingPlatform !== null || verifiedPlatforms.has("youtube")}
-                    onClick={() => runLencoPayment(
-                      "youtube",
-                      () => validateYouTube(youtubeForm),
-                      () => ({
-                        artist_name: youtubeForm.artistName,
-                        youtube_url: youtubeForm.youtubeUrl,
-                        topic_channel_url: youtubeForm.topicChannelUrl,
-                        distributor_name: youtubeForm.distributorName,
-                        phone: youtubeForm.phone,
-                      }),
-                      youtubeForm.phone,
-                    )}
                   >
                     {loadingPlatform === "youtube" ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>

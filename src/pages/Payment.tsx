@@ -354,24 +354,24 @@ export default function Payment() {
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
 
-      <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-lg mx-auto">
+      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12">
+        <div className="max-w-sm sm:max-w-lg mx-auto">
           <Card className="shadow-card">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">
+            <CardHeader className="text-center px-4 sm:px-6">
+              <CardTitle className="text-xl sm:text-2xl">
                 {paymentLabel} Payment
               </CardTitle>
 
-              <CardDescription className="text-3xl font-bold mt-2">
+              <CardDescription className="text-2xl sm:text-3xl font-bold mt-2">
                 K{paymentAmount}
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-4 sm:px-6">
               <div className="space-y-2">
                 <Label
                   htmlFor="phone"
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 text-sm"
                 >
                   <Phone className="h-4 w-4" />
                   Phone Number
@@ -385,27 +385,28 @@ export default function Payment() {
                   onChange={(e) =>
                     setPhoneNumber(e.target.value)
                   }
+                  className="h-10"
                 />
 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Enter the number linked to your
                   mobile money account.
                 </p>
               </div>
 
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                <h3 className="font-semibold text-primary mb-2">
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 text-center">
+                <h3 className="font-semibold text-primary mb-1 sm:mb-2 text-sm sm:text-base">
                   Secure Checkout
                 </h3>
 
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Pay securely using Mobile Money
                   or Card.
                 </p>
               </div>
 
               <Button
-                className="w-full py-6 text-lg"
+                className="w-full py-4 sm:py-6 text-base sm:text-lg"
                 disabled={processing}
                 onClick={handlePayment}
               >

@@ -16,8 +16,8 @@ export const FormProgress = ({ steps }: FormProgressProps) => {
         <span className="font-medium">{completedCount}/{steps.length} completed</span>
       </div>
       <Progress value={progress} className="h-2" />
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        {steps.map((step, index) => (
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+         {steps.map((step, index) => (
           <div
             key={index}
             className={`flex items-center gap-2 text-xs p-2 rounded-md transition-colors ${

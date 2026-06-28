@@ -166,16 +166,20 @@ const Admin = () => {
           {releases.map((r) => (
             <Card key={r.id} className="shadow-card">
               <CardHeader>
-                <CardTitle className="text-lg">{r.title}</CardTitle>
-                <CardDescription>
-                  {r.artist_name} · {r.profile_email || "no email"} · status: {r.status}
+                <CardTitle className="text-base sm:text-lg">{r.title}</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  <span className="block sm:inline">{r.artist_name}</span>
+                  <span className="hidden sm:inline"> · </span>
+                  <span className="block sm:inline">{r.profile_email || "no email"}</span>
+                  <span className="hidden sm:inline"> · status: </span>
+                  <span className="block sm:inline">{r.status}</span>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Progress value={progressInputs[r.id] ?? 0} className="h-2" />
-                <div className="flex items-end gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                   <div className="flex-1">
-                    <Label>Distribution progress (%)</Label>
+                    <Label className="text-sm">Distribution progress (%)</Label>
                     <Input
                       type="number"
                       min={0}
@@ -184,9 +188,10 @@ const Admin = () => {
                       onChange={(e) =>
                         setProgressInputs({ ...progressInputs, [r.id]: parseInt(e.target.value || "0", 10) })
                       }
+                      className="h-10 sm:h-9"
                     />
                   </div>
-                  <Button onClick={() => saveProgress(r)} disabled={saving === r.id}>
+                  <Button onClick={() => saveProgress(r)} disabled={saving === r.id} className="w-full sm:w-auto h-10 sm:h-9">
                     {saving === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
                   </Button>
                 </div>

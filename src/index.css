@@ -52,5 +52,16 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (max-width: 639px) {
+    .container {
+      @apply px-4;
+    }
+  }
+
+  input, textarea, button {
+    font-size: 16px;
   }
 }
