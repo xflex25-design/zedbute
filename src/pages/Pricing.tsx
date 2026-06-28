@@ -27,26 +27,26 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar user={user} />
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 sm:pb-16">
+        <div className="text-center mb-12 sm:mb-16">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
             One flat fee. No subscriptions. No hidden costs.
           </p>
         </div>
 
         <div className="max-w-md mx-auto">
-          <Card className="shadow-glow border-primary relative">
+          <Card className="shadow-glow border-primary relative transition-transform hover:-translate-y-1 duration-300">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="bg-gradient-primary px-4 py-1 rounded-full text-sm font-semibold text-primary-foreground">
                 Release Upload
               </span>
             </div>
             <CardHeader className="text-center pt-8">
-              <div className="mx-auto mb-3 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <Music className="h-6 w-6 text-primary" />
+              <div className="mx-auto mb-4 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                <Music className="h-7 w-7 text-primary" />
               </div>
               <CardTitle className="text-2xl">Upload Your Release</CardTitle>
               <div className="mt-4">
@@ -61,13 +61,13 @@ const Pricing = () => {
                 {features.map((feature) => (
                   <li key={feature} className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
+                    <span className="text-base">{feature}</span>
                   </li>
                 ))}
               </ul>
               <Button
                 variant="hero"
-                className="w-full"
+                className="w-full hover:scale-105 transition-transform"
                 onClick={() => navigate(user ? "/upload-release" : "/auth")}
               >
                 {user ? "Upload a Release" : "Get Started"}
@@ -76,8 +76,8 @@ const Pricing = () => {
           </Card>
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-xs sm:text-sm text-muted-foreground">
+        <div className="mt-12 text-center">
+          <p className="text-sm text-muted-foreground">
             Payments accepted via Mobile Money (Airtel, MTN, Zamtel) and Card through Lenco.
           </p>
         </div>

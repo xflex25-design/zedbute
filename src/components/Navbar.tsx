@@ -44,40 +44,40 @@ export const Navbar = ({ user }: NavbarProps) => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="text-foreground hover:text-primary transition-colors">
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
             </Link>
             {user && (
               <>
-                <Link to="/dashboard" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/dashboard" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                   Dashboard
                 </Link>
-                <Link to="/upload-release" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/upload-release" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                   Upload Release
                 </Link>
-                <Link to="/verify" className="text-foreground hover:text-primary transition-colors">
+                <Link to="/verify" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                   Get Verified
                 </Link>
               </>
             )}
-            <Link to="/pricing" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Pricing
             </Link>
-            <Link to="/blog" className="text-foreground hover:text-primary transition-colors">
+            <Link to="/blog" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Blog
             </Link>
             
             {user ? (
-              <Button onClick={handleSignOut} variant="outline">
+              <Button onClick={handleSignOut} variant="outline" size="sm">
                 Sign Out
               </Button>
             ) : (
               <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => navigate("/auth")}>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
                   Login
                 </Button>
-                <Button variant="hero" onClick={() => navigate("/auth")}>
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>
                   Get Started
                 </Button>
               </div>
@@ -86,8 +86,9 @@ export const Navbar = ({ user }: NavbarProps) => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground"
+            className="md:hidden text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -95,10 +96,10 @@ export const Navbar = ({ user }: NavbarProps) => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-3 border-t border-border">
+          <div className="md:hidden py-4 space-y-2 border-t border-border">
             <Link
               to="/"
-              className="block text-foreground hover:text-primary transition-colors"
+              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
@@ -107,21 +108,21 @@ export const Navbar = ({ user }: NavbarProps) => {
               <>
                 <Link
                   to="/dashboard"
-                  className="block text-foreground hover:text-primary transition-colors"
+                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <Link
                   to="/upload-release"
-                  className="block text-foreground hover:text-primary transition-colors"
+                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Upload Release
                 </Link>
                 <Link
                   to="/verify"
-                  className="block text-foreground hover:text-primary transition-colors"
+                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Get Verified
@@ -130,28 +131,28 @@ export const Navbar = ({ user }: NavbarProps) => {
             )}
             <Link
               to="/pricing"
-              className="block text-foreground hover:text-primary transition-colors"
+              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
             </Link>
             <Link
               to="/blog"
-              className="block text-foreground hover:text-primary transition-colors"
+              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               Blog
             </Link>
             {user ? (
-              <Button onClick={handleSignOut} variant="outline" className="w-full">
+              <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full mt-2">
                 Sign Out
               </Button>
             ) : (
-              <div className="flex flex-col gap-2">
-                <Button variant="ghost" onClick={() => navigate("/auth")} className="w-full">
+              <div className="flex flex-col gap-2 mt-2">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="w-full">
                   Login
                 </Button>
-                <Button variant="hero" onClick={() => navigate("/auth")} className="w-full">
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth")} className="w-full">
                   Get Started
                 </Button>
               </div>

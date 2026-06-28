@@ -8,10 +8,7 @@ import { Music, Sparkles, Globe, Shield, TrendingUp, Users } from "lucide-react"
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/useSEO";
-import heroBg from "@/assets/hero-bg.jpg";
 import { PlatformLogos } from "@/components/PlatformLogos";
-import mpakaFye from "@/assets/mpaka-fye.jpg.asset.json";
-import elcZulu from "@/assets/elc-zulu.jpg.asset.json";
 
 const faqs = [
   { q: "How do I distribute my music with ZedBute?", a: "Sign up, upload your track and cover art, fill in your release metadata, choose a plan, and pay securely with mobile money or card. We deliver your music to Spotify, Apple Music, TikTok and 150+ platforms." },
@@ -83,16 +80,16 @@ const Index = () => {
         
         {/* Hero Section */}
         <section
-          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-red-900 via-red-700 to-red-600"
+          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
         >
           <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 To The World
               </span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-6 sm:mb-8 max-w-3xl mx-auto px-2 drop-shadow">
+            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto px-2 drop-shadow">
               Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
             </p>
             <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
@@ -100,7 +97,7 @@ const Index = () => {
                 size="lg"
                 variant="hero"
                 onClick={() => navigate(user ? "/dashboard" : "/auth")}
-                className="text-base sm:text-lg px-6 sm:px-8 shadow-lg"
+                className="text-base px-6 sm:px-8 shadow-lg hover:scale-105 transition-transform"
               >
                 {user ? "Go to Dashboard" : "Start Distributing"}
               </Button>
@@ -108,7 +105,7 @@ const Index = () => {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/pricing")}
-                className="text-base sm:text-lg px-6 sm:px-8 bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 shadow-lg"
+                className="text-base px-6 sm:px-8 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 shadow-lg hover:scale-105 transition-transform"
               >
                 View Pricing
               </Button>
@@ -120,9 +117,9 @@ const Index = () => {
         <PlatformLogos />
 
         {/* Features Section */}
-        <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-hero">
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-gradient-hero">
           <div className="container mx-auto">
-            <div className="text-center mb-10 sm:mb-12 lg:mb-16">
+            <div className="text-center mb-12 sm:mb-16 lg:mb-20">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
                 Everything You Need To Succeed
               </h2>
@@ -131,15 +128,15 @@ const Index = () => {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
               {features.map((feature) => (
-                <Card key={feature.title} className="shadow-card hover:shadow-glow transition-shadow duration-300">
-                  <CardHeader className="p-4 sm:p-6">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-lg flex items-center justify-center mb-3 sm:mb-4">
-                      <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
+                <Card key={feature.title} className="shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300">
+                  <CardHeader className="p-6">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mb-5">
+                      <feature.icon className="h-6 w-6 text-primary-foreground" />
                     </div>
-                    <CardTitle className="text-lg sm:text-xl">{feature.title}</CardTitle>
-                    <CardDescription className="text-sm sm:text-base">
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardDescription className="text-base">
                       {feature.description}
                     </CardDescription>
                   </CardHeader>
@@ -150,14 +147,14 @@ const Index = () => {
         </section>
 
         {/* Artists We've Worked With */}
-        <section className="py-12 sm:py-16 lg:py-20 px-4 bg-muted/50">
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-muted/30">
           <div className="container mx-auto">
-            <div className="text-center mb-10 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-3">Artists We've Worked With</h2>
-              <p className="text-muted-foreground">Trending releases distributed globally via ZedBute</p>
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">Artists We've Worked With</h2>
+              <p className="text-base text-muted-foreground">Trending releases distributed globally via ZedBute</p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 sm:gap-8">
               {[
                 { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/IMG-20260609-WA0066(1).jpg", title: "MR GBP", artist: "Emcee zm" },
                 { src: "https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/1780489640980.jpg", title: "You Are Holy", artist: "Elc. Zulu" },
@@ -170,7 +167,7 @@ const Index = () => {
               ].map((a, index) => (
                 <div
                   key={index}
-                  className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-shadow"
+                  className="group rounded-2xl overflow-hidden shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="aspect-square overflow-hidden bg-muted">
                     <img
@@ -191,17 +188,17 @@ const Index = () => {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-12 sm:py-16 lg:py-20 px-4 bg-background">
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-background">
           <div className="container mx-auto max-w-3xl">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">Frequently Asked Questions</h2>
-              <p className="text-base sm:text-lg text-muted-foreground">Everything you need to know about distributing your music with ZedBute</p>
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
+              <p className="text-lg text-muted-foreground">Everything you need to know about distributing your music with ZedBute</p>
             </div>
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((f, i) => (
                 <AccordionItem key={i} value={`item-${i}`}>
-                  <AccordionTrigger className="text-left text-base sm:text-lg">{f.q}</AccordionTrigger>
-                  <AccordionContent className="text-sm sm:text-base text-muted-foreground">{f.a}</AccordionContent>
+                  <AccordionTrigger className="text-left text-lg">{f.q}</AccordionTrigger>
+                  <AccordionContent className="text-base text-muted-foreground">{f.a}</AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
@@ -209,26 +206,21 @@ const Index = () => {
         </section>
 
         {/* CTA Section */}
-        <section
-          className="py-20 sm:py-24 lg:py-32 px-4 relative"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.65)), url(https://focothurmwepjqbyrtnn.supabase.co/storage/v1/object/public/cover-art/Yo-Maps-Hello-Video.jpg)`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
+<section
+          className="py-20 sm:py-24 lg:py-32 px-4 bg-gradient-to-br from-primary via-red-600 to-secondary relative overflow-hidden"
         >
           <div className="container mx-auto text-center relative z-10">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 text-primary-foreground">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-primary-foreground">
               Ready to Share Your Music?
             </h2>
-            <p className="text-base sm:text-lg lg:text-xl text-primary-foreground/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+            <p className="text-lg sm:text-xl lg:text-2xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto px-2">
               Join ZedBute today and start distributing your music to millions of listeners worldwide
             </p>
             <Button
               size="lg"
               variant="secondary"
               onClick={() => navigate(user ? "/dashboard" : "/auth")}
-              className="text-base sm:text-lg px-6 sm:px-8"
+              className="text-base px-6 sm:px-8 shadow-lg hover:scale-105 transition-transform"
             >
               {user ? "Go to Dashboard" : "Get Started Free"}
             </Button>
