@@ -18,7 +18,7 @@ const authSchema = z.object({
   fullName: z.string().trim().max(100).optional(),
 });
 
-type ResetStep = "idle" | "enter_email" | "set_new_password";
+type ResetStep = "idle" | "enter_email";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -27,7 +27,6 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
-  const [newPassword, setNewPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,9 +40,7 @@ const Auth = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "PASSWORD_RECOVERY") {
-          setResetStep("set_new_password");
-        } else if (event === "SIGNED_IN" && session) {
+        if (event === "SIGNED_IN" && session) {
           navigate("/dashboard");
         }
       }
@@ -134,7 +131,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -151,65 +148,9 @@ const Auth = () => {
     }
   };
 
-  const handleSetNewPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword.length < 6) {
-      toast({ title: "Password too short", description: "Must be at least 6 characters.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Password updated!", description: "You can now login with your new password." });
-        setResetStep("idle");
-        setNewPassword("");
-        await supabase.auth.signOut();
-        setIsLogin(true);
-      }
-    } catch {
-      toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const goBack = () => {
     if (resetStep === "enter_email") setResetStep("idle");
-    else { setResetStep("idle"); setNewPassword(""); }
   };
-
-  // Set new password screen
-  if (resetStep === "set_new_password") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-        <Card className="w-full max-w-md shadow-card">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
-            <CardTitle className="text-2xl">Set New Password</CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSetNewPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" placeholder="••••••••" value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)} required minLength={6} maxLength={100} />
-              </div>
-              <Button type="submit" className="w-full" variant="hero" disabled={loading}>
-                {loading ? "Updating..." : "Update Password"}
-              </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
