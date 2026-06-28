@@ -714,7 +714,7 @@ return (
                           <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Promoted</Badge>
                         ) : hasPending ? (
                           <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>
-                        ) : (
+                        ) : r.status !== "unpaid" ? (
                           <Button
                             size="sm"
                             onClick={() => setPromotingReleaseId(r.id)}
@@ -722,6 +722,8 @@ return (
                           >
                             Promote — K20
                           </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Pay to promote</span>
                         )}
                       </div>
                     );

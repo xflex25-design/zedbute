@@ -12,11 +12,19 @@ export default {
         md: "2rem",
       },
       screens: {
+        "xs": "475px",
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px",
         "2xl": "1400px",
       },
     },
-    extend: {
-      colors: {
+      extend: {
+        screens: {
+          'xs': '475px',
+        },
+        colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
