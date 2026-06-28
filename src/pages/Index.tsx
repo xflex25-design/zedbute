@@ -83,7 +83,7 @@ const Index = () => {
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
         >
           <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 To The World
