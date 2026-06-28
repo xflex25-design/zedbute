@@ -1,5 +1,18 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://www.zedbute.com/:1",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "zedbute.vercel.app"
+        }
+      ]
+    }
   ]
 }
