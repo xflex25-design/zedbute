@@ -3,16 +3,16 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "redirects": [
+{
+  "source": "/:path*",
+  "destination": "https://www.zedbute.com/:path*",
+  "permanent": true,
+  "has": [
     {
-      "source": "/(.*)",
-      "destination": "https://www.zedbute.com/:1",
-      "permanent": true,
-      "has": [
-        {
-          "type": "host",
-          "value": "zedbute.vercel.app"
-        }
-      ]
+      "type": "host",
+      "value": "zedbute.vercel.app"
     }
+  ]
+}
   ]
 }
