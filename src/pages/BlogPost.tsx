@@ -52,9 +52,9 @@ const BlogPost = () => {
             <Link to="/blog"><ArrowLeft className="h-4 w-4" /> Back to Blog</Link>
           </Button>
 
-          <header className="mb-8 border-b border-border pb-6">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">{post.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <header className="mb-6 sm:mb-8 border-b border-border pb-4 sm:pb-6">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 leading-tight">{post.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><User className="h-4 w-4" />{post.author}</span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" />
@@ -65,11 +65,11 @@ const BlogPost = () => {
             </div>
           </header>
 
-          <div className="space-y-5 text-base md:text-lg leading-relaxed text-foreground/90">
+          <div className="space-y-4 sm:space-y-5 text-base sm:text-lg leading-relaxed text-foreground/90">
             {post.body.map((block, i) => {
-              if (block.type === "h2") return <h2 key={i} className="text-2xl md:text-3xl font-bold mt-8 text-foreground">{block.text}</h2>;
+              if (block.type === "h2") return <h2 key={i} className="text-xl sm:text-2xl md:text-3xl font-bold mt-6 sm:mt-8 text-foreground">{block.text}</h2>;
               if (block.type === "ul") return (
-                <ul key={i} className="list-disc pl-6 space-y-2">
+                <ul key={i} className="list-disc pl-5 sm:pl-6 space-y-1.5 sm:space-y-2">
                   {block.items?.map((it, j) => <li key={j}>{it}</li>)}
                 </ul>
               );
@@ -77,10 +77,10 @@ const BlogPost = () => {
             })}
           </div>
 
-          <div className="mt-12 p-6 rounded-lg bg-card border border-border text-center">
-            <h3 className="text-xl font-bold mb-2">Ready to release your music?</h3>
-            <p className="text-muted-foreground mb-4">Distribute to Spotify, Apple Music & 150+ platforms with ZedBute.</p>
-            <Button asChild variant="hero" size="lg">
+          <div className="mt-8 sm:mt-12 p-4 sm:p-6 rounded-lg bg-card border border-border text-center">
+            <h3 className="text-lg sm:text-xl font-bold mb-2">Ready to release your music?</h3>
+            <p className="text-muted-foreground mb-3 sm:mb-4">Distribute to Spotify, Apple Music & 150+ platforms with ZedBute.</p>
+            <Button asChild variant="hero" size="lg" className="w-full sm:w-auto">
               <Link to="/upload-release">Upload Your Release</Link>
             </Button>
           </div>

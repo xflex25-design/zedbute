@@ -83,7 +83,7 @@ const Index = () => {
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
         >
           <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 To The World
@@ -126,9 +126,9 @@ const Index = () => {
               <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
                 Professional music distribution tools built for independent artists
               </p>
-            </div>
+</div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
               {features.map((feature) => (
                 <Card key={feature.title} className="shadow-card hover:shadow-glow hover:-translate-y-1 transition-all duration-300">
                   <CardHeader className="p-6">

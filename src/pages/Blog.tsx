@@ -30,18 +30,18 @@ const Blog = () => {
       <Navbar user={user} />
       <main className="container mx-auto px-4 pt-24 pb-8 sm:pb-16">
         <header className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
             ZedBute <span className="bg-gradient-primary bg-clip-text text-transparent">Blog</span>
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground px-2">
             Tips, guides, and stories about music distribution for independent Zambian and African artists.
           </p>
         </header>
 
-        <section className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {blogPosts.map((post) => (
             <Card key={post.slug} className="flex flex-col hover:shadow-glow transition-all">
-              <CardHeader>
+              <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                   <Calendar className="h-3 w-3" />
                   <time dateTime={post.date}>
@@ -52,11 +52,11 @@ const Blog = () => {
                     })}
                   </time>
                 </div>
-                <CardTitle className="text-xl leading-snug">{post.title}</CardTitle>
-                <CardDescription className="line-clamp-3">{post.description}</CardDescription>
+                <CardTitle className="text-lg sm:text-xl leading-snug">{post.title}</CardTitle>
+                <CardDescription className="line-clamp-3 text-sm sm:text-base">{post.description}</CardDescription>
               </CardHeader>
-              <CardContent className="mt-auto">
-                <Button asChild variant="hero" className="w-full">
+              <CardContent className="mt-auto p-4 sm:p-6">
+                <Button asChild variant="hero" className="w-full text-sm sm:text-base">
                   <Link to={`/blog/${post.slug}`}>
                     Read More <ArrowRight className="h-4 w-4" />
                   </Link>
