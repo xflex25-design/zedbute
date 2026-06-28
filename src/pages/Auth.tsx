@@ -68,6 +68,8 @@ const Auth = () => {
             title: "Login failed",
             description: error.message.includes("Invalid")
               ? "Invalid email or password. Please try again."
+              : error.message.includes("not confirmed")
+              ? "Please check your email and click the confirmation link before logging in."
               : error.message,
             variant: "destructive",
           });
@@ -76,11 +78,12 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        const { error } = await supabase.auth.signUp({
+        const redirectUrl = `${window.location.origin}/auth`;
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: redirectUrl,
             data: { full_name: fullName },
           },
         });
@@ -95,11 +98,18 @@ const Auth = () => {
             variant: "destructive",
           });
         } else {
+          const needsConfirmation = !data.session;
           toast({
             title: "Account created!",
-            description: "Please check your email to verify your account, then login.",
+            description: needsConfirmation
+              ? "Check your email for a confirmation link, then login."
+              : "You're logged in! Welcome to ZedBute.",
           });
-          setIsLogin(true);
+          if (!needsConfirmation) {
+            navigate("/dashboard");
+          } else {
+            setIsLogin(true);
+          }
         }
       }
     } catch (error) {
