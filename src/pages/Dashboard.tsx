@@ -250,7 +250,7 @@ return (
       />
       <link
         rel="canonical"
-        href="https://zedbute.vercel.app/"
+        href="https://www.zedbute.com/"
       />
     </Helmet>
 

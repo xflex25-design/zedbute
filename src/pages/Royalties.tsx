@@ -154,7 +154,7 @@ const Royalties = () => {
       <Helmet>
         <title>ZedBute | Royalties</title>
         <meta name="description" content="View your royalty earnings and manage withdrawals." />
-        <link rel="canonical" href="https://zedbute.vercel.app/" />
+        <link rel="canonical" href="https://www.zedbute.com/" />
       </Helmet>
 
       <div className="min-h-screen bg-background">

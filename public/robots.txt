@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://zedbute.vercel.app/sitemap.xml
+Sitemap: https://www.zedbute.com/sitemap.xml
