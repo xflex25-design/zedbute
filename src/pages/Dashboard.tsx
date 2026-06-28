@@ -613,7 +613,7 @@ return (
                   </Table>
                 </div>
 
-                {/* Mobile: Cards */}
+                {/* Mobile: Cards  */}
                 <div className="md:hidden space-y-4">
                   {releases.map((r) => (
                     <div
