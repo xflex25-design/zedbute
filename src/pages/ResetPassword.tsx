@@ -6,53 +6,84 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Music2, ArrowLeft } from "lucide-react";
+import { Music2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [status, setStatus] = useState<"loading" | "ready" | "done" | "error">("loading");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let cancelled = false;
+
+    const setup = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (cancelled) return;
+
       if (session) {
         setShowForm(true);
+        setStatus("ready");
+        return;
       }
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
-          setShowForm(true);
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          if (cancelled) return;
+          if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && session) {
+            setShowForm(true);
+            setStatus("ready");
+          }
         }
-      }
-    );
+      );
 
-    return () => subscription.unsubscribe();
+      setTimeout(() => {
+        if (cancelled) return;
+        if (!session && !showForm) {
+          setStatus("error");
+        }
+      }, 5000);
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    };
+
+    setup();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (password !== confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    if (password.length < 6) {
+      toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (password !== confirmPassword) {
-        toast({ title: "Error", description: "Passwords do not match.", variant: "destructive" });
-        return;
-      }
-      if (password.length < 6) {
-        toast({ title: "Error", description: "Password must be at least 6 characters.", variant: "destructive" });
-        return;
-      }
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
+        setStatus("done");
         toast({ title: "Password updated!", description: "You can now login with your new password." });
         await supabase.auth.signOut();
-        navigate("/auth");
+        setTimeout(() => navigate("/auth"), 2000);
       }
     } catch {
       toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
@@ -63,45 +94,89 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-sm sm:max-w-md shadow-card">
-        <CardHeader className="text-center px-4 sm:px-6">
-          <div className="flex justify-center mb-4"><Music2 className="h-10 w-10 sm:h-12 sm:w-12 text-primary" /></div>
-          <CardTitle className="text-xl sm:text-2xl">Set New Password</CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            {showForm ? "Enter your new password below" : "Loading..."}
-          </CardDescription>
+      <Card className="w-full max-w-md shadow-card">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Music2 className="h-12 w-12 text-primary" />
+          </div>
+          {status === "loading" && (
+            <>
+              <CardTitle className="text-2xl">Checking Session</CardTitle>
+              <CardDescription>Verifying your reset link...</CardDescription>
+            </>
+          )}
+          {status === "ready" && (
+            <>
+              <CardTitle className="text-2xl">Set New Password</CardTitle>
+              <CardDescription>Enter your new password below</CardDescription>
+            </>
+          )}
+          {status === "done" && (
+            <>
+              <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                Password Updated
+              </CardTitle>
+              <CardDescription>Redirecting you to login...</CardDescription>
+            </>
+          )}
+          {status === "error" && (
+            <>
+              <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                <AlertCircle className="h-6 w-6 text-destructive" />
+                Invalid Link
+              </CardTitle>
+              <CardDescription>
+                This password reset link is invalid or has expired.
+              </CardDescription>
+            </>
+          )}
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          {showForm ? (
+        <CardContent>
+          {status === "loading" && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
+
+          {status === "ready" && showForm && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password" className="text-sm">New Password</Label>
-                <Input id="new-password" type="password" placeholder="••••••••" value={password}
-                  onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100}
-                  className="h-10"
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  maxLength={100}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-sm">Confirm Password</Label>
-                <Input id="confirm-password" type="password" placeholder="••••••••" value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100}
-                  className="h-10"
+                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  maxLength={100}
                 />
               </div>
-              <Button type="submit" className="w-full h-10" variant="hero" disabled={loading}>
+              <Button type="submit" className="w-full" variant="hero" disabled={loading}>
                 {loading ? "Updating..." : "Update Password"}
               </Button>
-              <Button type="button" variant="ghost" className="w-full h-10" onClick={() => navigate("/auth")}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
-              </Button>
             </form>
-          ) : (
-            <div className="text-center text-sm text-muted-foreground">
-              <p>No valid reset session found.</p>
-              <Button type="button" variant="link" onClick={() => navigate("/auth")}>
-                Return to login
-              </Button>
-            </div>
+          )}
+
+          {status === "error" && (
+            <Button variant="outline" className="w-full" onClick={() => navigate("/auth")}>
+              Return to Login
+            </Button>
           )}
         </CardContent>
       </Card>

@@ -24,6 +24,11 @@ export default {
         screens: {
           'xs': '475px',
         },
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Inter', 'system-ui', 'sans-serif'],
+          mono: ['SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+        },
         colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
