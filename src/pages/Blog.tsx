@@ -40,7 +40,7 @@ const Blog = () => {
 
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {blogPosts.map((post) => (
-            <Card key={post.slug} className="flex flex-col hover:shadow-glow transition-all">
+            <Card key={post.slug} className="flex flex-col hover:shadow-glow hover:-translate-y-0.5 transition-all duration-300">
               <CardHeader className="p-4 sm:p-6">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                   <Calendar className="h-3 w-3" />

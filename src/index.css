@@ -24,7 +24,7 @@ All colors MUST be HSL.
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted-foreground: 220 12% 60%;
 
     --accent: 45 100% 60%;
     --accent-foreground: 220 25% 5%;
@@ -32,11 +32,11 @@ All colors MUST be HSL.
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
+    --border: 220 15% 22%;
+    --input: 220 15% 22%;
     --ring: 17 88% 58%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
     --gradient-primary: linear-gradient(135deg, hsl(17 88% 58%), hsl(280 65% 60%));
     --gradient-hero: linear-gradient(180deg, hsl(220 25% 5%) 0%, hsl(220 20% 8%) 100%);
@@ -50,9 +50,61 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Typography hierarchy - refined for better visual rhythm */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl leading-tight font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-bold;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl font-semibold;
+  }
+
+  h5 {
+    @apply text-lg font-semibold;
+  }
+
+  h6 {
+    @apply text-base font-semibold;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+
+  /* Subtle text default */
+  small, .text-caption {
+    @apply text-xs text-muted-foreground font-medium tracking-wide;
+  }
+
+  /* Focus ring - more visible */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-primary/25 text-foreground;
   }
 
   @media (max-width: 639px) {
@@ -63,5 +115,19 @@ All colors MUST be HSL.
 
   input, textarea, button {
     font-size: 16px;
+  }
+}
+
+@layer utilities {
+  .transition-default {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .transition-smooth {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 }

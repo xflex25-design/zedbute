@@ -269,12 +269,13 @@ return (
         </div>
 
         {/* Verification Status card */}
-        <Card className="mb-4 bg-card border border-border rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Music className="h-5 w-5 text-foreground" />
-            <h2 className="text-base font-semibold">Verification Status</h2>
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">Artist verification information</p>
+        <Card className="mb-4 bg-card border border-border rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <Music className="h-5 w-5 text-foreground" />
+              <h2 className="text-base font-semibold">Verification Status</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Artist verification information</p>
 
           {verification ? (
             <div className="mb-4 space-y-2">
@@ -309,15 +310,17 @@ return (
           {(!verification || verification.status === "rejected") && (
             <Button
               onClick={() => navigate("/verify-claim")}
-              className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity"
+              className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
             >
               Apply for Verification
             </Button>
           )}
+          </div>
         </Card>
 
         {/* Quick Actions card */}
-        <Card className="mb-4 bg-card border border-border rounded-2xl p-5">
+        <Card className="mb-4 bg-card border border-border rounded-lg">
+          <div className="p-5">
           <div className="flex items-center gap-2 mb-1">
             <Upload className="h-5 w-5 text-foreground" />
             <h2 className="text-base font-semibold">Quick Actions</h2>
@@ -327,30 +330,31 @@ return (
           <div className="space-y-2">
             <button
               onClick={() => navigate("/upload-release")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
             >
               <Upload className="h-4 w-4 text-muted-foreground" />
               Upload New Release
             </button>
             <button
               onClick={() => navigate("/verify-claim")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
             >
               <BadgeCheck className="h-4 w-4 text-muted-foreground" />
               Get Verified
             </button>
             <button
               onClick={() => navigate("/royalties")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
             >
               <Wallet className="h-4 w-4 text-muted-foreground" />
               View Royalties
             </button>
           </div>
+          </div>
         </Card>
 
         {/* Royalty Overview */}
-        <Card className="bg-card border border-border rounded-2xl">
+        <Card className="bg-card border border-border rounded-lg">
           <div className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Wallet className="h-5 w-5 text-foreground" />
@@ -382,7 +386,7 @@ return (
                   <Button
                     onClick={() => setShowWithdrawForm(true)}
                     disabled={Math.max(0, royalties.filter((r) => r.status === "cleared").reduce((sum, r) => sum + (r.amount || 0), 0) - withdrawals.filter((w) => w.status === "approved").reduce((sum, w) => sum + (w.amount || 0), 0)) < 100}
-                    className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity"
+                    className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
                   >
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     Request Withdrawal
@@ -496,7 +500,7 @@ return (
         </Card>
 
         {/* Your Releases */}
-        <Card className="bg-card border border-border rounded-2xl">
+        <Card className="bg-card border border-border rounded-lg">
           <div className="p-5">
             <div className="flex items-center justify-between mb-1 gap-3">
               <div className="flex items-center gap-2">
@@ -535,7 +539,7 @@ return (
                 <Button
                   size="sm"
                   onClick={() => navigate("/upload-release")}
-                  className="rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:opacity-90"
+                  className="rounded-lg bg-gradient-primary text-primary-foreground hover:opacity-90"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Upload your first release
@@ -682,7 +686,7 @@ return (
 
 {/* Promote Your Releases */}
         {releases.length > 0 && (
-          <Card className="bg-card border border-border rounded-2xl mt-6">
+          <Card className="bg-card border border-border rounded-lg mt-6">
             <div className="p-5">
               <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
@@ -718,7 +722,7 @@ return (
                           <Button
                             size="sm"
                             onClick={() => setPromotingReleaseId(r.id)}
-                            className="rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs"
+                            className="rounded-lg bg-gradient-primary text-primary-foreground text-xs"
                           >
                             Promote — K20
                           </Button>
@@ -747,7 +751,7 @@ return (
                       <Input id="promoMessage" placeholder="Check out my new release!" value={promoMessage} onChange={(e) => setPromoMessage(e.target.value)} />
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <Button onClick={() => handlePromote(promotingReleaseId)} disabled={submittingPromo} className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+                      <Button onClick={() => handlePromote(promotingReleaseId)} disabled={submittingPromo} className="flex-1 bg-gradient-primary text-primary-foreground">
                         {submittingPromo ? "Submitting..." : "Proceed to Pay K20"}
                       </Button>
                       <Button variant="outline" onClick={() => { setPromotingReleaseId(null); setShowPromoForm(false); }} className="flex-1">Cancel</Button>

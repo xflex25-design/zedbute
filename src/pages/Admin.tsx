@@ -157,9 +157,9 @@ const Admin = () => {
       <Navbar user={user} />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-5xl">
         <h1 className="text-3xl font-bold mb-6">Admin — Releases</h1>
-        {banner && (
-          <div className="mb-4 p-3 bg-green-100 border border-green-500 text-green-800 rounded-lg flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5" /> {banner}
+          {banner && (
+          <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 text-green-600 rounded-lg flex items-center gap-2 animate-fade-in">
+            <CheckCircle2 className="h-5 w-5 shrink-0" /> <span>{banner}</span>
           </div>
         )}
         <div className="space-y-4">

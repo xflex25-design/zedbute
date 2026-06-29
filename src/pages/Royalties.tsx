@@ -165,19 +165,19 @@ const Royalties = () => {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="bg-card border border-border rounded-2xl">
+            <Card className="bg-card border border-border rounded-lg">
               <CardContent className="p-5">
                 <p className="text-xs text-muted-foreground mb-1">Total Cleared</p>
                 <p className="text-2xl font-bold">${totalCleared.toFixed(2)}</p>
               </CardContent>
             </Card>
-            <Card className="bg-card border border-border rounded-2xl">
+            <Card className="bg-card border border-border rounded-lg">
               <CardContent className="p-5">
                 <p className="text-xs text-muted-foreground mb-1">Total Paid Out</p>
                 <p className="text-2xl font-bold">${totalPaid.toFixed(2)}</p>
               </CardContent>
             </Card>
-            <Card className="bg-card border border-border rounded-2xl">
+            <Card className="bg-card border border-border rounded-lg">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs text-muted-foreground">Available Balance</p>
@@ -189,7 +189,7 @@ const Royalties = () => {
                 {available >= 100 ? (
                   <Button
                     onClick={() => setShowWithdrawForm(true)}
-                    className="mt-3 w-full rounded-xl bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm font-semibold hover:opacity-90"
+                    className="mt-3 w-full rounded-xl bg-gradient-primary text-primary-foreground text-sm font-semibold hover:opacity-90"
                   >
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     Request Withdrawal
@@ -203,7 +203,7 @@ const Royalties = () => {
 
 {/* Withdrawal Form */}
            {showWithdrawForm && (
-             <Card className="bg-card border border-border rounded-2xl mb-6 sm:mb-8">
+             <Card className="bg-card border border-border rounded-lg mb-6 sm:mb-8">
                <CardContent className="p-4 sm:p-6">
                  <h2 className="text-lg font-semibold mb-3 sm:mb-4">Request Withdrawal</h2>
                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
@@ -255,7 +255,7 @@ const Royalties = () => {
                    <Button
                      onClick={handleWithdraw}
                      disabled={submittingWithdraw || available < 100}
-                     className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white h-10"
+                     className="flex-1 bg-gradient-primary text-primary-foreground h-10"
                    >
                      {submittingWithdraw ? "Submitting..." : "Submit Request"}
                    </Button>
@@ -268,7 +268,7 @@ const Royalties = () => {
            )}
 
           {/* Royalty History */}
-          <Card className="bg-card border border-border rounded-2xl mb-8">
+          <Card className="bg-card border border-border rounded-lg mb-8">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Download className="h-5 w-5" />
@@ -323,7 +323,7 @@ const Royalties = () => {
           </Card>
 
           {/* Withdrawal History */}
-          <Card className="bg-card border border-border rounded-2xl">
+          <Card className="bg-card border border-border rounded-lg">
             <CardHeader>
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <ArrowUpRight className="h-5 w-5" />

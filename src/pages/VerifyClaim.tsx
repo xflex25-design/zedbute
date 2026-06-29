@@ -424,11 +424,13 @@ const VerifyClaim = () => {
                   <p className="text-sm text-muted-foreground">Pay securely via Mobile Money or Card.</p>
                 </div>
 
-                <Button
-                  onClick={handlePayment}
-                  className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold py-6 text-lg"
-                  disabled={loading}
-                >
+                  <Button
+                    onClick={handlePayment}
+                    variant="hero"
+                    className="w-full"
+                    size="lg"
+                    disabled={loading}
+                  >
                   {loading ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...</>
                   ) : (
@@ -453,7 +455,7 @@ const VerifyClaim = () => {
         </Button>
 
         <Card className="shadow-card">
-          <div className={`bg-gradient-to-br ${META[platform].gradient} px-6 py-5 rounded-t-xl border-b border-border`}>
+          <div className={`bg-gradient-to-br ${META[platform].gradient} px-6 py-5 rounded-t-lg border-b border-border`}>
             <div className="flex items-center gap-2">
               <Music className="h-5 w-5" />
               <h2 className="text-lg font-semibold">{META[platform].title}</h2>

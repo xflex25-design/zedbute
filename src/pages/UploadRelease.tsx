@@ -415,10 +415,10 @@ const UploadRelease = () => {
             <CardDescription>
               Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks.
             </CardDescription>
-            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
-              <p className="text-sm text-amber-700">
-                <AlertCircle className="h-4 w-4 inline mr-1" />
-                Your release will be saved as <strong>unpaid</strong> and you'll be redirected to complete the K50 payment.
+            <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <p className="text-sm text-amber-600 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>Your release will be saved as <strong>unpaid</strong> and you'll be redirected to complete the K50 payment.</span>
               </p>
             </div>
           </CardHeader>
@@ -518,7 +518,7 @@ const UploadRelease = () => {
                   <SelectTrigger className="w-full bg-background">
                     <SelectValue placeholder="Select a genre" />
                   </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
+                  <SelectContent className="bg-popover text-popover-foreground border border-border shadow-lg z-50">
                     {GENRES.map((genre) => (
                       <SelectItem key={genre} value={genre}>
                         {genre}

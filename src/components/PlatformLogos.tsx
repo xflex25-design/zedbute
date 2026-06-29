@@ -39,26 +39,26 @@ const platforms = [
 
 export const PlatformLogos = () => {
   return (
-    <section className="py-8 sm:py-10 px-4" style={{ backgroundColor: "white" }}>
+    <section className="py-10 sm:py-12 px-4" style={{ backgroundColor: "white" }}>
       <div className="container mx-auto">
-        <p className="text-center text-sm sm:text-base text-gray-500 mb-6 sm:mb-8 font-medium uppercase tracking-widest">
+        <p className="text-center text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8 font-semibold uppercase tracking-[0.15em]">
           Distribute to 150+ platforms including
         </p>
-        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8">
           {platforms.map((platform) => (
             <div
               key={platform.name}
-              className="flex flex-col items-center gap-1.5 sm:gap-2 group"
+              className="flex flex-col items-center gap-2 group"
             >
               <div
-                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 bg-white shadow-md border border-gray-100 group-hover:shadow-xl"
+                className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-0.5 bg-white shadow-md border border-gray-100 group-hover:shadow-xl"
                 style={{
                   color: platform.color,
                 }}
               >
                 {platform.icon}
               </div>
-              <span className="text-[10px] sm:text-xs text-gray-600 group-hover:text-gray-900 font-medium transition-colors text-center leading-tight max-w-[60px] sm:max-w-[80px]">
+              <span className="text-[10px] sm:text-xs text-gray-500 group-hover:text-gray-800 font-medium transition-colors duration-200 text-center leading-tight max-w-[60px] sm:max-w-[80px]">
                 {platform.name}
               </span>
             </div>

@@ -1,18 +1,36 @@
 import { Music2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface NavbarProps {
   user: any;
 }
 
+const navLinkClass = (isActive: boolean) =>
+  cn(
+    "text-sm font-medium px-3 py-2 rounded-md transition-all duration-200",
+    isActive
+      ? "text-primary bg-primary/10"
+      : "text-foreground/80 hover:text-foreground hover:bg-muted/50"
+  );
+
+const mobileNavLinkClass = (isActive: boolean) =>
+  cn(
+    "block text-sm font-medium rounded-md transition-all duration-200 py-2.5 px-3",
+    isActive
+      ? "text-primary bg-primary/10"
+      : "text-foreground hover:text-primary hover:bg-muted/50"
+  );
+
 export const Navbar = ({ user }: NavbarProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -30,11 +48,13 @@ export const Navbar = ({ user }: NavbarProps) => {
     }
   };
 
+  const closeMobile = () => setMobileMenuOpen(false);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 shrink-0">
             <Music2 className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">
               <span className="text-green-500">zed</span>
@@ -44,29 +64,17 @@ export const Navbar = ({ user }: NavbarProps) => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Home
-            </Link>
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/" className={navLinkClass(location.pathname === "/")}>Home</Link>
             {user && (
               <>
-                <Link to="/dashboard" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                  Dashboard
-                </Link>
-                <Link to="/upload-release" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                  Upload Release
-                </Link>
-                <Link to="/verify" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-                  Get Verified
-                </Link>
+                <Link to="/dashboard" className={navLinkClass(location.pathname === "/dashboard")}>Dashboard</Link>
+                <Link to="/upload-release" className={navLinkClass(location.pathname === "/upload-release")}>Upload Release</Link>
+                <Link to="/verify" className={navLinkClass(location.pathname === "/verify")}>Get Verified</Link>
               </>
             )}
-            <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Pricing
-            </Link>
-            <Link to="/blog" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Blog
-            </Link>
+            <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>Pricing</Link>
+            <Link to="/blog" className={navLinkClass(location.pathname === "/blog")}>Blog</Link>
             
             {user ? (
               <Button onClick={handleSignOut} variant="outline" size="sm">
@@ -95,70 +103,40 @@ export const Navbar = ({ user }: NavbarProps) => {
         </div>
 
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t border-border">
-            <Link
-              to="/"
-              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
+            mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
+          <div className="py-4 space-y-1 border-t border-border">
+            <Link to="/" className={mobileNavLinkClass(location.pathname === "/")} onClick={closeMobile}>Home</Link>
             {user && (
               <>
-                <Link
-                  to="/dashboard"
-                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/upload-release"
-                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Upload Release
-                </Link>
-                <Link
-                  to="/verify"
-                  className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Get Verified
-                </Link>
+                <Link to="/dashboard" className={mobileNavLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
+                <Link to="/upload-release" className={mobileNavLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
+                <Link to="/verify" className={mobileNavLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
               </>
             )}
-            <Link
-              to="/pricing"
-              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Pricing
-            </Link>
-            <Link
-              to="/blog"
-              className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Blog
-            </Link>
-            {user ? (
-              <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full mt-2">
-                Sign Out
-              </Button>
-            ) : (
-              <div className="flex flex-col gap-2 mt-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="w-full">
-                  Login
+            <Link to="/pricing" className={mobileNavLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
+            <Link to="/blog" className={mobileNavLinkClass(location.pathname === "/blog")} onClick={closeMobile}>Blog</Link>
+            <div className="pt-2 px-1">
+              {user ? (
+                <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full">
+                  Sign Out
                 </Button>
-                <Button variant="hero" size="sm" onClick={() => navigate("/auth")} className="w-full">
-                  Get Started
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="w-full">
+                    Login
+                  </Button>
+                  <Button variant="hero" size="sm" onClick={() => navigate("/auth")} className="w-full">
+                    Get Started
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   );

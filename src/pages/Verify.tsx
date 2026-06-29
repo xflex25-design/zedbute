@@ -18,7 +18,7 @@ type Platform = "spotify" | "boomplay" | "youtube";
 
 const PLATFORM_CONFIG: Record<Platform, { label: string; amount: number; accent: string }> = {
   spotify: { label: "Spotify", amount: 50, accent: "bg-green-600 hover:bg-green-700 text-white" },
-  boomplay: { label: "Boomplay", amount: 50, accent: "bg-orange-500 hover:bg-orange-600 text-white" },
+  boomplay: { label: "Boomplay", amount: 50, accent: "bg-gradient-primary text-primary-foreground" },
   youtube: { label: "YouTube OAC", amount: 260, accent: "bg-red-600 hover:bg-red-700 text-white" },
 };
 

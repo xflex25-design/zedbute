@@ -29,7 +29,7 @@ const Pricing = () => {
       <Navbar user={user} />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 sm:pb-16">
         <div className="text-center mb-8 xs:mb-10 sm:mb-12 md:mb-16 max-w-2xl mx-auto">
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 xs:mb-4">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 xs:mb-4 text-balance">
             Simple, Transparent Pricing
           </h1>
           <p className="text-base xs:text-lg sm:text-xl text-muted-foreground px-2">

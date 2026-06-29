@@ -94,7 +94,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-md shadow-card">
+      <Card className="w-full max-w-md shadow-card animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Music2 className="h-12 w-12 text-primary" />

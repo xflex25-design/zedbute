@@ -152,7 +152,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      <Card className="w-full max-w-md shadow-card">
+      <Card className="w-full max-w-md shadow-card animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
           <CardTitle className="text-2xl">
@@ -238,13 +238,13 @@ const Auth = () => {
               {isLogin && (
                 <div className="mt-2 text-center">
                   <button type="button" onClick={() => setResetStep("enter_email")}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                     Forgot password?
                   </button>
                 </div>
               )}
               <div className="mt-4 text-center text-sm">
-                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline">
+                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline transition-all duration-200">
                   {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
                 </button>
               </div>

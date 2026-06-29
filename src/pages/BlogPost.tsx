@@ -80,9 +80,9 @@ const BlogPost = () => {
           <div className="mt-8 sm:mt-12 p-4 sm:p-6 rounded-lg bg-card border border-border text-center">
             <h3 className="text-lg sm:text-xl font-bold mb-2">Ready to release your music?</h3>
             <p className="text-muted-foreground mb-3 sm:mb-4">Distribute to Spotify, Apple Music & 150+ platforms with ZedBute.</p>
-            <Button asChild variant="hero" size="lg" className="w-full sm:w-auto">
-              <Link to="/upload-release">Upload Your Release</Link>
-            </Button>
+              <Button asChild variant="hero" size="lg">
+                <Link to="/upload-release" className="w-full sm:w-auto">Upload Your Release</Link>
+              </Button>
           </div>
         </article>
       </main>

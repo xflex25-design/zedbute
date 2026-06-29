@@ -406,7 +406,8 @@ export default function Payment() {
               </div>
 
               <Button
-                className="w-full py-4 sm:py-6 text-base sm:text-lg"
+                className="w-full"
+                size="lg"
                 disabled={processing}
                 onClick={handlePayment}
               >
