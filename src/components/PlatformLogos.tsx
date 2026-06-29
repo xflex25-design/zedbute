@@ -44,7 +44,7 @@ export const PlatformLogos = () => {
         <p className="text-center text-sm sm:text-base text-gray-500 mb-6 sm:mb-8 font-medium uppercase tracking-widest">
           Distribute to 150+ platforms including
         </p>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
           {platforms.map((platform) => (
             <div
               key={platform.name}

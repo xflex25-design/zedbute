@@ -83,13 +83,13 @@ const Index = () => {
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
         >
           <div className="container mx-auto text-center relative z-10">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
+            <h1 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white drop-shadow-lg leading-tight">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent">
                 To The World
               </span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto px-2 drop-shadow">
+            <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto px-2 drop-shadow">
               Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
             </p>
             <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
@@ -230,7 +230,7 @@ const Index = () => {
         {/* Footer */}
         <footer className="py-10 sm:py-12 lg:py-16 px-4 border-t border-border bg-card">
           <div className="container mx-auto">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Music className="h-8 w-8 text-primary" />
