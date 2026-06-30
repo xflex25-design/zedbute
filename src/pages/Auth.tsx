@@ -53,7 +53,7 @@ const Auth = () => {
           toast({
             title: "Login failed",
             description: error.includes("Invalid")
-              ? "Invalid email or password. Please try again."
+              ? "Invalid email or password. If you signed up with Google, use 'Continue with Google' instead."
               : error.includes("not confirmed")
               ? "Please check your email and click the confirmation link before logging in."
               : error,

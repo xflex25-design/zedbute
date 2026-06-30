@@ -62,6 +62,7 @@ export const Navbar = () => {
                 <Link to="/dashboard" className={linkClass(location.pathname === "/dashboard")}>Dashboard</Link>
                 <Link to="/upload-release" className={linkClass(location.pathname === "/upload-release")}>Upload Release</Link>
                 <Link to="/verify" className={linkClass(location.pathname === "/verify")}>Get Verified</Link>
+                <Link to="/settings" className={linkClass(location.pathname === "/settings")}>Settings</Link>
               </>
             )}
             <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
@@ -102,6 +103,7 @@ export const Navbar = () => {
               <Link to="/dashboard" className={mobileLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
               <Link to="/upload-release" className={mobileLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
               <Link to="/verify" className={mobileLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
+              <Link to="/settings" className={mobileLinkClass(location.pathname === "/settings")} onClick={closeMobile}>Settings</Link>
             </>
           )}
           <Link to="/pricing" className={mobileLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>

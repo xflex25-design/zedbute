@@ -17,6 +17,7 @@ interface AuthContextValue {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<string | null>;
+  updatePassword: (password: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -83,8 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   }, []);
 
+  const updatePassword: AuthContextValue["updatePassword"] = useCallback(async (password) => {
+    if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
+    const { error } = await supabase.auth.updateUser({ password });
+    return error?.message ?? null;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, resetPassword }}>
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );
