@@ -13,8 +13,8 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<string | null>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
+  signIn: (username: string, password: string) => Promise<string | null>;
+  signUp: (email: string, password: string, fullName: string, username: string) => Promise<{ error: string | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<string | null>;
   updatePassword: (password: string) => Promise<string | null>;
@@ -66,20 +66,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.updateUser({ data: { full_name: name } }).catch(() => {});
   }, [user]);
 
-  const signIn: AuthContextValue["signIn"] = useCallback(async (email, password) => {
+  const signIn: AuthContextValue["signIn"] = useCallback(async (username, password) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
+    let email = username;
+    if (!email.includes("@")) {
+      const { data } = await supabase.rpc("get_email_by_username", { p_username: username });
+      if (!data) return "Invalid login credentials";
+      email = data;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return error?.message ?? null;
   }, []);
 
-  const signUp: AuthContextValue["signUp"] = useCallback(async (email, password, fullName) => {
+  const signUp: AuthContextValue["signUp"] = useCallback(async (email, password, fullName, username) => {
     if (envIssues.current.length > 0) return { error: `Missing env vars: ${envIssues.current.join(", ")}`, needsConfirmation: false };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth`,
-        data: { full_name: fullName },
+        data: { full_name: fullName, username },
       },
     });
     if (error) return { error: error.message, needsConfirmation: false };

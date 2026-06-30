@@ -12,18 +12,24 @@ import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
 const authSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }).max(255),
+  username: z.string().trim().min(1, "Username is required").max(100),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
   fullName: z.string().trim().max(100).optional(),
+  signupEmail: z.string().email({ message: "Invalid email address" }).max(255).optional(),
+  signupUsername: z.string().trim().min(3, "Username must be at least 3 characters").max(50).optional(),
 });
 
-type ResetStep = "idle" | "enter_email";
+type ResetStep = "idle" | "enter_email" | "forgot_username";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
+  const [recoverEmail, setRecoverEmail] = useState("");
+  const [recoveredUsername, setRecoveredUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
   const navigate = useNavigate();
@@ -40,22 +46,16 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const validationData = {
-        email,
-        password,
-        fullName: isLogin ? undefined : fullName,
-      };
-      authSchema.parse(validationData);
-
       if (isLogin) {
-        const error = await signIn(email, password);
+        const validationData = { username, password };
+        authSchema.parse(validationData);
+
+        const error = await signIn(username, password);
         if (error) {
           toast({
             title: "Login failed",
             description: error.includes("Invalid")
-              ? "Invalid email or password. If you previously signed in with Google, please use 'Continue with Google', or set a password from your account settings after logging in with Google."
-              : error.includes("not confirmed")
-              ? "Please check your email and click the confirmation link before logging in."
+              ? "Invalid username or password."
               : error,
             variant: "destructive",
           });
@@ -64,7 +64,10 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        const { error, needsConfirmation } = await signUp(email, password, fullName);
+        const validationData = { signupEmail, password, fullName, signupUsername };
+        authSchema.parse(validationData);
+
+        const { error, needsConfirmation } = await signUp(signupEmail, password, fullName, signupUsername);
         if (error) {
           const isRegistered = error.includes("already registered");
           toast({
@@ -103,12 +106,12 @@ const Auth = () => {
 
   const handleEmailReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
+    if (!recoverEmail) {
       toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const error = await resetPassword(email);
+    const error = await resetPassword(recoverEmail);
     if (error) {
       toast({ title: "Error", description: error, variant: "destructive" });
     } else {
@@ -120,8 +123,25 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleForgotUsername = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecoveredUsername(null);
+    if (!recoverEmail) {
+      toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.rpc("get_username_by_email", { p_email: recoverEmail });
+    if (error || !data) {
+      toast({ title: "Not found", description: "No account found with that email address.", variant: "destructive" });
+    } else {
+      setRecoveredUsername(data);
+    }
+    setLoading(false);
+  };
+
   const goBack = () => {
-    if (resetStep === "enter_email") setResetStep("idle");
+    if (resetStep === "enter_email" || resetStep === "forgot_username") setResetStep("idle");
   };
 
   return (
@@ -141,8 +161,8 @@ const Auth = () => {
             <form onSubmit={handleEmailReset} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="reset-email">Email</Label>
-                <Input id="reset-email" type="email" placeholder="you@example.com" value={email}
-                  onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
+                <Input id="reset-email" type="email" placeholder="you@example.com" value={recoverEmail}
+                  onChange={(e) => setRecoverEmail(e.target.value)} required maxLength={255} />
               </div>
               <Button type="submit" className="w-full" variant="hero" disabled={loading}>
                 {loading ? "Sending..." : "Send Recovery Link"}
@@ -150,6 +170,36 @@ const Auth = () => {
               <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
+            </form>
+          )}
+
+          {resetStep === "forgot_username" && (
+            <form onSubmit={handleForgotUsername} className="space-y-4">
+              {recoveredUsername ? (
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3">
+                    <p className="text-sm font-medium text-green-600">Your username</p>
+                    <p className="text-lg font-bold text-green-700 mt-1">{recoveredUsername}</p>
+                  </div>
+                  <Button type="button" variant="hero" className="w-full" onClick={goBack}>
+                    Back to Login
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="recover-email">Enter your email to find your username</Label>
+                    <Input id="recover-email" type="email" placeholder="you@example.com" value={recoverEmail}
+                      onChange={(e) => setRecoverEmail(e.target.value)} required maxLength={255} />
+                  </div>
+                  <Button type="submit" className="w-full" variant="hero" disabled={loading}>
+                    {loading ? "Searching..." : "Find Username"}
+                  </Button>
+                  <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                  </Button>
+                </>
+              )}
             </form>
           )}
 
@@ -188,18 +238,33 @@ const Auth = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {!isLogin && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input id="fullName" type="text" placeholder="John Doe" value={fullName}
+                        onChange={(e) => setFullName(e.target.value)} required maxLength={100} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signupEmail">Email</Label>
+                      <Input id="signupEmail" type="email" placeholder="you@example.com" value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)} required maxLength={255} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signupUsername">Username</Label>
+                      <Input id="signupUsername" type="text" placeholder="your_username" value={signupUsername}
+                        onChange={(e) => setSignupUsername(e.target.value)} required minLength={3} maxLength={50} />
+                    </div>
+                  </>
+                )}
+
+                {isLogin && (
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" type="text" placeholder="John Doe" value={fullName}
-                      onChange={(e) => setFullName(e.target.value)} required maxLength={100} />
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" type="text" placeholder="your_username" value={username}
+                      onChange={(e) => setUsername(e.target.value)} required maxLength={100} />
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="you@example.com" value={email}
-                    onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <Input id="password" type="password" placeholder="••••••••" value={password}
@@ -210,10 +275,14 @@ const Auth = () => {
                 </Button>
               </form>
               {isLogin && (
-                <div className="mt-2 text-center">
+                <div className="mt-2 flex flex-col items-center gap-1">
                   <button type="button" onClick={() => setResetStep("enter_email")}
                     className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
                     Forgot password?
+                  </button>
+                  <button type="button" onClick={() => { setRecoveredUsername(null); setRecoverEmail(""); setResetStep("forgot_username"); }}
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+                    Forgot username?
                   </button>
                 </div>
               )}
