@@ -1,12 +1,12 @@
 import { Music2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const navLinkClass = (isActive: boolean) =>
+const linkClass = (isActive: boolean) =>
   cn(
     "text-sm font-medium px-3 py-2 rounded-md transition-all duration-200",
     isActive
@@ -14,9 +14,9 @@ const navLinkClass = (isActive: boolean) =>
       : "text-foreground/80 hover:text-foreground hover:bg-muted/50"
   );
 
-const mobileNavLinkClass = (isActive: boolean) =>
+const mobileLinkClass = (isActive: boolean) =>
   cn(
-    "block text-sm font-medium rounded-md transition-all duration-200 py-2.5 px-3",
+    "flex items-center text-sm font-medium rounded-md transition-all duration-200 py-3 px-4 min-h-[44px]",
     isActive
       ? "text-primary bg-primary/10"
       : "text-foreground hover:text-primary hover:bg-muted/50"
@@ -32,98 +32,89 @@ export const Navbar = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
-    toast({
-      title: "Signed out successfully",
-    });
+    toast({ title: "Signed out successfully" });
   };
 
   const closeMobile = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <Music2 className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">
+          <Link to="/" className="flex items-center gap-2 shrink-0" onClick={closeMobile}>
+            <Music2 className="h-8 w-8 text-primary shrink-0" />
+            <span className="text-xl font-bold whitespace-nowrap">
               <span className="text-green-500">zed</span>
               <span className="text-red-500">B</span>
               <span className="text-foreground">ute</span>
             </span>
           </Link>
 
-          {/* Desktop Menu */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            <Link to="/" className={navLinkClass(location.pathname === "/")}>Home</Link>
+            <Link to="/" className={linkClass(location.pathname === "/")}>Home</Link>
             {user && (
               <>
-                <Link to="/dashboard" className={navLinkClass(location.pathname === "/dashboard")}>Dashboard</Link>
-                <Link to="/upload-release" className={navLinkClass(location.pathname === "/upload-release")}>Upload Release</Link>
-                <Link to="/verify" className={navLinkClass(location.pathname === "/verify")}>Get Verified</Link>
+                <Link to="/dashboard" className={linkClass(location.pathname === "/dashboard")}>Dashboard</Link>
+                <Link to="/upload-release" className={linkClass(location.pathname === "/upload-release")}>Upload Release</Link>
+                <Link to="/verify" className={linkClass(location.pathname === "/verify")}>Get Verified</Link>
               </>
             )}
-            <Link to="/pricing" className={navLinkClass(location.pathname === "/pricing")}>Pricing</Link>
-            <Link to="/blog" className={navLinkClass(location.pathname === "/blog")}>Blog</Link>
-            
+            <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
+            <Link to="/blog" className={linkClass(location.pathname === "/blog")}>Blog</Link>
             {user ? (
-              <Button onClick={handleSignOut} variant="outline" size="sm">
-                Sign Out
-              </Button>
+              <Button onClick={handleSignOut} variant="outline" size="sm">Sign Out</Button>
             ) : (
               <div className="flex gap-3">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
-                  Login
-                </Button>
-                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>
-                  Get Started
-                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Login</Button>
+                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>Get Started</Button>
               </div>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Hamburger Toggle */}
           <button
-            className="md:hidden text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
+            className="md:hidden flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
           >
-            {mobileMenuOpen ? <X /> : <Menu />}
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
-            mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-          }`}
-        >
-          <div className="py-4 space-y-1 border-t border-border">
-            <Link to="/" className={mobileNavLinkClass(location.pathname === "/")} onClick={closeMobile}>Home</Link>
-            {user && (
-              <>
-                <Link to="/dashboard" className={mobileNavLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
-                <Link to="/upload-release" className={mobileNavLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
-                <Link to="/verify" className={mobileNavLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
-              </>
+      {/* Mobile Slide-down Panel */}
+      <div
+        className={cn(
+          "md:hidden overflow-hidden transition-all duration-300 ease-out",
+          mobileMenuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="container mx-auto px-4 pb-4 space-y-1 border-t border-border pt-2">
+          <Link to="/" className={mobileLinkClass(location.pathname === "/")} onClick={closeMobile}>Home</Link>
+          {user && (
+            <>
+              <Link to="/dashboard" className={mobileLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
+              <Link to="/upload-release" className={mobileLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
+              <Link to="/verify" className={mobileLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
+            </>
+          )}
+          <Link to="/pricing" className={mobileLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
+          <Link to="/blog" className={mobileLinkClass(location.pathname === "/blog")} onClick={closeMobile}>Blog</Link>
+          <div className="pt-2">
+            {user ? (
+              <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full h-11">Sign Out</Button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <Button variant="ghost" size="sm" onClick={() => { navigate("/auth"); closeMobile(); }} className="w-full h-11">Login</Button>
+                <Button variant="hero" size="sm" onClick={() => { navigate("/auth"); closeMobile(); }} className="w-full h-11">Get Started</Button>
+              </div>
             )}
-            <Link to="/pricing" className={mobileNavLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
-            <Link to="/blog" className={mobileNavLinkClass(location.pathname === "/blog")} onClick={closeMobile}>Blog</Link>
-            <div className="pt-2 px-1">
-              {user ? (
-                <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full">
-                  Sign Out
-                </Button>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="w-full">
-                    Login
-                  </Button>
-                  <Button variant="hero" size="sm" onClick={() => navigate("/auth")} className="w-full">
-                    Get Started
-                  </Button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
