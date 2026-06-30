@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const envIssues = useRef(MISSING_ENV);
+  const backfilledName = useRef(false);
 
   useEffect(() => {
     if (envIssues.current.length > 0) {
@@ -51,6 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user || backfilledName.current) return;
+    const meta = user.user_metadata ?? {};
+    if (meta.full_name) return;
+    const name = meta.name
+      ?? user.identities?.find((i) => i.provider === "google")?.identity_data?.name
+      ?? user.identities?.find((i) => i.provider === "google")?.identity_data?.full_name
+      ?? null;
+    if (!name) return;
+    backfilledName.current = true;
+    supabase.auth.updateUser({ data: { full_name: name } }).catch(() => {});
+  }, [user]);
 
   const signIn: AuthContextValue["signIn"] = useCallback(async (email, password) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
