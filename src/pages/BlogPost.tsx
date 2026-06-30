@@ -45,7 +45,7 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+      <Navbar />
       <main className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-16">
         <article className="max-w-2xl sm:max-w-3xl mx-auto">
           <Button asChild variant="ghost" className="mb-4 sm:mb-6">

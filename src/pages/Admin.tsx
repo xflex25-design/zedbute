@@ -128,7 +128,7 @@ const Admin = () => {
   if (isAdmin === null) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar user={user} />
+        <Navbar />
         <div className="pt-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto" /></div>
       </div>
     );
@@ -137,7 +137,7 @@ const Admin = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto pt-24 max-w-md">
           <Card>
             <CardContent className="pt-6 text-center space-y-3">
@@ -154,7 +154,7 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <Navbar user={user} />
+      <Navbar />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-5xl">
         <h1 className="text-3xl font-bold mb-6">Admin — Releases</h1>
           {banner && (

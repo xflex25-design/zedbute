@@ -158,7 +158,7 @@ const Royalties = () => {
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-6xl">
 
           <h1 className="text-3xl font-bold mb-6">Royalties</h1>

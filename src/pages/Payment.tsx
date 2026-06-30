@@ -352,7 +352,7 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <Navbar user={user} />
+      <Navbar />
 
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12">
         <div className="max-w-sm sm:max-w-lg mx-auto">

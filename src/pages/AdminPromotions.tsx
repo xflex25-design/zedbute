@@ -54,7 +54,7 @@ const AdminPromotions = () => {
   if (isAdmin === null) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar user={null} />
+        <Navbar />
         <div className="pt-24 text-center"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto" /></div>
       </div>
     );
@@ -63,7 +63,7 @@ const AdminPromotions = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar user={null} />
+        <Navbar />
         <div className="pt-24 text-center text-muted-foreground">Access denied. Admins only.</div>
       </div>
     );
@@ -71,7 +71,7 @@ const AdminPromotions = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={null} />
+      <Navbar />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-6xl">
         <h1 className="text-3xl font-bold mb-6">Manage Promotions</h1>
         <Card>

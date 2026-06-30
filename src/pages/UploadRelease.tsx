@@ -404,7 +404,7 @@ const UploadRelease = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+      <Navbar />
       <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
         <Card>
           <CardHeader>

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,7 @@ const verificationBadge = (status: string | null) => {
 };
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
@@ -193,45 +194,21 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    let ignore = false;
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (ignore) return;
-      if (session) {
-        setUser(session.user);
-        fetchUserData(session.user.id).finally(() => {
-          if (!ignore) setLoading(false);
-        });
-        fetchRoyaltyData(session.user.id);
-        fetchPromotions(session.user.id);
-      } else {
-        setLoading(false);
-        navigate("/auth");
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (ignore) return;
-      if (session) {
-        setUser(session.user);
-        fetchUserData(session.user.id);
-        fetchRoyaltyData(session.user.id);
-        fetchPromotions(session.user.id);
-      } else if (event === "SIGNED_OUT") {
-        navigate("/auth");
-      }
-    });
-
-    return () => {
-      ignore = true;
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+    if (authLoading) return;
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    setLoading(true);
+    fetchUserData(user.id).finally(() => setLoading(false));
+    fetchRoyaltyData(user.id);
+    fetchPromotions(user.id);
+  }, [user, authLoading, navigate]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto px-4 pt-24 flex items-center justify-center">
           <p className="text-muted-foreground">Loading...</p>
         </div>
@@ -255,7 +232,7 @@ return (
     </Helmet>
 
     <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+      <Navbar />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-2xl">
 
         {/* Welcome header */}

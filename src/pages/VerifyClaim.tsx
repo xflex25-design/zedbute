@@ -330,7 +330,7 @@ const VerifyClaim = () => {
   if (submitted) {
     return (
       <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto px-4 pt-24 max-w-xl">
           <Card className="shadow-card">
             <CardContent className="pt-8 text-center space-y-4">
@@ -351,7 +351,7 @@ const VerifyClaim = () => {
   if (!platform) {
     return (
       <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-4xl">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-center">Artist Verification</h1>
           <p className="text-center text-muted-foreground mb-8">Choose a platform to claim your official artist profile.</p>
@@ -388,7 +388,7 @@ const VerifyClaim = () => {
   if (step === "payment") {
     return (
       <div className="min-h-screen bg-gradient-hero">
-        <Navbar user={user} />
+        <Navbar />
         <div className="container mx-auto px-4 pt-24 pb-12">
           <div className="max-w-lg mx-auto">
             <Button variant="ghost" onClick={() => setStep("form")} className="mb-4">
@@ -448,7 +448,7 @@ const VerifyClaim = () => {
   // ── Form step ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <Navbar user={user} />
+      <Navbar />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-2xl">
         <Button variant="ghost" onClick={() => setPlatform(null)} className="mb-4">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to platforms

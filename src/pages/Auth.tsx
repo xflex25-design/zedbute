@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,23 +28,13 @@ const Auth = () => {
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/dashboard");
-    });
-  }, [navigate]);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          navigate("/dashboard");
-        }
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!authLoading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,20 +43,20 @@ const Auth = () => {
       const validationData = {
         email,
         password,
-        fullName: !isLogin ? fullName : undefined,
+        fullName: isLogin ? undefined : fullName,
       };
       authSchema.parse(validationData);
+
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        console.log("Supabase login error:", error);
+        const error = await signIn(email, password);
         if (error) {
           toast({
             title: "Login failed",
-            description: error.message.includes("Invalid")
+            description: error.includes("Invalid")
               ? "Invalid email or password. Please try again."
-              : error.message.includes("not confirmed")
+              : error.includes("not confirmed")
               ? "Please check your email and click the confirmation link before logging in."
-              : error.message,
+              : error,
             variant: "destructive",
           });
         } else {
@@ -73,27 +64,17 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        const redirectUrl = `${window.location.origin}/auth`;
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: { full_name: fullName },
-          },
-        });
-
+        const { error, needsConfirmation } = await signUp(email, password, fullName);
         if (error) {
-          const isRegistered = error.message.includes("already registered");
+          const isRegistered = error.includes("already registered");
           toast({
             title: isRegistered ? "Account exists" : "Error",
             description: isRegistered
               ? "This email is already registered. Please login instead."
-              : error.message,
+              : error,
             variant: "destructive",
           });
         } else {
-          const needsConfirmation = !data.session;
           toast({
             title: "Account created!",
             description: needsConfirmation
@@ -127,23 +108,16 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+    const error = await resetPassword(email);
+    if (error) {
+      toast({ title: "Error", description: error, variant: "destructive" });
+    } else {
+      toast({
+        title: "Recovery email sent!",
+        description: "Check your inbox for a password reset link.",
       });
-      if (error) {
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-      } else {
-        toast({
-          title: "Recovery email sent!",
-          description: "Check your inbox for a password reset link.",
-        });
-      }
-    } catch {
-      toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const goBack = () => {

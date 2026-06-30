@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Helmet } from 'react-helmet-async';
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Music, Sparkles, Globe, Shield, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSEO } from "@/hooks/useSEO";
 import { PlatformLogos } from "@/components/PlatformLogos";
 
@@ -20,7 +20,7 @@ const faqs = [
 ];
 
 const Index = () => {
-  const [user, setUser] = useState<any>(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useSEO({
@@ -46,21 +46,6 @@ const Index = () => {
     return () => { document.head.removeChild(ld); };
   }, []);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (event === "SIGNED_IN" && session) {
-        navigate("/dashboard");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const features = [
     { icon: Globe, title: "Global Distribution", description: "Reach 150+ streaming platforms worldwide including Spotify, Apple Music, and more" },
     { icon: TrendingUp, title: "100% Royalties", description: "Keep all your earnings. We never take a percentage of your royalties" },
@@ -76,7 +61,7 @@ const Index = () => {
         <meta name="google-site-verification" content="google5381a056419580bb" />
       </Helmet>
       <div className="min-h-screen bg-background">
-        <Navbar user={user} />
+        <Navbar />
         
         {/* Hero Section */}
         <section

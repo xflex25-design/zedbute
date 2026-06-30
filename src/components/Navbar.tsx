@@ -2,13 +2,9 @@ import { Music2, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-interface NavbarProps {
-  user: any;
-}
 
 const navLinkClass = (isActive: boolean) =>
   cn(
@@ -26,26 +22,19 @@ const mobileNavLinkClass = (isActive: boolean) =>
       : "text-foreground hover:text-primary hover:bg-muted/50"
   );
 
-export const Navbar = ({ user }: NavbarProps) => {
+export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      navigate("/");
-      toast({
-        title: "Signed out successfully",
-      });
-    }
+    await signOut();
+    navigate("/");
+    toast({
+      title: "Signed out successfully",
+    });
   };
 
   const closeMobile = () => setMobileMenuOpen(false);

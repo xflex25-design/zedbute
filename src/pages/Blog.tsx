@@ -27,7 +27,7 @@ const Blog = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+      <Navbar />
       <main className="container mx-auto px-4 pt-24 pb-8 sm:pb-16">
         <header className="max-w-3xl mx-auto text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
