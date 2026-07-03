@@ -135,6 +135,8 @@ export type Database = {
           genre: string | null
           id: string
           language: string[] | null
+          legal_name: string | null
+          producer_name: string | null
           release_date: string | null
           release_type: string | null
           rights_confirmed: boolean | null
@@ -154,6 +156,8 @@ export type Database = {
           genre?: string | null
           id?: string
           language?: string[] | null
+          legal_name?: string | null
+          producer_name?: string | null
           release_date?: string | null
           release_type?: string | null
           rights_confirmed?: boolean | null
@@ -173,6 +177,8 @@ export type Database = {
           genre?: string | null
           id?: string
           language?: string[] | null
+          legal_name?: string | null
+          producer_name?: string | null
           release_date?: string | null
           release_type?: string | null
           rights_confirmed?: boolean | null

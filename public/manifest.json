@@ -1,7 +1,7 @@
 {
   "name": "zedBute",
   "short_name": "zedBute",
-  "description": "Distribute your music to Spotify, Apple Music, TikTok, and 150+ platforms",
+  "description": "Distribute your music to Spotify, Apple Music, Boomplay, TikTok, and 150+ platforms worldwide",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0E14",

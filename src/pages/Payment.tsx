@@ -45,15 +45,22 @@ export default function Payment() {
   const paymentType = searchParams.get("type") || "release";
   const releaseId = searchParams.get("releaseId");
   const promotionId = searchParams.get("promotionId");
+  const amountParam = searchParams.get("amount");
 
   const paymentLabel =
     paymentType === "verification"
       ? "Artist Verification"
       : paymentType === "promotion"
         ? "Promote Release"
-        : "Release Upload";
+        : paymentType === "ep"
+          ? "EP Upload"
+          : paymentType === "album"
+            ? "Album Upload"
+            : "Single Upload";
 
-  const paymentAmount = paymentType === "promotion" ? 20 : 50;
+  // Use amount from URL if provided, otherwise use defaults
+  const defaultAmount = paymentType === "promotion" ? 20 : paymentType === "ep" ? 200 : paymentType === "album" ? 500 : 50;
+  const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -186,7 +193,7 @@ export default function Payment() {
 
       await savePayment(transactionId, status);
 
-      if (paymentType === "release") {
+      if (paymentType === "release" || paymentType === "ep" || paymentType === "album") {
         await updateReleaseStatus();
       }
 
@@ -206,7 +213,7 @@ export default function Payment() {
             : "Payment confirmation is pending.",
       });
 
-      if (paymentType === "release" && status === "verified") {
+      if ((paymentType === "release" || paymentType === "ep" || paymentType === "album") && status === "verified") {
         try {
           const { data: release } = await supabase
             .from("music_releases")
@@ -238,6 +245,8 @@ export default function Payment() {
         );
 
         navigate("/verify");
+      } else if (paymentType === "promotion") {
+        navigate("/dashboard");
       } else {
         navigate("/release-success");
       }

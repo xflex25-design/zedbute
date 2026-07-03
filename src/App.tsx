@@ -13,6 +13,8 @@ import Verify from "./pages/Verify";
 import VerifyClaim from "./pages/VerifyClaim";
 import Admin from "./pages/Admin";
 import UploadRelease from "./pages/UploadRelease";
+import UploadEP from "./pages/UploadEP";
+import UploadAlbum from "./pages/UploadAlbum";
 import Pricing from "./pages/Pricing";
 import ReleaseSuccess from "./pages/ReleaseSuccess";
 import Payment from "./pages/Payment";
@@ -43,6 +45,8 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/promotions" element={<AdminPromotions />} />
               <Route path="/upload-release" element={<UploadRelease />} />
+              <Route path="/upload-ep" element={<UploadEP />} />
+              <Route path="/upload-album" element={<UploadAlbum />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/release-success" element={<ReleaseSuccess />} />
               <Route path="/payment" element={<Payment />} />

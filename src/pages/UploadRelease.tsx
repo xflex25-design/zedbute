@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -69,6 +69,8 @@ const UploadRelease = () => {
   const [formData, setFormData] = useState({
     title: "",
     artistName: "",
+    producerName: "",
+    legalName: "",
     releaseType: "single",
     genre: "",
     releaseDate: undefined as Date | undefined,
@@ -346,6 +348,8 @@ const UploadRelease = () => {
           user_id: user.id,
           title: formData.title,
           artist_name: formData.artistName,
+          producer_name: formData.producerName || null,
+          legal_name: formData.legalName || null,
           language: selectedLanguages,
           release_type: formData.releaseType,
           genre: formData.genre,
@@ -458,6 +462,30 @@ const UploadRelease = () => {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter your release title"
                   required
+                />
+              </div>
+
+              {/* Producer Name - Optional */}
+              <div className="space-y-2">
+                <Label htmlFor="producerName">Producer Name (Optional)</Label>
+                <Input
+                  id="producerName"
+                  value={formData.producerName}
+                  onChange={(e) => setFormData({ ...formData, producerName: e.target.value })}
+                  placeholder="Name of the producer"
+                  maxLength={100}
+                />
+              </div>
+
+              {/* Legal Name - Optional */}
+              <div className="space-y-2">
+                <Label htmlFor="legalName">Full Legal Name (Optional)</Label>
+                <Input
+                  id="legalName"
+                  value={formData.legalName}
+                  onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
+                  placeholder="Your full legal name for royalty payments"
+                  maxLength={150}
                 />
               </div>
 
