@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader as Loader2, Upload, Music, CircleAlert as AlertCircle, Calendar as CalendarIcon, Info } from "lucide-react";
+import { Loader as Loader2, Upload, Music, CircleAlert as AlertCircle, Calendar as CalendarIcon, Info, Plus, Minus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addWeeks } from "date-fns";
@@ -41,7 +41,16 @@ const GENRES = [
   "Jazz",
 ];
 
-const EP_PRICE = 200; // K200 for EP
+const EP_PRICE = 200;
+const EP_MIN_TRACKS = 4;
+const EP_MAX_TRACKS = 6;
+
+interface Track {
+  id: string;
+  title: string;
+  file: File | null;
+  trackNumber: number;
+}
 
 const UploadEP = () => {
   const navigate = useNavigate();
@@ -53,16 +62,14 @@ const UploadEP = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [audioUploadProgress, setAudioUploadProgress] = useState(0);
-  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
+  const [uploadingTrackIndex, setUploadingTrackIndex] = useState<number | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [validatingImage, setValidatingImage] = useState(false);
   const [showReattachPrompt, setShowReattachPrompt] = useState(false);
   const [previousFileName, setPreviousFileName] = useState<string | null>(null);
-  const [savedAudioFileName, setSavedAudioFileName] = useState<string | null>(null);
   const coverScrollRef = useRef<HTMLDivElement>(null);
   const coverArtRef = useRef<HTMLInputElement>(null);
-  const audioScrollRef = useRef<HTMLDivElement>(null);
-  const audioFileRef = useRef<HTMLInputElement>(null);
+  const audioFileRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -74,9 +81,15 @@ const UploadEP = () => {
     genre: "",
     releaseDate: undefined as Date | undefined,
     coverArt: null as File | null,
-    audioFile: null as File | null,
     rightsConfirmed: false,
   });
+
+  const [tracks, setTracks] = useState<Track[]>([
+    { id: "1", title: "", file: null, trackNumber: 1 },
+    { id: "2", title: "", file: null, trackNumber: 2 },
+    { id: "3", title: "", file: null, trackNumber: 3 },
+    { id: "4", title: "", file: null, trackNumber: 4 },
+  ]);
 
   useEffect(() => {
     return () => {
@@ -93,17 +106,15 @@ const UploadEP = () => {
   useEffect(() => {
     const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
     const savedCoverName = sessionStorage.getItem("pendingCoverArtName");
-    const savedAudioName = sessionStorage.getItem("pendingAudioFileName");
 
     if (pendingPayment === "completed") {
       sessionStorage.removeItem("pendingReleasePayment");
-      if (savedCoverName || savedAudioName) {
+      if (savedCoverName) {
         setShowReattachPrompt(true);
         setPreviousFileName(savedCoverName);
-        setSavedAudioFileName(savedAudioName);
         toast({
-          title: "Re-attach your files",
-          description: "Please re-upload your cover art and audio file to complete your release.",
+          title: "Re-attach your cover art",
+          description: "Please re-upload your cover art and audio files to complete your EP.",
           variant: "default",
         });
         setTimeout(() => {
@@ -176,7 +187,13 @@ const UploadEP = () => {
     }
   };
 
-  const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTrackTitleChange = (id: string, title: string) => {
+    setTracks(tracks.map(track => 
+      track.id === id ? { ...track, title } : track
+    ));
+  };
+
+  const handleTrackAudioChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -190,8 +207,42 @@ const UploadEP = () => {
       return;
     }
 
-    setFormData({ ...formData, audioFile: file });
-    sessionStorage.setItem("pendingAudioFileName", file.name);
+    setTracks(tracks.map((track, i) => 
+      i === index ? { ...track, file } : track
+    ));
+  };
+
+  const addTrack = () => {
+    if (tracks.length >= EP_MAX_TRACKS) {
+      toast({
+        title: "Maximum Tracks Reached",
+        description: `EPs are limited to ${EP_MAX_TRACKS} tracks`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const newTrack: Track = {
+      id: Date.now().toString(),
+      title: "",
+      file: null,
+      trackNumber: tracks.length + 1
+    };
+    setTracks([...tracks, newTrack]);
+  };
+
+  const removeTrack = (id: string) => {
+    if (tracks.length <= EP_MIN_TRACKS) {
+      toast({
+        title: "Minimum Tracks Required",
+        description: `EPs require at least ${EP_MIN_TRACKS} tracks`,
+        variant: "destructive",
+      });
+      return;
+    }
+    setTracks(tracks.filter(track => track.id !== id).map((track, index) => ({
+      ...track,
+      trackNumber: index + 1
+    })));
   };
 
   const handleLanguageToggle = (language: string) => {
@@ -202,13 +253,44 @@ const UploadEP = () => {
     );
   };
 
+  const validateTracks = (): boolean => {
+    const tracksWithFiles = tracks.filter(t => t.file);
+    if (tracksWithFiles.length < EP_MIN_TRACKS) {
+      toast({
+        title: "Insufficient Tracks",
+        description: `EPs require a minimum of ${EP_MIN_TRACKS} tracks. Please add more audio files.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (tracksWithFiles.length > EP_MAX_TRACKS) {
+      toast({
+        title: "Too Many Tracks",
+        description: `EPs are limited to a maximum of ${EP_MAX_TRACKS} tracks.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+    for (const track of tracks) {
+      if (!track.title.trim() && track.file) {
+        toast({
+          title: "Missing Track Title",
+          description: `Please enter a title for track ${track.trackNumber}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
       toast({
         title: "Missing Title",
-        description: "Please enter a release title",
+        description: "Please enter an EP title",
         variant: "destructive",
       });
       return;
@@ -241,19 +323,12 @@ const UploadEP = () => {
       return;
     }
 
+    if (!validateTracks()) return;
+
     if (!formData.coverArt) {
       toast({
         title: "No Cover Art",
         description: "Please upload cover art (3000x3000 pixels)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.audioFile) {
-      toast({
-        title: "No Audio File",
-        description: "Please upload your music audio file",
         variant: "destructive",
       });
       return;
@@ -292,43 +367,7 @@ const UploadEP = () => {
         .from("cover-art")
         .getPublicUrl(fileName);
 
-      setUploadProgress(30);
-
-      setIsUploadingAudio(true);
-      setAudioUploadProgress(0);
-      const audioExt = formData.audioFile!.name.split(".").pop();
-      const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
-
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-
-      progressIntervalRef.current = setInterval(() => {
-        setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
-      }, 300);
-
-      const { error: audioUploadError } = await supabase.storage
-        .from("audio-files")
-        .upload(audioFileName, formData.audioFile!);
-
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      if (audioUploadError) {
-        setIsUploadingAudio(false);
-        setAudioUploadProgress(0);
-        throw audioUploadError;
-      }
-      setAudioUploadProgress(100);
-      setIsUploadingAudio(false);
-
-      const { data: { publicUrl: audioUrl } } = supabase.storage
-        .from("audio-files")
-        .getPublicUrl(audioFileName);
-
-      setUploadProgress(70);
+      setUploadProgress(20);
 
       const { data: inserted, error: insertError } = await supabase
         .from("music_releases")
@@ -343,7 +382,6 @@ const UploadEP = () => {
           genre: formData.genre,
           release_date: format(formData.releaseDate, "yyyy-MM-dd"),
           cover_art_url: publicUrl,
-          audio_url: audioUrl,
           rights_confirmed: formData.rightsConfirmed,
           status: "unpaid",
           upload_progress: 0,
@@ -352,6 +390,62 @@ const UploadEP = () => {
         .single();
 
       if (insertError) throw insertError;
+
+      setUploadProgress(40);
+
+      const trackUrls: { title: string; url: string }[] = [];
+      for (let i = 0; i < tracks.length; i++) {
+        const track = tracks[i];
+        if (!track.file) continue;
+
+        setUploadingTrackIndex(i);
+        setAudioUploadProgress(0);
+
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+        }
+
+        progressIntervalRef.current = setInterval(() => {
+          setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
+        }, 300);
+
+        const audioExt = track.file.name.split(".").pop();
+        const audioFileName = `${user.id}/${inserted.id}/track_${track.trackNumber}_${Date.now()}.${audioExt}`;
+
+        const { error: audioUploadError } = await supabase.storage
+          .from("audio-files")
+          .upload(audioFileName, track.file);
+
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+
+        if (audioUploadError) throw audioUploadError;
+        setAudioUploadProgress(100);
+
+        const { data: { publicUrl: trackUrl } } = supabase.storage
+          .from("audio-files")
+          .getPublicUrl(audioFileName);
+
+        trackUrls.push({ title: track.title, url: trackUrl, trackNumber: track.trackNumber });
+
+        const progressPerTrack = 60 / tracks.filter(t => t.file).length;
+        setUploadProgress(40 + (trackUrls.length * progressPerTrack));
+      }
+
+      const { error: tracksError } = await supabase
+        .from("release_tracks")
+        .insert(
+          trackUrls.map((t) => ({
+            release_id: inserted.id,
+            track_number: t.trackNumber,
+            title: t.title,
+            audio_url: t.url,
+          }))
+        );
+
+      if (tracksError) throw tracksError;
 
       setUploadProgress(100);
 
@@ -365,10 +459,10 @@ const UploadEP = () => {
       navigate(`/payment?type=ep&releaseId=${inserted.id}&amount=${EP_PRICE}`);
 
     } catch (error: any) {
-      console.error("Error submitting release:", error);
+      console.error("Error submitting EP:", error);
       toast({
         title: "Submission Failed",
-        description: error.message || "An error occurred while submitting your release",
+        description: error.message || "An error occurred while submitting your EP",
         variant: "destructive",
       });
     } finally {
@@ -376,7 +470,7 @@ const UploadEP = () => {
       setIsUploading(false);
       setUploadProgress(0);
       setAudioUploadProgress(0);
-      setIsUploadingAudio(false);
+      setUploadingTrackIndex(null);
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -391,6 +485,8 @@ const UploadEP = () => {
       </div>
     );
   }
+
+  const uploadedTracksCount = tracks.filter(t => t.file).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -411,16 +507,21 @@ const UploadEP = () => {
                 <span>Your EP will be saved as <strong>unpaid</strong> and you'll be redirected to complete the <strong>K{EP_PRICE}</strong> payment.</span>
               </p>
             </div>
+            <div className="mt-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <p className="text-xs text-blue-600">
+                <strong>EP Requirements:</strong> {EP_MIN_TRACKS}-{EP_MAX_TRACKS} tracks required. Current: {uploadedTracksCount} tracks
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             <FormProgress
               steps={[
                 { label: "Title", completed: formData.title.trim().length > 0 },
                 { label: "Language", completed: selectedLanguages.length > 0 },
+                { label: "Tracks", completed: uploadedTracksCount >= EP_MIN_TRACKS },
                 { label: "Genre", completed: !!formData.genre },
                 { label: "Release Date", completed: !!formData.releaseDate },
                 { label: "Cover Art", completed: !!formData.coverArt },
-                { label: "Audio File", completed: !!formData.audioFile },
                 { label: "Rights Confirmed", completed: formData.rightsConfirmed },
               ]}
             />
@@ -491,6 +592,95 @@ const UploadEP = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Track List */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Tracks * ({EP_MIN_TRACKS}-{EP_MAX_TRACKS} required)</Label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTrack}
+                      disabled={tracks.length >= EP_MAX_TRACKS}
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeTrack(tracks[tracks.length - 1].id)}
+                      disabled={tracks.length <= EP_MIN_TRACKS}
+                    >
+                      <Minus className="h-3 w-3 mr-1" /> Remove
+                    </Button>
+                  </div>
+                </div>
+
+                {tracks.map((track, index) => (
+                  <div key={track.id} className="border border-border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-medium">Track {track.trackNumber}</Label>
+                      {track.file && (
+                        <span className="text-xs text-muted-foreground">
+                          {(track.file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      )}
+                    </div>
+                    <Input
+                      value={track.title}
+                      onChange={(e) => handleTrackTitleChange(track.id, e.target.value)}
+                      placeholder={`Track ${track.trackNumber} title`}
+                      maxLength={100}
+                    />
+                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
+                      {track.file ? (
+                        <div className="space-y-2">
+                          <Music className="mx-auto h-8 w-8 text-primary" />
+                          <p className="text-sm font-medium truncate">{track.file.name}</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setTracks(tracks.map((t, i) => 
+                                i === index ? { ...t, file: null } : t
+                              ));
+                              if (audioFileRefs.current[index]) {
+                                audioFileRefs.current[index]!.value = "";
+                              }
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                          <div className="text-sm text-muted-foreground">
+                            <Label
+                              htmlFor={`track-audio-${index}`}
+                              className="cursor-pointer text-primary hover:underline"
+                            >
+                              Click to upload
+                            </Label>
+                          </div>
+                          <Input
+                            id={`track-audio-${index}`}
+                            type="file"
+                            accept="audio/*"
+                            onChange={(e) => handleTrackAudioChange(index, e)}
+                            className="hidden"
+                            ref={el => audioFileRefs.current[index] = el}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Genre */}
@@ -616,73 +806,6 @@ const UploadEP = () => {
                 )}
               </div>
 
-              {/* Audio File */}
-              <div className="space-y-3">
-                <Label htmlFor="audioFile">Music Audio File *</Label>
-                <div ref={audioScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                  {formData.audioFile ? (
-                    <div className="space-y-4">
-                      <Music className="mx-auto h-12 w-12 text-primary" />
-                      <p className="text-sm font-medium">{formData.audioFile.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {(formData.audioFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-
-                      {isUploadingAudio && (
-                        <div className="space-y-2 mt-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Uploading audio...</span>
-                            <span className="font-medium">{audioUploadProgress}%</span>
-                          </div>
-                          <Progress value={audioUploadProgress} className="h-2" />
-                        </div>
-                      )}
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setFormData({ ...formData, audioFile: null });
-                          sessionStorage.removeItem("pendingAudioFileName");
-                          setSavedAudioFileName(null);
-                        }}
-                        disabled={isUploadingAudio}
-                      >
-                        Remove File
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {showReattachPrompt && savedAudioFileName && (
-                        <p className="text-sm text-primary font-medium">
-                          Please re-attach: {savedAudioFileName}
-                        </p>
-                      )}
-                      <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                      <div className="text-sm text-muted-foreground">
-                        <Label
-                          htmlFor="audioFile"
-                          className="cursor-pointer text-primary hover:underline"
-                        >
-                          Click to upload
-                        </Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Upload MP3, WAV, or other audio formats
-                      </p>
-                    </div>
-                  )}
-                  <Input
-                    id="audioFile"
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleAudioChange}
-                    className="hidden"
-                    ref={audioFileRef}
-                  />
-                </div>
-              </div>
-
               {/* Rights Confirmation */}
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4 bg-muted/50">
                 <Checkbox
@@ -708,7 +831,12 @@ const UploadEP = () => {
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Uploading...</span>
+                    <span className="text-muted-foreground">
+                      {uploadingTrackIndex !== null 
+                        ? `Uploading track ${uploadingTrackIndex + 1}...`
+                        : "Uploading..."
+                      }
+                    </span>
                     <span className="font-medium">{uploadProgress}%</span>
                   </div>
                   <Progress value={uploadProgress} className="h-2" />
@@ -719,7 +847,7 @@ const UploadEP = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={loading || validatingImage || isUploadingAudio}
+                disabled={loading || validatingImage}
               >
                 {loading ? (
                   <>
