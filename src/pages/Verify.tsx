@@ -14,11 +14,10 @@ import { CheckCircle2, Loader2, Music, Youtube } from "lucide-react";
 
 const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
-type Platform = "spotify" | "boomplay" | "youtube";
+type Platform = "spotify" | "youtube";
 
 const PLATFORM_CONFIG: Record<Platform, { label: string; amount: number; accent: string }> = {
   spotify: { label: "Spotify", amount: 50, accent: "bg-green-600 hover:bg-green-700 text-white" },
-  boomplay: { label: "Boomplay", amount: 20, accent: "bg-gradient-primary text-primary-foreground" },
   youtube: { label: "YouTube OAC", amount: 260, accent: "bg-red-600 hover:bg-red-700 text-white" },
 };
 
@@ -26,13 +25,6 @@ interface SpotifyForm {
   platformEmail: string;
   artistName: string;
   spotifyUrl: string;
-  socialUrl: string;
-  phone: string;
-}
-interface BoomplayForm {
-  platformEmail: string;
-  artistName: string;
-  platformUserId: string;
   socialUrl: string;
   phone: string;
 }
@@ -57,9 +49,6 @@ const Verify = () => {
   const [spotifyForm, setSpotifyForm] = useState<SpotifyForm>({
     platformEmail: "", artistName: "", spotifyUrl: "", socialUrl: "", phone: "",
   });
-  const [boomplayForm, setBoomplayForm] = useState<BoomplayForm>({
-    platformEmail: "", artistName: "", platformUserId: "", socialUrl: "", phone: "",
-  });
   const [youtubeForm, setYoutubeForm] = useState<YouTubeForm>({
     artistName: "", youtubeUrl: "", topicChannelUrl: "", distributorName: "", phone: "",
   });
@@ -78,7 +67,6 @@ const Verify = () => {
       setProfile(profileData);
       const ph = profileData?.phone_number || "";
       setSpotifyForm((f) => ({ ...f, phone: ph }));
-      setBoomplayForm((f) => ({ ...f, phone: ph }));
       setYoutubeForm((f) => ({ ...f, phone: ph }));
 
       const { data: existing } = await supabase
@@ -88,7 +76,7 @@ const Verify = () => {
       if (existing) {
         const set = new Set<Platform>();
         existing.forEach((r: any) => {
-          if (r.platform === "spotify" || r.platform === "boomplay" || r.platform === "youtube") {
+          if (r.platform === "spotify" || r.platform === "youtube") {
             set.add(r.platform);
           }
         });
@@ -100,12 +88,6 @@ const Verify = () => {
 
   const validateSpotify = (f: SpotifyForm) => {
     if (!f.platformEmail.trim() || !f.artistName.trim() || !f.spotifyUrl.trim() || !f.phone.trim()) {
-      return "Please fill all required fields";
-    }
-    return null;
-  };
-  const validateBoomplay = (f: BoomplayForm) => {
-    if (!f.platformEmail.trim() || !f.artistName.trim() || !f.platformUserId.trim() || !f.phone.trim()) {
       return "Please fill all required fields";
     }
     return null;
@@ -234,9 +216,8 @@ const Verify = () => {
           </div>
 
 <Tabs defaultValue="spotify" className="w-full">
-           <TabsList className="grid w-full grid-cols-3">
+           <TabsList className="grid w-full grid-cols-2">
              <TabsTrigger value="spotify">Spotify</TabsTrigger>
-             <TabsTrigger value="boomplay" className="text-xs sm:text-sm">Boomplay</TabsTrigger>
              <TabsTrigger value="youtube" className="text-xs sm:text-sm">YouTube</TabsTrigger>
            </TabsList>
 
@@ -297,68 +278,6 @@ const Verify = () => {
                     {loadingPlatform === "spotify" ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
                     ) : "Pay K50 & Submit via Lenco"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* BOOMPLAY */}
-            <TabsContent value="boomplay">
-              <Card className="shadow-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <CardTitle className="flex items-center gap-2 text-orange-600">
-                      <Music className="h-5 w-5" /> Boomplay Verification
-                    </CardTitle>
-                    <Badge className="bg-orange-500 hover:bg-orange-500 text-white">Processing Fee: K20 Kwacha via Lenco</Badge>
-                  </div>
-                  <CardDescription>Get verified on Boomplay's artist platform.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {verifiedPlatforms.has("boomplay") && (
-                    <div className="flex items-center gap-2 rounded-lg bg-orange-50 border border-orange-200 p-3 text-orange-700 text-sm">
-                      <CheckCircle2 className="h-4 w-4" /> Submitted — in review
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label>Boomplay Account Email *</Label>
-                    <Input type="email" value={boomplayForm.platformEmail}
-                      onChange={(e) => setBoomplayForm({ ...boomplayForm, platformEmail: e.target.value })}
-                      placeholder="you@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Artist Name *</Label>
-                    <Input value={boomplayForm.artistName}
-                      onChange={(e) => setBoomplayForm({ ...boomplayForm, artistName: e.target.value })}
-                      placeholder="Your Boomplay artist name" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Boomplay Artist ID / URL *</Label>
-                    <Input value={boomplayForm.platformUserId}
-                      onChange={(e) => setBoomplayForm({ ...boomplayForm, platformUserId: e.target.value })}
-                      placeholder="Boomplay ID or profile URL" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Social Media Link (Instagram / Twitter)</Label>
-                    <Input value={boomplayForm.socialUrl}
-                      onChange={(e) => setBoomplayForm({ ...boomplayForm, socialUrl: e.target.value })}
-                      placeholder="https://instagram.com/yourhandle" />
-                  </div>
-<div className="space-y-2">
-                    <Label>Mobile Money / Payment Phone *</Label>
-                    <Input type="tel" value={boomplayForm.phone}
-                      onChange={(e) => setBoomplayForm({ ...boomplayForm, phone: e.target.value })}
-                      placeholder="e.g. 0971234567"
-                      className="h-10"
-                    />
-                  </div>
-                  <Button
-                    className={`w-full font-bold py-3 sm:py-4 text-sm sm:text-base ${PLATFORM_CONFIG.boomplay.accent}`}
-                    disabled={loadingPlatform !== null || verifiedPlatforms.has("boomplay")}
-                  >
-                    {loadingPlatform === "boomplay" ? (
-                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
-                    ) : "Pay K20 & Submit via Lenco"}
                   </Button>
                 </CardContent>
               </Card>
