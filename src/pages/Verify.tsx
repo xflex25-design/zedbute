@@ -18,7 +18,7 @@ type Platform = "spotify" | "boomplay" | "youtube";
 
 const PLATFORM_CONFIG: Record<Platform, { label: string; amount: number; accent: string }> = {
   spotify: { label: "Spotify", amount: 50, accent: "bg-green-600 hover:bg-green-700 text-white" },
-  boomplay: { label: "Boomplay", amount: 50, accent: "bg-gradient-primary text-primary-foreground" },
+  boomplay: { label: "Boomplay", amount: 20, accent: "bg-gradient-primary text-primary-foreground" },
   youtube: { label: "YouTube OAC", amount: 260, accent: "bg-red-600 hover:bg-red-700 text-white" },
 };
 
@@ -310,7 +310,7 @@ const Verify = () => {
                     <CardTitle className="flex items-center gap-2 text-orange-600">
                       <Music className="h-5 w-5" /> Boomplay Verification
                     </CardTitle>
-                    <Badge className="bg-orange-500 hover:bg-orange-500 text-white">Processing Fee: K50 Kwacha via Lenco</Badge>
+                    <Badge className="bg-orange-500 hover:bg-orange-500 text-white">Processing Fee: K20 Kwacha via Lenco</Badge>
                   </div>
                   <CardDescription>Get verified on Boomplay's artist platform.</CardDescription>
                 </CardHeader>
@@ -358,7 +358,7 @@ const Verify = () => {
                   >
                     {loadingPlatform === "boomplay" ? (
                       <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
-                    ) : "Pay K50 & Submit via Lenco"}
+                    ) : "Pay K20 & Submit via Lenco"}
                   </Button>
                 </CardContent>
               </Card>
