@@ -150,11 +150,11 @@ export default function Payment() {
         status: "pending",
       })
       .eq("id", releaseId)
-      .eq("user_id", user.id)
-      .eq("status", "unpaid");
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error(error);
+      console.error("Failed to update release status to pending:", error);
+      throw error;
     }
   }
 
