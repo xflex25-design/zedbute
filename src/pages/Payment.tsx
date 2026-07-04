@@ -50,16 +50,26 @@ export default function Payment() {
   const paymentLabel =
     paymentType === "verification"
       ? "Artist Verification"
-      : paymentType === "promotion"
-        ? "Promote Release"
-        : paymentType === "ep"
-          ? "EP Upload"
-          : paymentType === "album"
-            ? "Album Upload"
-            : "Single Upload";
+      : paymentType === "boomplay-claim"
+        ? "Boomplay Claim"
+        : paymentType === "promotion"
+          ? "Promote Release"
+          : paymentType === "ep"
+            ? "EP Upload"
+            : paymentType === "album"
+              ? "Album Upload"
+              : "Single Upload";
 
   // Use amount from URL if provided, otherwise use defaults
-  const defaultAmount = paymentType === "promotion" ? 20 : paymentType === "ep" ? 200 : paymentType === "album" ? 500 : 50;
+  const defaultAmount = paymentType === "boomplay-claim"
+    ? 20
+    : paymentType === "promotion"
+      ? 20
+      : paymentType === "ep"
+        ? 200
+        : paymentType === "album"
+          ? 500
+          : 50;
   const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
 
   const [user, setUser] = useState<User | null>(null);
@@ -245,6 +255,9 @@ export default function Payment() {
         );
 
         navigate("/verify");
+      } else if (paymentType === "boomplay-claim") {
+        sessionStorage.setItem("boomplayClaimPaid", "true");
+        navigate("/dashboard");
       } else if (paymentType === "promotion") {
         navigate("/dashboard");
       } else {

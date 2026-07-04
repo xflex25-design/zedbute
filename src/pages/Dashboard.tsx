@@ -107,6 +107,7 @@ const Dashboard = () => {
   const [withdrawCode, setWithdrawCode] = useState("");
   const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showBoomplayClaim, setShowBoomplayClaim] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -200,6 +201,7 @@ const Dashboard = () => {
       navigate("/auth");
       return;
     }
+    setShowBoomplayClaim(sessionStorage.getItem("boomplayClaimPaid") === "true");
     setLoading(true);
     fetchUserData(user.id).finally(() => setLoading(false));
     fetchRoyaltyData(user.id);
@@ -287,7 +289,21 @@ return (
 
           {(!verification || verification.status === "rejected") && (
             <div className="space-y-3">
-              <BoomplayClaimButton />
+              {showBoomplayClaim ? (
+                <>
+                  <BoomplayClaimButton />
+                  <p className="text-xs text-muted-foreground">
+                    Your K20 Boomplay claim payment was completed successfully.
+                  </p>
+                </>
+              ) : (
+                <Button
+                  onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
+                  className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
+                >
+                  Pay K20 to Claim on Boomplay
+                </Button>
+              )}
             </div>
           )}
           </div>
@@ -325,7 +341,16 @@ return (
               Upload Album — K500
             </button>
             <div className="w-full rounded-lg border border-border bg-background p-3">
-              <BoomplayClaimButton />
+              {showBoomplayClaim ? (
+                <BoomplayClaimButton />
+              ) : (
+                <Button
+                  onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
+                  className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
+                >
+                  Pay K20 to Claim on Boomplay
+                </Button>
+              )}
             </div>
             <button
               onClick={() => navigate("/royalties")}
