@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { BoomplayClaimButton } from "@/components/BoomplayClaimButton";
 import {
   Table,
   TableBody,
@@ -285,12 +286,9 @@ return (
           )}
 
           {(!verification || verification.status === "rejected") && (
-            <Button
-              onClick={() => navigate("/verify-claim")}
-              className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-            >
-              Apply for Verification
-            </Button>
+            <div className="space-y-3">
+              <BoomplayClaimButton />
+            </div>
           )}
           </div>
         </Card>
@@ -326,13 +324,9 @@ return (
               <Disc className="h-4 w-4 text-muted-foreground" />
               Upload Album — K500
             </button>
-            <button
-              onClick={() => navigate("/verify-claim")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
-            >
-              <BadgeCheck className="h-4 w-4 text-muted-foreground" />
-              Get Verified
-            </button>
+            <div className="w-full rounded-lg border border-border bg-background p-3">
+              <BoomplayClaimButton />
+            </div>
             <button
               onClick={() => navigate("/royalties")}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"

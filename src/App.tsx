@@ -11,7 +11,6 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
-import VerifyClaim from "./pages/VerifyClaim";
 import Admin from "./pages/Admin";
 import UploadRelease from "./pages/UploadRelease";
 import UploadEP from "./pages/UploadEP";
@@ -44,7 +43,6 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/verify" element={<Verify />} />
-                <Route path="/verify-claim" element={<VerifyClaim />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/promotions" element={<AdminPromotions />} />
                 <Route path="/upload-release" element={<UploadRelease />} />
