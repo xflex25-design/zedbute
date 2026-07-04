@@ -20,7 +20,7 @@ export function BoomplayClaimButton() {
         </a>
       </Button>
       <p className="text-sm text-muted-foreground">
-        You&apos;ll complete your artist claim directly on Boomplay. We don&apos;t submit this on your behalf.
+        You&apos;ll complete your artist claim directly on Boomplay. We don&apos;t submit this on your behalf. You can only claim if you already have your songs on streaming platforms.
       </p>
     </div>
   );
