@@ -53,15 +53,17 @@ serve(async (req) => {
       }),
     });
 
-    const responseText = await response.text();
-    console.log('Lenco raw response:', response.status, response.statusText, responseText);
-    
+    // Prefer JSON parsing but fall back to raw text for unexpected responses
     let data: any;
     try {
-      data = JSON.parse(responseText);
-    } catch {
+      data = await response.json();
+    } catch (e) {
+      const responseText = await response.text();
+      console.warn('Failed to parse Lenco response JSON, falling back to text:', responseText);
       data = { message: responseText };
     }
+
+    console.log('Lenco response:', response.status, JSON.stringify(data));
 
     if (!response.ok || !data.status) {
       const userMessage = mapLencoError(response.status, data);
@@ -74,6 +76,7 @@ serve(async (req) => {
     const collectionId = data.data?.id;
     const collectionStatus = data.data?.status;
 
+    // If successful or failed return immediately
     if (collectionStatus === 'successful') {
       return new Response(
         JSON.stringify({
@@ -99,60 +102,14 @@ serve(async (req) => {
       );
     }
 
-    // Poll for result
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const statusResponse = await fetch(`${LENCO_BASE_URL}/collections/${collectionId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${lencoToken}`,
-        },
-      });
-
-      if (statusResponse.ok) {
-        const statusData = await statusResponse.json();
-        const currentStatus = statusData.data?.status;
-        console.log('Status check', attempts + 1, ':', currentStatus);
-
-        if (currentStatus === 'successful') {
-          return new Response(
-            JSON.stringify({
-              success: true,
-              referenceId: collectionId || ref,
-              status: 'SUCCESSFUL',
-              message: 'Payment completed successfully',
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        if (currentStatus === 'failed') {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              referenceId: collectionId || ref,
-              status: 'FAILED',
-              error: statusData.data?.reasonForFailure || 'Payment failed',
-              userMessage: statusData.data?.reasonForFailure || 'Payment was declined.',
-            }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-      }
-
-      attempts++;
-    }
-
+    // For 'pending' or unknown states, return PENDING immediately and let the client handle confirmation callbacks.
+    console.log('Payment pending, returning PENDING to client. collectionId:', collectionId, 'ref:', ref);
     return new Response(
       JSON.stringify({
         success: false,
         referenceId: collectionId || ref,
         status: 'PENDING',
-        message: 'Payment is still processing. Please check your phone to authorize.',
+        message: 'Payment is processing. Confirmations will follow asynchronously.',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
