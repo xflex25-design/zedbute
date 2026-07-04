@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 const linkClass = (isActive: boolean) =>
@@ -67,6 +68,8 @@ export const Navbar = () => {
             )}
             <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
             <Link to="/blog" className={linkClass(location.pathname === "/blog")}>Blog</Link>
+            <Link to="/contact" className={linkClass(location.pathname === "/contact")}>Contact</Link>
+            <ThemeToggle />
             {user ? (
               <Button onClick={handleSignOut} variant="outline" size="sm">Sign Out</Button>
             ) : (
@@ -108,7 +111,10 @@ export const Navbar = () => {
           )}
           <Link to="/pricing" className={mobileLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
           <Link to="/blog" className={mobileLinkClass(location.pathname === "/blog")} onClick={closeMobile}>Blog</Link>
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
+            <div className="px-4">
+              <ThemeToggle />
+            </div>
             {user ? (
               <Button onClick={handleSignOut} variant="outline" size="sm" className="w-full h-11">Sign Out</Button>
             ) : (
