@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -107,6 +107,7 @@ const Dashboard = () => {
   const [withdrawCode, setWithdrawCode] = useState("");
   const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showBoomplayClaim, setShowBoomplayClaim] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -207,6 +208,17 @@ const Dashboard = () => {
     fetchRoyaltyData(user.id);
     fetchPromotions(user.id);
   }, [user, authLoading, navigate]);
+
+  const filteredReleases = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return releases;
+    return releases.filter((r) => {
+      return (
+        (r.title ?? "").toLowerCase().includes(q) ||
+        (r.artist_name ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [releases, searchQuery]);
 
   if (loading) {
     return (
@@ -557,8 +569,21 @@ return (
               </div>
             ) : (
               <>
-                {/* Desktop: Table */}
-                <div className="hidden md:block">
+                <div className="mb-4">
+                  <Input
+                    placeholder="Search releases by title or artist"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                {filteredReleases.length === 0 ? (
+                  <div className="text-center py-10 space-y-3">
+                    <p className="text-sm text-muted-foreground">No releases match your search.</p>
+                  </div>
+                ) : (
+                  /* Desktop: Table */
+                  <div className="hidden md:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -571,7 +596,7 @@ return (
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {releases.map((r) => (
+                      {filteredReleases.map((r) => (
                         <TableRow
                           key={r.id}
                           className={r.status === "unpaid" ? "cursor-pointer hover:bg-amber-500/5" : ""}
@@ -629,7 +654,7 @@ return (
 
                 {/* Mobile: Cards  */}
                 <div className="md:hidden space-y-4">
-                  {releases.map((r) => (
+                  {filteredReleases.map((r) => (
                     <div
                       key={r.id}
                       className={`rounded-lg border bg-background p-4 space-y-3 ${
@@ -706,7 +731,7 @@ return (
 
               {!promotingReleaseId ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {releases.map((r) => {
+                  {filteredReleases.map((r) => {
                     const isPromoted = promotions.some((p) => p.release_id === r.id && p.status === "active");
                     const hasPending = promotions.some((p) => p.release_id === r.id && p.status === "pending");
                     return (
