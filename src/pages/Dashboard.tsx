@@ -582,144 +582,147 @@ return (
                     <p className="text-sm text-muted-foreground">No releases match your search.</p>
                   </div>
                 ) : (
-                  /* Desktop: Table */
-                  <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cover</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Release Date</TableHead>
-                        <TableHead>Genre</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <>
+                    {/* Desktop: Table */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Cover</TableHead>
+                            <TableHead>Title</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Release Date</TableHead>
+                            <TableHead>Genre</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredReleases.map((r) => (
+                            <TableRow
+                              key={r.id}
+                              className={r.status === "unpaid" ? "cursor-pointer hover:bg-amber-500/5" : ""}
+                              onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
+                            >
+                              <TableCell>
+                                {r.cover_art_url ? (
+                                  <img
+                                    src={r.cover_art_url}
+                                    alt={r.title}
+                                    className="w-10 h-10 rounded object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                                    <Music className="h-4 w-4 text-muted-foreground" />
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-medium">{r.title}</p>
+                                <p className="text-xs text-muted-foreground">{r.artist_name}</p>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="capitalize">
+                                  {r.release_type ?? "Single"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{r.release_date ?? "—"}</TableCell>
+                              <TableCell>{r.genre ?? "—"}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Badge className={statusVariant(r.status)}>
+                                    {statusLabel(r.status)}
+                                  </Badge>
+                                  {r.status === "unpaid" && (
+                                    <Button
+                                      size="sm"
+                                      className="h-6 px-2 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/payment?type=release&releaseId=${r.id}`);
+                                      }}
+                                    >
+                                      <CreditCard className="h-3 w-3 mr-1" />
+                                      Pay Now
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile: Cards  */}
+                    <div className="md:hidden space-y-4">
                       {filteredReleases.map((r) => (
-                        <TableRow
+                        <div
                           key={r.id}
-                          className={r.status === "unpaid" ? "cursor-pointer hover:bg-amber-500/5" : ""}
+                          className={`rounded-lg border bg-background p-4 space-y-3 ${
+                            r.status === "unpaid"
+                              ? "border-amber-500/40 cursor-pointer active:bg-amber-500/5"
+                              : "border-border"
+                          }`}
                           onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
                         >
-                          <TableCell>
+                          <div className="flex items-start gap-3">
                             {r.cover_art_url ? (
                               <img
                                 src={r.cover_art_url}
                                 alt={r.title}
-                                className="w-10 h-10 rounded object-cover"
+                                className="w-14 h-14 rounded object-cover shrink-0"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                                <Music className="h-4 w-4 text-muted-foreground" />
+                              <div className="w-14 h-14 rounded bg-muted flex items-center justify-center shrink-0">
+                                <Music className="h-5 w-5 text-muted-foreground" />
                               </div>
                             )}
-                          </TableCell>
-                          <TableCell>
-                            <p className="font-medium">{r.title}</p>
-                            <p className="text-xs text-muted-foreground">{r.artist_name}</p>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {r.release_type ?? "Single"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{r.release_date ?? "—"}</TableCell>
-                          <TableCell>{r.genre ?? "—"}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Badge className={statusVariant(r.status)}>
-                                {statusLabel(r.status)}
-                              </Badge>
-                              {r.status === "unpaid" && (
-                                <Button
-                                  size="sm"
-                                  className="h-6 px-2 text-xs bg-amber-500 hover:bg-amber-600 text-white"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/payment?type=release&releaseId=${r.id}`);
-                                  }}
-                                >
-                                  <CreditCard className="h-3 w-3 mr-1" />
-                                  Pay Now
-                                </Button>
-                              )}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium truncate">{r.title}</p>
+                              <p className="text-sm text-muted-foreground">{r.artist_name}</p>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Mobile: Cards  */}
-                <div className="md:hidden space-y-4">
-                  {filteredReleases.map((r) => (
-                    <div
-                      key={r.id}
-                      className={`rounded-lg border bg-background p-4 space-y-3 ${
-                        r.status === "unpaid"
-                          ? "border-amber-500/40 cursor-pointer active:bg-amber-500/5"
-                          : "border-border"
-                      }`}
-                      onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
-                    >
-                      <div className="flex items-start gap-3">
-                        {r.cover_art_url ? (
-                          <img
-                            src={r.cover_art_url}
-                            alt={r.title}
-                            className="w-14 h-14 rounded object-cover shrink-0"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded bg-muted flex items-center justify-center shrink-0">
-                            <Music className="h-5 w-5 text-muted-foreground" />
+                            <Badge className={statusVariant(r.status)}>
+                              {statusLabel(r.status)}
+                            </Badge>
                           </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{r.title}</p>
-                          <p className="text-sm text-muted-foreground">{r.artist_name}</p>
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                              <p className="text-muted-foreground">Type</p>
+                              <p className="font-medium capitalize">{r.release_type ?? "Single"}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Release Date</p>
+                              <p className="font-medium">{r.release_date ?? "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">Genre</p>
+                              <p className="font-medium">{r.genre ?? "—"}</p>
+                            </div>
+                          </div>
+                          {r.status === "unpaid" && (
+                            <Button
+                              size="sm"
+                              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/payment?type=release&releaseId=${r.id}`);
+                              }}
+                            >
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              Complete Payment — K50
+                            </Button>
+                          )}
                         </div>
-                        <Badge className={statusVariant(r.status)}>
-                          {statusLabel(r.status)}
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Type</p>
-                          <p className="font-medium capitalize">{r.release_type ?? "Single"}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Release Date</p>
-                          <p className="font-medium">{r.release_date ?? "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Genre</p>
-                          <p className="font-medium">{r.genre ?? "—"}</p>
-                        </div>
-                      </div>
-                      {r.status === "unpaid" && (
-                        <Button
-                          size="sm"
-                          className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/payment?type=release&releaseId=${r.id}`);
-                          }}
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Complete Payment — K50
-                        </Button>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </>
             )}
           </div>
         </Card>
 
-{/* Promote Your Releases */}
+        {/* Promote Your Releases */}
         {releases.length > 0 && (
           <Card className="bg-card border border-border rounded-lg mt-6">
             <div className="p-5">
