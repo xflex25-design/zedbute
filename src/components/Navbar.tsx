@@ -68,7 +68,6 @@ export const Navbar = () => {
             )}
             <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
             <Link to="/blog" className={linkClass(location.pathname === "/blog")}>Blog</Link>
-            <Link to="/contact" className={linkClass(location.pathname === "/contact")}>Contact</Link>
             <ThemeToggle />
             {user ? (
               <Button onClick={handleSignOut} variant="outline" size="sm">Sign Out</Button>
