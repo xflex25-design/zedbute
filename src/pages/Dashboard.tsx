@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BoomplayClaimButton } from "@/components/BoomplayClaimButton";
 import {
   Table,
   TableBody,
@@ -101,7 +100,6 @@ const Dashboard = () => {
   const [submittingPromo, setSubmittingPromo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showBoomplayClaim, setShowBoomplayClaim] = useState(false);
 
   const [royalties, setRoyalties] = useState<any[]>([]);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -232,7 +230,6 @@ const Dashboard = () => {
       navigate("/auth");
       return;
     }
-    setShowBoomplayClaim(sessionStorage.getItem("boomplayClaimPaid") === "true");
     setLoading(true);
     fetchUserData(user.id).finally(() => setLoading(false));
     fetchPromotions(user.id);
@@ -375,21 +372,12 @@ return (
 
           {(!verification || verification.status === "rejected") && (
             <div className="space-y-3">
-              {showBoomplayClaim ? (
-                <>
-                  <BoomplayClaimButton />
-                  <p className="text-xs text-muted-foreground">
-                    Your Boomplay claim payment was completed successfully.
-                  </p>
-                </>
-              ) : (
-                <Button
-                  onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
-                  className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-                >
-                  Claim on Boomplay
-                </Button>
-              )}
+              <Button
+                onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
+                className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
+              >
+                Claim on Boomplay
+              </Button>
             </div>
           )}
           </div>
