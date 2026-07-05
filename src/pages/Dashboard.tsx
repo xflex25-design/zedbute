@@ -323,7 +323,6 @@ return (
           </div>
         </Card>
 
-        {/* Your Releases */}
         <Card className="bg-card border border-border rounded-lg">
           <div className="p-5">
             <div className="flex items-center justify-between mb-1 gap-3">
