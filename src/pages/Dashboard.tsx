@@ -293,7 +293,7 @@ return (
                 <>
                   <BoomplayClaimButton />
                   <p className="text-xs text-muted-foreground">
-                    Your K20 Boomplay claim payment was completed successfully.
+                    Your Boomplay claim payment was completed successfully.
                   </p>
                 </>
               ) : (
@@ -301,7 +301,7 @@ return (
                   onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
                   className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
                 >
-                  Pay K20 to Claim on Boomplay
+                  Claim on Boomplay
                 </Button>
               )}
             </div>
@@ -348,7 +348,7 @@ return (
                   onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
                   className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
                 >
-                  Pay K20 to Claim on Boomplay
+                  Claim on Boomplay
                 </Button>
               )}
             </div>
