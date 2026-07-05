@@ -352,18 +352,6 @@ return (
               <Disc className="h-4 w-4 text-muted-foreground" />
               Upload Album
             </button>
-            <div className="w-full rounded-lg border border-border bg-background p-3">
-              {showBoomplayClaim ? (
-                <p className="text-xs text-muted-foreground">Boomplay claim completed.</p>
-              ) : (
-                <Button
-                  onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
-                  className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-                >
-                  Claim on Boomplay
-                </Button>
-              )}
-            </div>
             <button
               onClick={() => navigate("/royalties")}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
@@ -570,8 +558,13 @@ return (
             ) : (
               <>
                 <div className="mb-4">
+                  <Label htmlFor="release-search" className="block text-sm font-medium text-foreground mb-2">
+                    Search releases
+                  </Label>
                   <Input
-                    placeholder="Search releases by title or artist"
+                    id="release-search"
+                    className="w-full"
+                    placeholder="Search title or artist"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
