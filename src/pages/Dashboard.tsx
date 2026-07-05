@@ -26,8 +26,6 @@ import {
   Music,
   Plus,
   Upload,
-  Wallet,
-  ArrowUpRight,
   TrendingUp,
 } from "lucide-react";
 
@@ -89,8 +87,6 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
-  const [royalties, setRoyalties] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [promotions, setPromotions] = useState<any[]>([]);
   const [loadingPromotions, setLoadingPromotions] = useState(false);
   const [promotingReleaseId, setPromotingReleaseId] = useState<string | null>(null);
@@ -99,13 +95,6 @@ const Dashboard = () => {
   const [promoAudience, setPromoAudience] = useState("");
   const [promoMessage, setPromoMessage] = useState("");
   const [submittingPromo, setSubmittingPromo] = useState(false);
-  const [loadingRoyalties, setLoadingRoyalties] = useState(false);
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawBank, setWithdrawBank] = useState("");
-  const [withdrawAccount, setWithdrawAccount] = useState("");
-  const [withdrawCode, setWithdrawCode] = useState("");
-  const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showBoomplayClaim, setShowBoomplayClaim] = useState(false);
@@ -131,27 +120,6 @@ const Dashboard = () => {
     setProfile(profileData);
     setVerification(verificationData);
     setReleases(releasesData ?? []);
-  };
-
-  const fetchRoyaltyData = async (userId: string) => {
-    setLoadingRoyalties(true);
-    const [{ data: royaltiesData }, { data: withdrawalsData }] = await Promise.all([
-      supabase
-        .from("royalty_records")
-        .select("*")
-        .eq("user_id", userId)
-        .order("date_earned", { ascending: false })
-        .limit(20),
-      supabase
-        .from("withdrawal_requests")
-        .select("*")
-        .eq("user_id", userId)
-        .order("requested_at", { ascending: false })
-        .limit(10),
-    ]);
-    setRoyalties(royaltiesData ?? []);
-    setWithdrawals(withdrawalsData ?? []);
-    setLoadingRoyalties(false);
   };
 
   const fetchPromotions = async (userId: string) => {
@@ -205,7 +173,6 @@ const Dashboard = () => {
     setShowBoomplayClaim(sessionStorage.getItem("boomplayClaimPaid") === "true");
     setLoading(true);
     fetchUserData(user.id).finally(() => setLoading(false));
-    fetchRoyaltyData(user.id);
     fetchPromotions(user.id);
   }, [user, authLoading, navigate]);
 
@@ -360,152 +327,6 @@ return (
               View Royalties
             </button>
           </div>
-          </div>
-        </Card>
-
-        {/* Royalty Overview */}
-        <Card className="bg-card border border-border rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Wallet className="h-5 w-5 text-foreground" />
-              <h2 className="text-base font-semibold">Royalty Overview</h2>
-            </div>
-
-            {loadingRoyalties ? (
-              <p className="text-sm text-muted-foreground">Loading earnings...</p>
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border border-border bg-background p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Total Cleared</p>
-                    <p className="text-lg font-bold">
-                      ${royalties.filter((r) => r.status === "cleared").reduce((sum, r) => sum + (r.amount || 0), 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-border bg-background p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Available Balance</p>
-                    <p className="text-lg font-bold text-green-600">
-                      ${Math.max(0, royalties.filter((r) => r.status === "cleared").reduce((sum, r) => sum + (r.amount || 0), 0) - withdrawals.filter((w) => w.status === "approved").reduce((sum, w) => sum + (w.amount || 0), 0)).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-xs text-muted-foreground mb-2">Minimum withdrawal: <strong>$100.00</strong></p>
-
-                {!showWithdrawForm && (
-                  <Button
-                    onClick={() => setShowWithdrawForm(true)}
-                    disabled={Math.max(0, royalties.filter((r) => r.status === "cleared").reduce((sum, r) => sum + (r.amount || 0), 0) - withdrawals.filter((w) => w.status === "approved").reduce((sum, w) => sum + (w.amount || 0), 0)) < 100}
-                    className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-                  >
-                    <ArrowUpRight className="h-4 w-4 mr-2" />
-                    Request Withdrawal
-                  </Button>
-                )}
-
-                {showWithdrawForm && (
-                  <div className="space-y-3 rounded-lg border border-border bg-background p-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <Label htmlFor="withdrawAmount">Amount (USD)</Label>
-                        <Input
-                          id="withdrawAmount"
-                          type="number"
-                          placeholder="100.00"
-                          value={withdrawAmount}
-                          onChange={(e) => setWithdrawAmount(e.target.value)}
-                          min="100"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="withdrawBank">Bank Name</Label>
-                        <Input
-                          id="withdrawBank"
-                          placeholder="e.g., Zanaco"
-                          value={withdrawBank}
-                          onChange={(e) => setWithdrawBank(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="withdrawAccount">Account Number</Label>
-                        <Input
-                          id="withdrawAccount"
-                          placeholder="Account number"
-                          value={withdrawAccount}
-                          onChange={(e) => setWithdrawAccount(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="withdrawCode">Bank Code / SWIFT</Label>
-                        <Input
-                          id="withdrawCode"
-                          placeholder="ZABA"
-                          value={withdrawCode}
-                          onChange={(e) => setWithdrawCode(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleWithdraw}
-                          disabled={submittingWithdraw}
-                          className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white"
-                        >
-                          {submittingWithdraw ? "Submitting..." : "Submit Request"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowWithdrawForm(false)}
-                          className="flex-1"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {royalties.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Recent Earnings</p>
-                    <div className="space-y-2">
-                      {royalties.slice(0, 5).map((r) => (
-                        <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{r.source || "Royalty"}</p>
-                            <p className="text-xs text-muted-foreground">{r.date_earned}</p>
-                          </div>
-                          <div className="text-right ml-2">
-                            <p className="text-sm font-bold">${r.amount.toFixed(2)}</p>
-                            <p className={`text-xs ${r.status === "cleared" ? "text-green-600" : "text-yellow-600"}`}>{r.status}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {withdrawals.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Recent Withdrawals</p>
-                    <div className="space-y-2">
-                      {withdrawals.slice(0, 3).map((w) => (
-                        <div key={w.id} className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{w.bank_name}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(w.requested_at).toLocaleDateString()}</p>
-                          </div>
-                          <div className="text-right ml-2">
-                            <p className="text-sm font-bold">${w.amount.toFixed(2)}</p>
-                            <p className={`text-xs ${w.status === "paid" || w.status === "approved" ? "text-green-600" : "text-yellow-600"}`}>{w.status}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </Card>
 
