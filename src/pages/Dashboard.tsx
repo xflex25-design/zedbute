@@ -342,7 +342,7 @@ return (
             </button>
             <div className="w-full rounded-lg border border-border bg-background p-3">
               {showBoomplayClaim ? (
-                <BoomplayClaimButton />
+                <p className="text-xs text-muted-foreground">Boomplay claim completed.</p>
               ) : (
                 <Button
                   onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
