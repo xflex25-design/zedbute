@@ -11,12 +11,20 @@ import { Music2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
-const authSchema = z.object({
-  username: z.string().trim().min(1, "Username is required").max(100).optional(),
+// Separate schemas per mode so required fields are actually enforced.
+// (Previously a single schema marked every field .optional(), so
+// authSchema.parse() never caught a missing username/email/name —
+// only the HTML `required` attribute was doing that job.)
+const loginSchema = z.object({
+  username: z.string().trim().min(1, "Username is required").max(100),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
-  fullName: z.string().trim().max(100).optional(),
-  signupEmail: z.string().email({ message: "Invalid email address" }).max(255).optional(),
-  signupUsername: z.string().trim().min(3, "Username must be at least 3 characters").max(50).optional(),
+});
+
+const signupSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required").max(100),
+  signupEmail: z.string().trim().email({ message: "Invalid email address" }).max(255),
+  signupUsername: z.string().trim().min(3, "Username must be at least 3 characters").max(50),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
 });
 
 type ResetStep = "idle" | "enter_email" | "forgot_username";
@@ -31,6 +39,7 @@ const Auth = () => {
   const [recoverEmail, setRecoverEmail] = useState("");
   const [recoveredUsername, setRecoveredUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -47,8 +56,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        const validationData = { username, password };
-        authSchema.parse(validationData);
+        loginSchema.parse({ username, password });
 
         const error = await signIn(username, password);
         if (error) {
@@ -64,8 +72,7 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        const validationData = { signupEmail, password, fullName, signupUsername };
-        authSchema.parse(validationData);
+        signupSchema.parse({ signupEmail, password, fullName, signupUsername });
 
         const { error, needsConfirmation } = await signUp(signupEmail, password, fullName, signupUsername);
         if (error) {
@@ -95,7 +102,13 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         toast({
           title: "Validation Error",
-          description: error.errors[0].message,
+          description: error.issues[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Something went wrong. Please try again.",
           variant: "destructive",
         });
       }
@@ -111,16 +124,19 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const error = await resetPassword(recoverEmail);
-    if (error) {
-      toast({ title: "Error", description: error, variant: "destructive" });
-    } else {
-      toast({
-        title: "Recovery email sent!",
-        description: "Check your inbox for a password reset link.",
-      });
+    try {
+      const error = await resetPassword(recoverEmail);
+      if (error) {
+        toast({ title: "Error", description: error, variant: "destructive" });
+      } else {
+        toast({
+          title: "Recovery email sent!",
+          description: "Check your inbox for a password reset link.",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleForgotUsername = async (e: React.FormEvent) => {
@@ -131,18 +147,46 @@ const Auth = () => {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase.rpc("get_username_by_email", { p_email: recoverEmail });
-    if (error || !data) {
-      toast({ title: "Not found", description: "No account found with that email address.", variant: "destructive" });
-    } else {
-      setRecoveredUsername(data);
+    try {
+      // NOTE: this RPC returns the username directly to the client based on
+      // an email lookup. That lets anyone probe arbitrary emails to learn
+      // whether they're registered (and get the username back). Consider
+      // routing this through a rate-limited edge function, or switching to
+      // an email-only flow (send the username to the inbox) so a match/miss
+      // isn't observable from the UI.
+      const { data, error } = await supabase.rpc("get_username_by_email", { p_email: recoverEmail });
+      if (error || !data) {
+        toast({ title: "Not found", description: "No account found with that email address.", variant: "destructive" });
+      } else {
+        setRecoveredUsername(data);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) {
+        toast({ title: "Google login failed", description: error.message, variant: "destructive" });
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const goBack = () => {
     if (resetStep === "enter_email" || resetStep === "forgot_username") setResetStep("idle");
   };
+
+  const anyLoading = loading || googleLoading;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
@@ -164,10 +208,10 @@ const Auth = () => {
                 <Input id="reset-email" type="email" placeholder="you@example.com" value={recoverEmail}
                   onChange={(e) => setRecoverEmail(e.target.value)} required maxLength={255} />
               </div>
-              <Button type="submit" className="w-full" variant="hero" disabled={loading}>
+              <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
                 {loading ? "Sending..." : "Send Recovery Link"}
               </Button>
-              <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
+              <Button type="button" variant="ghost" className="w-full" onClick={goBack} disabled={anyLoading}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
             </form>
@@ -192,10 +236,10 @@ const Auth = () => {
                     <Input id="recover-email" type="email" placeholder="you@example.com" value={recoverEmail}
                       onChange={(e) => setRecoverEmail(e.target.value)} required maxLength={255} />
                   </div>
-                  <Button type="submit" className="w-full" variant="hero" disabled={loading}>
+                  <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
                     {loading ? "Searching..." : "Find Username"}
                   </Button>
-                  <Button type="button" variant="ghost" className="w-full" onClick={goBack}>
+                  <Button type="button" variant="ghost" className="w-full" onClick={goBack} disabled={anyLoading}>
                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                   </Button>
                 </>
@@ -209,17 +253,8 @@ const Auth = () => {
                 type="button"
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2"
-                onClick={async () => {
-                  const { error } = await supabase.auth.signInWithOAuth({
-                    provider: "google",
-                    options: {
-                      redirectTo: `${window.location.origin}/dashboard`,
-                    },
-                  });
-                  if (error) {
-                    toast({ title: "Google login failed", description: error.message, variant: "destructive" });
-                  }
-                }}
+                onClick={handleGoogleLogin}
+                disabled={anyLoading}
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -227,7 +262,7 @@ const Auth = () => {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continue with Google
+                {googleLoading ? "Redirecting..." : "Continue with Google"}
               </Button>
 
               <div className="flex items-center gap-3 my-4">
@@ -270,24 +305,27 @@ const Auth = () => {
                   <Input id="password" type="password" placeholder="••••••••" value={password}
                     onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100} />
                 </div>
-                <Button type="submit" className="w-full" variant="hero" disabled={loading}>
+                <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
                   {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
                 </Button>
               </form>
               {isLogin && (
                 <div className="mt-2 flex flex-col items-center gap-1">
                   <button type="button" onClick={() => setResetStep("enter_email")}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+                    disabled={anyLoading}>
                     Forgot password?
                   </button>
                   <button type="button" onClick={() => { setRecoveredUsername(null); setRecoverEmail(""); setResetStep("forgot_username"); }}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200">
+                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
+                    disabled={anyLoading}>
                     Forgot username?
                   </button>
                 </div>
               )}
               <div className="mt-4 text-center text-sm">
-                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline transition-all duration-200">
+                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline transition-all duration-200"
+                  disabled={anyLoading}>
                   {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
                 </button>
               </div>
