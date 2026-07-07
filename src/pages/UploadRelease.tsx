@@ -250,7 +250,7 @@ const UploadRelease = () => {
     if (!formData.coverArt) {
       toast({
         title: "No Cover Art",
-        description: "Please upload cover art (3000x3000 pixels)",
+          description: "Please upload cover art (square, at least 1000x1000 pixels)",
         variant: "destructive",
       });
       return;
@@ -598,7 +598,7 @@ const UploadRelease = () => {
               <div className="space-y-3">
                 <Label htmlFor="coverArt" className="flex items-center gap-2">
                   Cover Art *
-                  <span className="text-xs text-muted-foreground font-normal">(Required: 3000 x 3000 pixels)</span>
+                  <span className="text-xs text-muted-foreground font-normal">(Square, at least 1000 x 1000 px)</span>
                 </Label>
                 <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
                   {imagePreview ? (
@@ -637,7 +637,7 @@ const UploadRelease = () => {
                         </Label>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Image must be exactly 3000 x 3000 pixels
+                        Square image, at least 1000 x 1000 px
                       </p>
                     </div>
                   )}

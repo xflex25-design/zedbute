@@ -51,7 +51,7 @@ export const blogPosts: BlogPost[] = [
         type: "ul",
         items: [
           "A finished, mastered audio file (WAV recommended)",
-          "Cover art at 3000x3000px",
+          "Square cover art, at least 1000x1000px",
           "Your release metadata (artist name, title, genre, release date)",
           "A distribution plan — single, EP or album",
           "A distributor that understands Zambia",
