@@ -177,12 +177,6 @@ const Settings = () => {
                 <span className="text-muted-foreground">Email: </span>
                 <span className="font-medium">{user?.email}</span>
               </div>
-              {user?.user_metadata?.username && (
-                <div>
-                  <span className="text-muted-foreground">Username: </span>
-                  <span className="font-medium">{user.user_metadata.username}</span>
-                </div>
-              )}
               {user?.user_metadata?.full_name && (
                 <div>
                   <span className="text-muted-foreground">Name: </span>

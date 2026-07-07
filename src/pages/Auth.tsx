@@ -11,33 +11,26 @@ import { Music2, ArrowLeft } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
-// Separate schemas per mode so required fields are actually enforced.
-// (Previously a single schema marked every field .optional(), so
-// authSchema.parse() never caught a missing username/email/name —
-// only the HTML `required` attribute was doing that job.)
 const loginSchema = z.object({
-  username: z.string().trim().min(1, "Username is required").max(100),
+  email: z.string().trim().email("Invalid email address").max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
 });
 
 const signupSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
-  signupEmail: z.string().trim().email({ message: "Invalid email address" }).max(255),
-  signupUsername: z.string().trim().min(3, "Username must be at least 3 characters").max(50),
+  email: z.string().trim().email("Invalid email address").max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
 });
 
-type ResetStep = "idle" | "enter_email" | "forgot_username";
+type ResetStep = "idle" | "enter_email";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
-  const [signupUsername, setSignupUsername] = useState("");
   const [recoverEmail, setRecoverEmail] = useState("");
-  const [recoveredUsername, setRecoveredUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
@@ -56,9 +49,9 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        loginSchema.parse({ username, password });
+        loginSchema.parse({ email, password });
 
-        const error = await signIn(username, password);
+        const error = await signIn(email, password);
         if (error) {
           toast({
             title: "Login failed",
@@ -70,9 +63,9 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        signupSchema.parse({ signupEmail, password, fullName, signupUsername });
+        signupSchema.parse({ fullName, email: signupEmail, password });
 
-        const { error, needsConfirmation } = await signUp(signupEmail, password, fullName, signupUsername);
+        const { error, needsConfirmation } = await signUp(signupEmail, password, fullName);
         if (error) {
           const isRegistered = error.includes("already registered");
           toast({
@@ -137,32 +130,6 @@ const Auth = () => {
     }
   };
 
-  const handleForgotUsername = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRecoveredUsername(null);
-    if (!recoverEmail) {
-      toast({ title: "Email required", description: "Please enter your email address.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-    try {
-      // NOTE: this RPC returns the username directly to the client based on
-      // an email lookup. That lets anyone probe arbitrary emails to learn
-      // whether they're registered (and get the username back). Consider
-      // routing this through a rate-limited edge function, or switching to
-      // an email-only flow (send the username to the inbox) so a match/miss
-      // isn't observable from the UI.
-      const { data, error } = await supabase.rpc("get_username_by_email", { p_email: recoverEmail });
-      if (error || !data) {
-        toast({ title: "Not found", description: "No account found with that email address.", variant: "destructive" });
-      } else {
-        setRecoveredUsername(data);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
@@ -181,7 +148,7 @@ const Auth = () => {
   };
 
   const goBack = () => {
-    if (resetStep === "enter_email" || resetStep === "forgot_username") setResetStep("idle");
+    if (resetStep === "enter_email") setResetStep("idle");
   };
 
   const anyLoading = loading || googleLoading;
@@ -215,37 +182,6 @@ const Auth = () => {
             </form>
           )}
 
-          {resetStep === "forgot_username" && (
-            <form onSubmit={handleForgotUsername} className="space-y-4">
-              {recoveredUsername ? (
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-4 py-3">
-                    <p className="text-sm font-medium text-green-600">Your username</p>
-                    <p className="text-lg font-bold text-green-700 mt-1">{recoveredUsername}</p>
-                  </div>
-                  <Button type="button" variant="hero" className="w-full" onClick={goBack}>
-                    Back to Login
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="recover-email">Enter your email to find your username</Label>
-                    <Input id="recover-email" type="email" placeholder="you@example.com" value={recoverEmail}
-                      onChange={(e) => setRecoverEmail(e.target.value)} required maxLength={255} />
-                  </div>
-                  <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
-                    {loading ? "Searching..." : "Find Username"}
-                  </Button>
-                  <Button type="button" variant="ghost" className="w-full" onClick={goBack} disabled={anyLoading}>
-                    <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                  </Button>
-                </>
-              )}
-            </form>
-          )}
-
-      
           {resetStep === "idle" && (
             <>
               <Button
@@ -283,19 +219,14 @@ const Auth = () => {
                       <Input id="signupEmail" type="email" placeholder="you@example.com" value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)} required maxLength={255} />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signupUsername">Username</Label>
-                      <Input id="signupUsername" type="text" placeholder="your_username" value={signupUsername}
-                        onChange={(e) => setSignupUsername(e.target.value)} required minLength={3} maxLength={50} />
-                    </div>
                   </>
                 )}
 
                 {isLogin && (
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" type="text" placeholder="your_username" value={username}
-                      onChange={(e) => setUsername(e.target.value)} required maxLength={100} />
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" placeholder="you@example.com" value={email}
+                      onChange={(e) => setEmail(e.target.value)} required maxLength={255} />
                   </div>
                 )}
 
@@ -314,11 +245,6 @@ const Auth = () => {
                     className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
                     disabled={anyLoading}>
                     Forgot password?
-                  </button>
-                  <button type="button" onClick={() => { setRecoveredUsername(null); setRecoverEmail(""); setResetStep("forgot_username"); }}
-                    className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200"
-                    disabled={anyLoading}>
-                    Forgot username?
                   </button>
                 </div>
               )}
