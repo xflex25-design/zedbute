@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader as Loader2, Phone, Zap } from "lucide-react";
 
@@ -78,6 +78,10 @@ export default function Payment() {
 
   const [initializing, setInitializing] = useState(true);
   const [processing, setProcessing] = useState(false);
+
+  // Guards against onClose firing after a successful/pending callback and
+  // clobbering the success state with a "Payment Cancelled" toast.
+  const paymentHandled = useRef(false);
 
   useEffect(() => {
     initializePage();
@@ -277,6 +281,8 @@ export default function Payment() {
   function handlePayment() {
     if (processing) return;
 
+    paymentHandled.current = false;
+
     if (!user) return;
 
     if (!phoneNumber.trim()) {
@@ -331,6 +337,8 @@ export default function Payment() {
       },
 
       onSuccess: async (response: any) => {
+        if (paymentHandled.current) return;
+        paymentHandled.current = true;
         await handlePaymentSuccess(
           response.reference,
           "verified"
@@ -340,6 +348,8 @@ export default function Payment() {
       },
 
       onConfirmationPending: async () => {
+        if (paymentHandled.current) return;
+        paymentHandled.current = true;
         await handlePaymentSuccess(
           reference,
           "pending"
@@ -350,6 +360,10 @@ export default function Payment() {
 
       onClose: () => {
         setProcessing(false);
+
+        // If a success/pending callback already ran, the modal was closed
+        // after a payment — don't show a "cancelled" message.
+        if (paymentHandled.current) return;
 
         // Mark payment as cancelled (user closed without paying)
         // Keep file names for potential re-attach prompt on next attempt

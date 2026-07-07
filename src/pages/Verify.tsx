@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
@@ -140,6 +140,10 @@ const Verify = () => {
     const amount = PLATFORM_CONFIG[platform].amount;
     const reference = `verification-${platform}-${user.id}-${Date.now()}`;
 
+    // Guards against onClose firing after a success/pending callback and
+    // clobbering the success state with a "Payment cancelled" toast.
+    let paymentHandled = false;
+
     // Pre-record verification payment so the DB trigger allows the verification insert
     const writePayment = async (status: "verified" | "pending") => {
       await supabase.from("release_payments").insert({
@@ -186,10 +190,19 @@ const Verify = () => {
         lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
         phone,
       },
-      onSuccess: async () => { await finalize("verified"); },
-      onConfirmationPending: () => { finalize("pending"); },
+      onSuccess: async () => {
+        if (paymentHandled) return;
+        paymentHandled = true;
+        await finalize("verified");
+      },
+      onConfirmationPending: () => {
+        if (paymentHandled) return;
+        paymentHandled = true;
+        finalize("pending");
+      },
       onClose: () => {
         setLoadingPlatform(null);
+        if (paymentHandled) return;
         toast({ title: "Payment cancelled", description: "You closed the payment window. No charge was made." });
       },
     });
