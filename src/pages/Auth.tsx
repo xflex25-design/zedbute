@@ -247,6 +247,7 @@ const Auth = () => {
             </form>
           )}
 
+      
           {resetStep === "idle" && (
             <>
               <Button
