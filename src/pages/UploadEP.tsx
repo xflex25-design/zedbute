@@ -138,11 +138,11 @@ const UploadEP = () => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const isValid = img.width === 3000 && img.height === 3000;
+        const isValid = img.width >= 1000 && img.height >= 1000 && img.width === img.height;
         if (!isValid) {
           toast({
             title: "Invalid Image Dimensions",
-            description: "Cover art must be exactly 3000x3000 pixels. Please upload a correctly sized image.",
+            description: "Cover art should be a square image at least 1000x1000 pixels.",
             variant: "destructive",
           });
         }

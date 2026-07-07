@@ -100,17 +100,6 @@ const Dashboard = () => {
   const [submittingPromo, setSubmittingPromo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
-  const [royalties, setRoyalties] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [loadingRoyalties, setLoadingRoyalties] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawBank, setWithdrawBank] = useState("");
-  const [withdrawAccount, setWithdrawAccount] = useState("");
-  const [withdrawCode, setWithdrawCode] = useState("");
-  const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -146,26 +135,6 @@ const Dashboard = () => {
     setLoadingPromotions(false);
   };
 
-  const fetchRoyaltyData = async (userId: string) => {
-    setLoadingRoyalties(true);
-    const [{ data: royaltiesData }, { data: withdrawalsData }] = await Promise.all([
-      supabase
-        .from("royalty_records")
-        .select("*")
-        .eq("user_id", userId)
-        .order("date_earned", { ascending: false }),
-      supabase
-        .from("withdrawal_requests")
-        .select("*")
-        .eq("user_id", userId)
-        .order("requested_at", { ascending: false }),
-    ]);
-
-    setRoyalties(royaltiesData ?? []);
-    setWithdrawals(withdrawalsData ?? []);
-    setLoadingRoyalties(false);
-  };
-
   const handlePromote = async (releaseId: string) => {
     if (!user) return;
     setSubmittingPromo(true);
@@ -197,33 +166,6 @@ const Dashboard = () => {
     setSubmittingPromo(false);
   };
 
-  const handleWithdraw = async () => {
-    if (!user || !withdrawAmount || parseFloat(withdrawAmount) <= 0) return;
-    setSubmittingWithdraw(true);
-    const { error } = await supabase.from("withdrawal_requests").insert({
-      user_id: user.id,
-      amount: parseFloat(withdrawAmount),
-      bank_name: withdrawBank,
-      bank_account_number: withdrawAccount,
-      bank_code: withdrawCode,
-      status: "pending",
-    });
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Withdrawal requested", description: "Your request has been submitted for processing." });
-      setShowWithdrawForm(false);
-      setWithdrawAmount("");
-      setWithdrawBank("");
-      setWithdrawAccount("");
-      setWithdrawCode("");
-      fetchRoyaltyData(user.id);
-    }
-
-    setSubmittingWithdraw(false);
-  };
-
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -233,7 +175,6 @@ const Dashboard = () => {
     setLoading(true);
     fetchUserData(user.id).finally(() => setLoading(false));
     fetchPromotions(user.id);
-    fetchRoyaltyData(user.id);
   }, [user, authLoading, navigate]);
 
   const filteredReleases = useMemo(() => {
@@ -246,50 +187,6 @@ const Dashboard = () => {
       );
     });
   }, [releases, searchQuery]);
-
-  const totalCleared = royalties
-    .filter((r) => r.status === "cleared")
-    .reduce((sum, r) => sum + (r.amount || 0), 0);
-
-  const totalPaid = withdrawals
-    .filter((w) => w.status === "paid" || w.status === "approved")
-    .reduce((sum, w) => sum + (w.amount || 0), 0);
-
-  const availableBalance = Math.max(0, totalCleared - totalPaid);
-
-  const filteredRoyalties = statusFilter === "all"
-    ? royalties
-    : royalties.filter((r) => r.status === statusFilter);
-
-  const royaltyStatusBadge = (status: string) => {
-    switch (status) {
-      case "cleared":
-        return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Cleared</Badge>;
-      case "paid":
-        return <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Paid</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>;
-      case "disputed":
-        return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Disputed</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
-  const withdrawalStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Paid</Badge>;
-      case "approved":
-        return <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Approved</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Rejected</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
 
   if (loading) {
     return (

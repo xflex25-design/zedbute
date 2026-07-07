@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
 const authSchema = z.object({
-  username: z.string().trim().min(1, "Username is required").max(100),
+  username: z.string().trim().min(1, "Username is required").max(100).optional(),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
   fullName: z.string().trim().max(100).optional(),
   signupEmail: z.string().email({ message: "Invalid email address" }).max(255).optional(),
