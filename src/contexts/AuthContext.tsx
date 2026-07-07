@@ -68,14 +68,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn: AuthContextValue["signIn"] = useCallback(async (username, password) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
-    let email = username;
+
+    const normalized = username.trim().toLowerCase();
+    let email = username.trim();
     if (!email.includes("@")) {
-      const { data } = await supabase.rpc("get_email_by_username", { p_username: username });
-      if (!data) return "Invalid login credentials";
+      const { data, error } = await supabase.rpc("get_email_by_username", { p_username: normalized });
+      if (error) {
+        console.error("[signIn] get_email_by_username RPC error:", error);
+        return `Username lookup failed: ${error.message}`;
+      }
+      if (!data) {
+        console.warn("[signIn] No profile found for username:", normalized);
+        return "Invalid login credentials";
+      }
       email = data;
     }
+
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error?.message ?? null;
+    if (error) {
+      // Surface the real Supabase error instead of masking it, so we can see
+      // what's actually failing (e.g. unconfirmed email vs. wrong password).
+      console.error("[signIn] signInWithPassword error:", error);
+      if (error.message.toLowerCase().includes("email not confirmed")) {
+        return "Please confirm your email address before logging in. Check your inbox for the confirmation link.";
+      }
+      return error.message;
+    }
+    return null;
   }, []);
 
   const signUp: AuthContextValue["signUp"] = useCallback(async (email, password, fullName, username) => {

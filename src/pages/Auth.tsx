@@ -54,9 +54,7 @@ const Auth = () => {
         if (error) {
           toast({
             title: "Login failed",
-            description: error.includes("Invalid")
-              ? "Invalid username or password."
-              : error,
+            description: error,
             variant: "destructive",
           });
         } else {

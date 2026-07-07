@@ -1,5 +1,11 @@
 project_id = "nyxubpqniyuckkoflzqu"
 
+# Allow users to sign in immediately after signup (no email confirmation step).
+# For a HOSTED project, set this in the Supabase dashboard:
+#   Authentication > Providers > Email > "Confirm email" OFF
+# or run: update auth.config set mailer_autoconfirm = true; (via SQL)
+[auth.email]
+enable_confirmations = false
 [functions.mtn-momo-payment]
 verify_jwt = false
 
