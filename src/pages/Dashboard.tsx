@@ -275,6 +275,13 @@ return (
               >
                 Claim on Boomplay
               </Button>
+              <Button
+                onClick={() => navigate("/spotify-claim")}
+                variant="outline"
+                className="w-full rounded-lg font-semibold transition-all duration-200"
+              >
+                Claim Your Spotify Artist Profile
+              </Button>
             </div>
           )}
           </div>

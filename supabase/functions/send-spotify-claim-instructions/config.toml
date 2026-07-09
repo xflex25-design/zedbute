@@ -1,0 +1,3 @@
+name = "send-spotify-claim-instructions"
+main = "index.ts"
+compatibility_date = "2023-10-25"

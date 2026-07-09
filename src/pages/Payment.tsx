@@ -52,7 +52,9 @@ export default function Payment() {
       ? "Artist Verification"
       : paymentType === "boomplay-claim"
         ? "Boomplay Claim"
-        : paymentType === "promotion"
+        : paymentType === "spotify-claim"
+          ? "Spotify Claim"
+          : paymentType === "promotion"
           ? "Promote Release"
           : paymentType === "ep"
             ? "EP Upload"
@@ -63,7 +65,9 @@ export default function Payment() {
   // Use amount from URL if provided, otherwise use defaults
   const defaultAmount = paymentType === "boomplay-claim"
     ? 20
-    : paymentType === "promotion"
+    : paymentType === "spotify-claim"
+      ? 20
+      : paymentType === "promotion"
       ? 20
       : paymentType === "ep"
         ? 200
@@ -262,6 +266,19 @@ export default function Payment() {
       } else if (paymentType === "boomplay-claim") {
         sessionStorage.setItem("boomplayClaimPaid", "true");
         navigate("/dashboard");
+      } else if (paymentType === "spotify-claim") {
+        sessionStorage.setItem(
+          "spotifyClaimPayment",
+          JSON.stringify({
+            transactionId,
+            status,
+            amount: paymentAmount,
+            email: user?.email,
+          })
+        );
+        const returnUrl =
+          searchParams.get("returnUrl") || "/spotify-claim?paid=1";
+        navigate(returnUrl);
       } else if (paymentType === "promotion") {
         navigate("/dashboard");
       } else {

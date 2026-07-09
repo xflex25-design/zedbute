@@ -12,6 +12,8 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
 import Admin from "./pages/Admin";
+import SpotifyClaim from "./pages/SpotifyClaim";
+import AdminSpotifyClaims from "./pages/AdminSpotifyClaims";
 import UploadRelease from "./pages/UploadRelease";
 import UploadEP from "./pages/UploadEP";
 import UploadAlbum from "./pages/UploadAlbum";
@@ -44,6 +46,8 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/spotify-claims" element={<AdminSpotifyClaims />} />
+                <Route path="/spotify-claim" element={<SpotifyClaim />} />
                 <Route path="/admin/promotions" element={<AdminPromotions />} />
                 <Route path="/upload-release" element={<UploadRelease />} />
                 <Route path="/upload-ep" element={<UploadEP />} />
