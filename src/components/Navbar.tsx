@@ -64,6 +64,7 @@ export const Navbar = () => {
                 <Link to="/upload-release" className={linkClass(location.pathname === "/upload-release")}>Upload Release</Link>
                 <Link to="/verify" className={linkClass(location.pathname === "/verify")}>Get Verified</Link>
                 <Link to="/spotify-claim" className={linkClass(location.pathname === "/spotify-claim")}>Claim Spotify</Link>
+                <Link to="/boomplay-claim" className={linkClass(location.pathname === "/boomplay-claim")}>Claim Boomplay</Link>
                 <Link to="/settings" className={linkClass(location.pathname === "/settings")}>Settings</Link>
               </>
             )}
@@ -107,6 +108,7 @@ export const Navbar = () => {
               <Link to="/upload-release" className={mobileLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
               <Link to="/verify" className={mobileLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
               <Link to="/spotify-claim" className={mobileLinkClass(location.pathname === "/spotify-claim")} onClick={closeMobile}>Claim Spotify</Link>
+              <Link to="/boomplay-claim" className={mobileLinkClass(location.pathname === "/boomplay-claim")} onClick={closeMobile}>Claim Boomplay</Link>
               <Link to="/settings" className={mobileLinkClass(location.pathname === "/settings")} onClick={closeMobile}>Settings</Link>
             </>
           )}

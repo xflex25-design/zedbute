@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
 import Admin from "./pages/Admin";
 import SpotifyClaim from "./pages/SpotifyClaim";
+import BoomplayClaim from "./pages/BoomplayClaim";
 import AdminSpotifyClaims from "./pages/AdminSpotifyClaims";
 import UploadRelease from "./pages/UploadRelease";
 import UploadEP from "./pages/UploadEP";
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/spotify-claims" element={<AdminSpotifyClaims />} />
                 <Route path="/spotify-claim" element={<SpotifyClaim />} />
+                <Route path="/boomplay-claim" element={<BoomplayClaim />} />
                 <Route path="/admin/promotions" element={<AdminPromotions />} />
                 <Route path="/upload-release" element={<UploadRelease />} />
                 <Route path="/upload-ep" element={<UploadEP />} />

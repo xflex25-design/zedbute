@@ -40,9 +40,10 @@ const CLAIM_STATUSES: ClaimStatus[] = [
 
 interface Claim {
   id: string;
+  platform: "Spotify" | "Boomplay";
   name: string;
   email: string;
-  spotify_link: string | null;
+  link: string | null;
   distributor: string | null;
   notes: string | null;
   payment_status: string;
@@ -94,21 +95,50 @@ const AdminSpotifyClaims = () => {
   }, [navigate]);
 
   async function loadClaims() {
-    const { data, error } = await (supabase as any)
-      .from("spotify_claims")
-      .select(
-        "id, name, email, spotify_link, distributor, notes, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
-      )
-      .order("created_at", { ascending: false });
-    if (error) {
+    const [spotifyRes, boomplayRes] = await Promise.all([
+      (supabase as any)
+        .from("spotify_claims")
+        .select(
+          "id, name, email, spotify_link, distributor, notes, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
+        )
+        .order("created_at", { ascending: false }),
+      (supabase as any)
+        .from("boomplay_claims")
+        .select(
+          "id, name, email, boomplay_link, distributor, notes, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
+        )
+        .order("created_at", { ascending: false }),
+    ]);
+
+    if (spotifyRes.error) {
       toast({
         title: "Failed to load claims",
-        description: error.message,
+        description: spotifyRes.error.message,
         variant: "destructive",
       });
       return;
     }
-    const rows = (data || []) as Claim[];
+    if (boomplayRes.error) {
+      toast({
+        title: "Failed to load claims",
+        description: boomplayRes.error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const spotifyRows = (spotifyRes.data || []).map((r: any) => ({
+      ...r,
+      platform: "Spotify" as const,
+      link: r.spotify_link ?? null,
+    }));
+    const boomplayRows = (boomplayRes.data || []).map((r: any) => ({
+      ...r,
+      platform: "Boomplay" as const,
+      link: r.boomplay_link ?? null,
+    }));
+
+    const rows = [...spotifyRows, ...boomplayRows] as Claim[];
     setClaims(rows);
     setStatusInputs(Object.fromEntries(rows.map((r) => [r.id, r.claim_status])));
     setNotesInputs(Object.fromEntries(rows.map((r) => [r.id, r.admin_notes || ""])));
@@ -175,10 +205,10 @@ const AdminSpotifyClaims = () => {
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-4xl">
-        <h1 className="text-3xl font-bold mb-1">Admin — Spotify Claims</h1>
+        <h1 className="text-3xl font-bold mb-1">Admin — Platform Claims</h1>
         <p className="text-sm text-muted-foreground mb-6">
           Review submissions, update claim status, and add notes. Artists
-          complete the verification themselves on Spotify's site.
+          complete verification themselves on each platform's own site.
         </p>
 
         <div className="space-y-4">
@@ -186,7 +216,18 @@ const AdminSpotifyClaims = () => {
             <Card key={c.id} className="shadow-card">
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle className="text-base sm:text-lg">{c.name}</CardTitle>
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <Badge
+                      className={
+                        c.platform === "Spotify"
+                          ? "bg-green-600 hover:bg-green-600 text-white"
+                          : "bg-[#F7931E] hover:bg-[#F7931E] text-white"
+                      }
+                    >
+                      {c.platform}
+                    </Badge>
+                    {c.name}
+                  </CardTitle>
                   <div className="flex flex-wrap gap-2">
                     <Badge className="bg-slate-500 hover:bg-slate-500 text-white">
                       Paid: {c.payment_status}
@@ -214,14 +255,14 @@ const AdminSpotifyClaims = () => {
               </CardHeader>
 
               <CardContent className="space-y-3">
-                {c.spotify_link && (
+                {c.link && (
                   <a
-                    href={c.spotify_link}
+                    href={c.link}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-sm text-primary hover:underline break-all"
                   >
-                    {c.spotify_link}
+                    {c.link}
                     <ExternalLink className="h-3 w-3 shrink-0" />
                   </a>
                 )}

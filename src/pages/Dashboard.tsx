@@ -270,7 +270,7 @@ return (
           {(!verification || verification.status === "rejected") && (
             <div className="space-y-3">
               <Button
-                onClick={() => navigate("/payment?type=boomplay-claim&amount=20")}
+                onClick={() => navigate("/boomplay-claim")}
                 className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
               >
                 Claim on Boomplay

@@ -31,7 +31,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const CLAIM_FEE = 20;
+const CLAIM_FEE = 40;
 
 const DISTRIBUTORS = [
   "DistroKid",
