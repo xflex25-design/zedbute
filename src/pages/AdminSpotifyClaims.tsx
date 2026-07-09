@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2, ShieldAlert, Save } from "lucide-react";
+import { ExternalLink, Loader2, ShieldAlert, Save, Send } from "lucide-react";
 
 type ClaimStatus =
   | "New"
@@ -71,6 +71,15 @@ const AdminSpotifyClaims = () => {
   const [statusInputs, setStatusInputs] = useState<Record<string, ClaimStatus>>({});
   const [notesInputs, setNotesInputs] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
+
+  const tableFor = (platform: Claim["platform"]) =>
+    platform === "Spotify" ? "spotify_claims" : "boomplay_claims";
+
+  const functionFor = (platform: Claim["platform"]) =>
+    platform === "Spotify"
+      ? "send-spotify-claim-instructions"
+      : "send-boomplay-claim-instructions";
 
   useEffect(() => {
     const init = async () => {
@@ -148,7 +157,7 @@ const AdminSpotifyClaims = () => {
     setSaving(c.id);
     try {
       const { error } = await (supabase as any)
-        .from("spotify_claims")
+        .from(tableFor(c.platform))
         .update({
           claim_status: statusInputs[c.id],
           admin_notes: notesInputs[c.id] || null,
@@ -167,6 +176,43 @@ const AdminSpotifyClaims = () => {
       });
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function resendInstructions(c: Claim) {
+    setResending(c.id);
+    try {
+      const { error } = await supabase.functions.invoke(functionFor(c.platform), {
+        body: {
+          to_email: c.email,
+          to_name: c.name,
+          spotify_link: c.platform === "Spotify" ? c.link : null,
+          boomplay_link: c.platform === "Boomplay" ? c.link : null,
+        },
+      });
+
+      if (error) throw error;
+
+      if (statusInputs[c.id] !== "Instructions Sent") {
+        await (supabase as any)
+          .from(tableFor(c.platform))
+          .update({ claim_status: "Instructions Sent" })
+          .eq("id", c.id);
+      }
+
+      toast({
+        title: "Instructions resent",
+        description: `Sent to ${c.email}.`,
+      });
+      await loadClaims();
+    } catch (err: any) {
+      toast({
+        title: "Resend failed",
+        description: err?.message ?? "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setResending(null);
     }
   }
 
@@ -300,7 +346,7 @@ const AdminSpotifyClaims = () => {
                     </Select>
                   </div>
 
-                  <div className="flex items-end">
+                  <div className="flex items-end gap-2">
                     <Button
                       onClick={() => saveClaim(c)}
                       disabled={saving === c.id}
@@ -311,6 +357,20 @@ const AdminSpotifyClaims = () => {
                       ) : (
                         <>
                           <Save className="h-4 w-4 mr-1" /> Save
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => resendInstructions(c)}
+                      disabled={resending === c.id || saving === c.id}
+                      className="w-full sm:w-auto"
+                    >
+                      {resending === c.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-1" /> Resend
                         </>
                       )}
                     </Button>
@@ -334,7 +394,7 @@ const AdminSpotifyClaims = () => {
 
           {claims.length === 0 && (
             <p className="text-muted-foreground text-center">
-              No Spotify claims yet.
+              No claims yet.
             </p>
           )}
         </div>
