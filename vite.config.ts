@@ -3,14 +3,23 @@ import react from "@vitejs/plugin-react-swc";
 import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+  const supabaseHost = supabaseUrl.replace('https://', '').replace('http://', '');
+  
+  return {
   server: {
     host: "0.0.0.0",
     port: 8080,
     allowedHosts: [
       "sb-2trqkt1j7egp.vercel.run",
-      ".vercel.run"
+      ".vercel.run",
+      supabaseHost,
     ],
+    hmr: {
+      host: undefined,
+      port: undefined,
+    },
   },
   plugins: [
     react(),
@@ -39,4 +48,5 @@ export default defineConfig(({ mode }) => ({
     // 2. We increase the limit to 700 to accept the heavy vendor chunk.
     chunkSizeWarningLimit: 700
   }
-}));
+};
+});
