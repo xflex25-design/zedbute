@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Music2, ArrowLeft } from "lucide-react";
+import { Music2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
@@ -20,6 +20,10 @@ const signupSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
   email: z.string().trim().email("Invalid email address").max(255),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(100),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 type ResetStep = "idle" | "enter_email";
@@ -28,6 +32,9 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fullName, setFullName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [recoverEmail, setRecoverEmail] = useState("");
@@ -63,7 +70,7 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
-        signupSchema.parse({ fullName, email: signupEmail, password });
+        signupSchema.parse({ fullName, email: signupEmail, password, confirmPassword });
 
         const { error, needsConfirmation } = await signUp(signupEmail, password, fullName);
         if (error) {
@@ -85,7 +92,9 @@ const Auth = () => {
           if (!needsConfirmation) {
             navigate("/dashboard");
           } else {
+            setEmail(signupEmail);
             setIsLogin(true);
+            setConfirmPassword("");
           }
         }
       }
@@ -232,9 +241,26 @@ const Auth = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="••••••••" value={password}
-                    onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100} />
+                  <div className="relative">
+                    <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password}
+                      onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100} />
+                    <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <div className="relative">
+                      <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100} />
+                      <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
                   {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
                 </Button>
@@ -249,8 +275,16 @@ const Auth = () => {
                 </div>
               )}
               <div className="mt-4 text-center text-sm">
-                <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline transition-all duration-200"
-                  disabled={anyLoading}>
+                  <button type="button" onClick={() => {
+                    if (isLogin) {
+                      setSignupEmail(email);
+                    } else {
+                      setEmail(signupEmail);
+                    }
+                    setConfirmPassword("");
+                    setIsLogin(!isLogin);
+                  }} className="text-primary hover:underline transition-all duration-200"
+                    disabled={anyLoading}>
                   {isLogin ? "Don't have an account? Sign up" : "Already have an account? Login"}
                 </button>
               </div>

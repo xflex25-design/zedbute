@@ -32,7 +32,6 @@ export const Navbar = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
     toast({ title: "Signed out successfully" });
   };
 
