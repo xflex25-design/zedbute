@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS public.playlists (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   genre text,
-  followers_count integer DEFAULT 0,
   submission_fee numeric(12,2) NOT NULL DEFAULT 0,
   is_active boolean DEFAULT true,
   created_at timestamptz DEFAULT now() NOT NULL,
@@ -113,10 +112,10 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.playlists) THEN
-    INSERT INTO public.playlists (name, genre, followers_count, submission_fee) VALUES
-      ('Afro Hits Zambia', 'Afrobeat', 12400, 30),
-      ('Hip Hop Zambia', 'Hip Hop', 8700, 30),
-      ('Zedbute Top 50', 'Mixed', 21300, 30),
-      ('African Vibes', 'Afrobeats', 15600, 30);
+    INSERT INTO public.playlists (name, genre, submission_fee) VALUES
+      ('Afro Hits Zambia', 'Afrobeat', 30),
+      ('Hip Hop Zambia', 'Hip Hop', 30),
+      ('Zedbute Top 50', 'Mixed', 30),
+      ('African Vibes', 'Afrobeats', 30);
   END IF;
 END $$;

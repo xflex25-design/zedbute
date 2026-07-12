@@ -20,7 +20,6 @@ interface Playlist {
   id: string;
   name: string;
   genre: string | null;
-  followers_count: number;
   submission_fee: number;
   is_active: boolean;
 }
@@ -28,7 +27,6 @@ interface Playlist {
 const empty = {
   name: "",
   genre: "",
-  followers_count: "0",
   submission_fee: "30",
   is_active: true,
 };
@@ -66,20 +64,19 @@ const AdminPlaylists = () => {
   async function load() {
     const { data } = await (supabase as any)
       .from("playlists")
-      .select("id, name, genre, followers_count, submission_fee, is_active")
+      .select("id, name, genre, submission_fee, is_active")
       .order("created_at", { ascending: true });
     setPlaylists(data || []);
   }
 
   function startEdit(p: Playlist) {
     setEditingId(p.id);
-    setForm({
-      name: p.name,
-      genre: p.genre || "",
-      followers_count: String(p.followers_count || 0),
-      submission_fee: String(p.submission_fee || 0),
-      is_active: p.is_active,
-    });
+      setForm({
+        name: p.name,
+        genre: p.genre || "",
+        submission_fee: String(p.submission_fee || 0),
+        is_active: p.is_active,
+      });
   }
 
   function resetForm() {
@@ -97,7 +94,6 @@ const AdminPlaylists = () => {
       const payload = {
         name: form.name.trim(),
         genre: form.genre.trim() || null,
-        followers_count: parseInt(form.followers_count || "0", 10) || 0,
         submission_fee: parseFloat(form.submission_fee || "0") || 0,
         is_active: form.is_active,
       };
@@ -200,14 +196,6 @@ const AdminPlaylists = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Followers Count</Label>
-              <Input
-                type="number"
-                value={form.followers_count}
-                onChange={(e) => setForm({ ...form, followers_count: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
               <Label>Submission Fee (ZMW)</Label>
               <Input
                 type="number"
@@ -250,7 +238,7 @@ const AdminPlaylists = () => {
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {p.genre || "No genre"} · {p.followers_count.toLocaleString()} followers · K{p.submission_fee}
+                    {p.genre || "No genre"} · K{p.submission_fee}
                   </p>
                 </div>
                 <div className="flex gap-2">

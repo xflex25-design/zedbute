@@ -12,13 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ListMusic, Loader2, Users, Send } from "lucide-react";
+import { ListMusic, Loader2, Send } from "lucide-react";
 
 interface Playlist {
   id: string;
   name: string;
   genre: string | null;
-  followers_count: number;
   submission_fee: number;
   is_active: boolean;
 }
@@ -37,7 +36,7 @@ const MyPlaylists = () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("playlists")
-      .select("id, name, genre, followers_count, submission_fee, is_active")
+      .select("id, name, genre, submission_fee, is_active")
       .eq("is_active", true)
       .order("created_at", { ascending: true });
 
@@ -89,10 +88,6 @@ const MyPlaylists = () => {
                     <CardTitle className="text-lg">{p.name}</CardTitle>
                     <CardDescription className="flex flex-wrap items-center gap-2">
                       {p.genre && <Badge variant="secondary">{p.genre}</Badge>}
-                      <span className="inline-flex items-center gap-1 text-xs">
-                        <Users className="h-3 w-3" />
-                        {(p.followers_count || 0).toLocaleString()} followers
-                      </span>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="mt-auto space-y-3">
