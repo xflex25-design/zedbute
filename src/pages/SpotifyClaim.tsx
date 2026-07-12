@@ -25,11 +25,14 @@ import { useToast } from "@/hooks/use-toast";
 import {
   AlertTriangle,
   CheckCircle2,
+  CreditCard,
   ExternalLink,
   Loader2,
   Music2,
   ShieldCheck,
 } from "lucide-react";
+
+const CLAIM_FEE = 40;
 
 const DISTRIBUTORS = [
   "DistroKid",
@@ -40,11 +43,12 @@ const DISTRIBUTORS = [
   "Other",
 ];
 
-type Stage = "loading" | "eligibility" | "no-song" | "form" | "done";
+type Stage = "loading" | "eligibility" | "no-song" | "form" | "pay" | "done";
 
 interface ExistingClaim {
   id: string;
   claim_status: string;
+  payment_status: string;
   spotify_link: string | null;
   distributor: string | null;
   admin_notes: string | null;
@@ -93,13 +97,19 @@ const SpotifyClaim = () => {
 
       const { data: claim } = await (supabase as any)
         .from("spotify_claims")
-        .select("id, claim_status, spotify_link, distributor, admin_notes")
+        .select("id, claim_status, payment_status, spotify_link, distributor, admin_notes")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
       if (claim) {
         setExisting(claim as ExistingClaim);
-        setStage("done");
+        // If the fee is already paid/pending, show the final status.
+        // Otherwise resume the payment flow.
+        if (claim.payment_status === "paid" || claim.payment_status === "pending") {
+          setStage("done");
+        } else {
+          setStage("pay");
+        }
         return;
       }
 
@@ -126,6 +136,12 @@ const SpotifyClaim = () => {
     setStage("form");
   }
 
+  function goToPayment(claimId: string) {
+    navigate(
+      `/payment?type=spotify-claim&claimId=${claimId}&amount=${CLAIM_FEE}`
+    );
+  }
+
   async function submitForm() {
     if (!name.trim() || !email.trim() || !distributor) {
       toast({
@@ -143,7 +159,8 @@ const SpotifyClaim = () => {
 
     setSubmitting(true);
     try {
-      // 1. Store the submission (free, self-serve claim request).
+      // Save the form first (unpaid), then send the user to pay — just like
+      // the upload-release flow. Payment success marks it paid + sends email.
       const { data: inserted, error: insertError } = await (supabase as any)
         .from("spotify_claims")
         .insert({
@@ -155,7 +172,7 @@ const SpotifyClaim = () => {
           notes: notes.trim() || null,
           payment_status: "unpaid",
           payment_transaction_id: null,
-          payment_amount: null,
+          payment_amount: CLAIM_FEE,
           claim_status: "New",
         })
         .select("id")
@@ -163,49 +180,12 @@ const SpotifyClaim = () => {
 
       if (insertError) throw insertError;
 
-      // 2. Send the artist the Spotify claim instructions via Resend.
-      const { error: fnError } = await supabase.functions.invoke(
-        "send-spotify-claim-instructions",
-        {
-          body: {
-            to_email: email.trim(),
-            to_name: name.trim(),
-            spotify_link: spotifyLink.trim() || null,
-          },
-        }
-      );
-
-      if (fnError) {
-        // Form saved, but the email failed. Leave status as "New"
-        // so an admin can resend later.
-        console.error("Resend instructions email failed:", fnError);
-        toast({
-          title: "Saved, but email failed",
-          description:
-            "Your claim was saved. Our team will send your instructions shortly.",
-          variant: "destructive",
-        });
-      } else {
-        if (inserted?.id) {
-          await (supabase as any)
-            .from("spotify_claims")
-            .update({ claim_status: "Instructions Sent" })
-            .eq("id", inserted.id);
-        }
-        toast({
-          title: "You're all set!",
-          description: "Check your inbox for the Spotify claim steps.",
-        });
-      }
-
-      setExisting({
-        id: inserted?.id,
-        claim_status: "Instructions Sent",
-        spotify_link: spotifyLink.trim() || null,
-        distributor,
-        admin_notes: null,
+      toast({
+        title: "Form saved",
+        description: "Redirecting you to complete payment...",
       });
-      setStage("done");
+
+      goToPayment(inserted.id);
     } catch (err: any) {
       console.error(err);
       toast({
@@ -239,8 +219,8 @@ const SpotifyClaim = () => {
             </h1>
             <p className="text-muted-foreground">
               We never log into Spotify for you and never ask for your Spotify
-              password. Tell us a bit about your profile and we'll send you the
-              exact steps to claim it yourself.
+              password. Fill in your details, pay the small fee, and we'll email
+              you the exact steps to claim it yourself.
             </p>
           </div>
 
@@ -308,8 +288,8 @@ const SpotifyClaim = () => {
               <CardHeader>
                 <CardTitle>Complete your claim details</CardTitle>
                 <CardDescription>
-                  Fill this in so we can send you the right instructions to
-                  claim your profile on Spotify.
+                  Fill this in, then you'll pay the K{CLAIM_FEE} fee and we'll
+                  email your claim instructions.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -374,9 +354,45 @@ const SpotifyClaim = () => {
                       Submitting...
                     </>
                   ) : (
-                    "Submit &amp; Get Instructions"
+                    "Submit & Continue to Payment"
                   )}
                 </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* PAY (resume / pending payment) */}
+          {stage === "pay" && existing && (
+            <Card className="shadow-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Complete your claim payment
+                </CardTitle>
+                <CardDescription>
+                  Your details are saved. Pay the K{CLAIM_FEE} fee to receive your
+                  Spotify claim instructions by email.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
+                  <p className="text-3xl font-bold">K{CLAIM_FEE}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Secure checkout via Lenco (Mobile Money or Card)
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                    Back
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    size="lg"
+                    onClick={() => goToPayment(existing.id)}
+                  >
+                    Pay K{CLAIM_FEE}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -395,6 +411,9 @@ const SpotifyClaim = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
+                  <Badge className="bg-green-600 hover:bg-green-600 text-white">
+                    Payment: {existing?.payment_status ?? "paid"}
+                  </Badge>
                   <Badge className="bg-primary hover:bg-primary text-primary-foreground">
                     Status: {existing?.claim_status ?? "New"}
                   </Badge>

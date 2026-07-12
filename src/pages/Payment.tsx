@@ -263,31 +263,59 @@ export default function Payment() {
         );
 
         navigate("/verify");
-      } else if (paymentType === "boomplay-claim") {
-        sessionStorage.setItem(
-          "boomplayClaimPayment",
-          JSON.stringify({
-            transactionId,
-            status,
-            amount: paymentAmount,
-            email: user?.email,
-          })
-        );
+      } else if (
+        paymentType === "boomplay-claim" ||
+        paymentType === "spotify-claim"
+      ) {
+        // Central payment log (mirrors the release flow).
+        await savePayment(transactionId, status);
+
+        const claimId = searchParams.get("claimId");
+        if (claimId && user) {
+          const isSpotify = paymentType === "spotify-claim";
+          const table = isSpotify ? "spotify_claims" : "boomplay_claims";
+          const linkCol = isSpotify ? "spotify_link" : "boomplay_link";
+          const fnName = isSpotify
+            ? "send-spotify-claim-instructions"
+            : "send-boomplay-claim-instructions";
+          const paymentStatus: "paid" | "pending" =
+            status === "verified" ? "paid" : "pending";
+
+          const { data: claimRow, error: claimErr } = await (supabase as any)
+            .from(table)
+            .select(`id, name, email, ${linkCol}`)
+            .eq("id", claimId)
+            .eq("user_id", user.id)
+            .single();
+
+          if (!claimErr && claimRow) {
+            await (supabase as any)
+              .from(table)
+              .update({ payment_status: paymentStatus })
+              .eq("id", claimId);
+
+            const { error: fnError } = await supabase.functions.invoke(fnName, {
+              body: {
+                to_email: claimRow.email,
+                to_name: claimRow.name,
+                spotify_link: isSpotify ? claimRow.spotify_link : null,
+                boomplay_link: isSpotify ? null : claimRow.boomplay_link,
+              },
+            });
+
+            // Only mark as instructions-sent once the email actually went out.
+            if (!fnError) {
+              await (supabase as any)
+                .from(table)
+                .update({ claim_status: "Instructions Sent" })
+                .eq("id", claimId);
+            }
+          }
+        }
+
         const returnUrl =
-          searchParams.get("returnUrl") || "/boomplay-claim?paid=1";
-        navigate(returnUrl);
-      } else if (paymentType === "spotify-claim") {
-        sessionStorage.setItem(
-          "spotifyClaimPayment",
-          JSON.stringify({
-            transactionId,
-            status,
-            amount: paymentAmount,
-            email: user?.email,
-          })
-        );
-        const returnUrl =
-          searchParams.get("returnUrl") || "/spotify-claim?paid=1";
+          searchParams.get("returnUrl") ||
+          (paymentType === "spotify-claim" ? "/spotify-claim" : "/boomplay-claim");
         navigate(returnUrl);
       } else if (paymentType === "promotion") {
         navigate("/dashboard");
