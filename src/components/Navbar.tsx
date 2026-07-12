@@ -80,15 +80,22 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle */}
-          <button
-            className="md:hidden flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          {/* Mobile Auth Button + Hamburger Toggle */}
+          <div className="md:hidden flex items-center gap-2">
+            {user ? (
+              <Button onClick={handleSignOut} variant="outline" size="sm" className="h-9">Sign Out</Button>
+            ) : (
+              <Button variant="hero" size="sm" className="h-9" onClick={() => navigate("/auth")}>Login</Button>
+            )}
+            <button
+              className="flex items-center justify-center h-11 w-11 rounded-lg hover:bg-muted transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
       </div>
 
