@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -29,18 +28,33 @@ import {
   ExternalLink,
   Loader2,
   Music2,
+  Plus,
   ShieldCheck,
 } from "lucide-react";
 
 const CLAIM_FEE = 40;
 
-const DISTRIBUTORS = [
-  "DistroKid",
-  "TuneCore",
-  "CD Baby",
-  "ONErpm",
-  "Boomplay Distribution",
-  "Other",
+const COUNTRY_CODES = [
+  "+260",
+  "+1",
+  "+44",
+  "+27",
+  "+234",
+  "+254",
+  "+233",
+  "+255",
+  "+256",
+  "+91",
+  "+61",
+  "+81",
+];
+
+const SOCIAL_PLATFORMS = [
+  "Instagram",
+  "Facebook",
+  "TikTok",
+  "X/Twitter",
+  "YouTube",
 ];
 
 type Stage = "loading" | "eligibility" | "no-song" | "form" | "pay" | "done";
@@ -66,9 +80,15 @@ const BoomplayClaim = () => {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [boomplayLink, setBoomplayLink] = useState("");
+  const [emailCode, setEmailCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [countryCode, setCountryCode] = useState("+260");
+  const [mobile, setMobile] = useState("");
   const [distributor, setDistributor] = useState("");
-  const [notes, setNotes] = useState("");
+  const [socialPlatform, setSocialPlatform] = useState("");
+  const [socialLink, setSocialLink] = useState("");
+  const [socialImageName, setSocialImageName] = useState("");
+  const [labelImageName, setLabelImageName] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -90,7 +110,7 @@ const BoomplayClaim = () => {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("email, full_name, artist_name")
+        .select("email, full_name, artist_name, phone_number")
         .eq("id", session.user.id)
         .maybeSingle();
       setProfile(profileData);
@@ -140,10 +160,10 @@ const BoomplayClaim = () => {
   }
 
   async function submitForm() {
-    if (!name.trim() || !email.trim() || !distributor) {
+    if (!name.trim() || !email.trim() || !mobile.trim()) {
       toast({
         title: "Missing information",
-        description: "Please fill in your name, email and distributor.",
+        description: "Please fill in your full name, email, and mobile number.",
         variant: "destructive",
       });
       return;
@@ -162,9 +182,16 @@ const BoomplayClaim = () => {
           user_id: user.id,
           name: name.trim(),
           email: email.trim(),
-          boomplay_link: boomplayLink.trim() || null,
-          distributor,
-          notes: notes.trim() || null,
+          boomplay_link: null,
+          distributor: distributor.trim() || null,
+          notes: null,
+          country_code: countryCode,
+          mobile_number: mobile.trim() || null,
+          email_code: emailCode.trim() || null,
+          social_platform: socialPlatform || null,
+          social_profile_link: socialLink.trim() || null,
+          social_proof_file: socialImageName || null,
+          label_proof_file: labelImageName || null,
           payment_status: "unpaid",
           payment_transaction_id: null,
           payment_amount: CLAIM_FEE,
@@ -281,62 +308,242 @@ const BoomplayClaim = () => {
           {stage === "form" && (
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Complete your claim details</CardTitle>
-                <CardDescription>
+                <div className="flex flex-col items-center text-center">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center overflow-hidden mb-2">
+                    <span className="text-2xl font-bold text-primary">
+                      {(profile?.artist_name || profile?.full_name || user?.email || "?")
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                  <p className="font-semibold">
+                    {profile?.artist_name || profile?.full_name || user?.email}
+                  </p>
+                </div>
+                <CardTitle className="text-center">Verify Your Identity</CardTitle>
+                <CardDescription className="text-center">
                   Fill this in, then you'll pay the K{CLAIM_FEE} fee and we'll
                   email your claim instructions.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Full Name *</Label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Email *</Label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Boomplay Artist Link (if known)</Label>
-                  <Input
-                    value={boomplayLink}
-                    onChange={(e) => setBoomplayLink(e.target.value)}
-                    placeholder="https://www.boomplay.com/artist/..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Distributor Used *</Label>
-                  <Select value={distributor} onValueChange={setDistributor}>
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Select your distributor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {DISTRIBUTORS.map((d) => (
-                        <SelectItem key={d} value={d}>
-                          {d}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Any notes</Label>
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Anything you'd like our team to know"
-                    rows={3}
-                  />
-                </div>
+              <CardContent className="space-y-8">
+                {/* YOUR CONTACT INFORMATION */}
+                <section className="space-y-4">
+                  <h3 className="font-semibold text-base">Your Contact Information</h3>
+
+                  <div className="space-y-2">
+                    <Label>
+                      Full Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter your full legal name here"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      Email Address <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This email is used for identity verification when settling
+                      royalties for artists uploading tracks on Boomplay.
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      <Input
+                        value={emailCode}
+                        onChange={(e) => setEmailCode(e.target.value)}
+                        placeholder="Enter the code"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={codeSent}
+                        onClick={() => {
+                          setCodeSent(true);
+                          toast({
+                            title: "Code sent",
+                            description: "We've sent a verification code to your email.",
+                          });
+                        }}
+                      >
+                        {codeSent ? "Code Sent" : "Send Code"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>
+                      Mobile Number <span className="text-red-500">*</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <Select value={countryCode} onValueChange={setCountryCode}>
+                        <SelectTrigger className="bg-background w-28 shrink-0">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          {COUNTRY_CODES.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={mobile}
+                        onChange={(e) => setMobile(e.target.value)}
+                        placeholder="Enter a valid phone number"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Distributor Name</Label>
+                    <Input
+                      value={distributor}
+                      onChange={(e) => setDistributor(e.target.value)}
+                      placeholder="Contact your label or agent for more info"
+                    />
+                  </div>
+                </section>
+
+                {/* ARTIST IDENTITY PROOF */}
+                <section className="space-y-5">
+                  <h3 className="font-semibold text-base">Artist Identity Proof</h3>
+
+                  <div className="rounded-lg bg-purple-100 border border-purple-200 p-4 space-y-2">
+                    <p className="font-bold text-purple-900">
+                      Provide As Much Identity Proof As Possible.
+                    </p>
+                    <p className="font-bold text-red-600">
+                      Upload at least one screenshot from any proof type below.
+                    </p>
+                    <p className="text-sm italic text-gray-500">
+                      The more complete your proof is, the higher the chance of
+                      passing review and the faster we can verify the rightful
+                      artist or representative.
+                    </p>
+                  </div>
+
+                  {/* SOCIAL MEDIA PROFILE */}
+                  <div className="space-y-3">
+                    <p className="font-medium">
+                      Social Media Profile{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
+                    </p>
+                    <div className="flex gap-4">
+                      <label className="h-28 w-28 shrink-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg"
+                          className="hidden"
+                          onChange={(e) =>
+                            setSocialImageName(e.target.files?.[0]?.name || "")
+                          }
+                        />
+                        <div className="flex flex-col items-center text-muted-foreground">
+                          <Plus className="h-6 w-6" />
+                          {socialImageName && (
+                            <span className="text-[10px] text-center px-1 mt-1 break-all">
+                              {socialImageName}
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <p>
+                          Upload a screenshot from the artist account owner's
+                          main profile page
+                        </p>
+                        <p className="italic text-blue-600">Size: Maximum 5MB</p>
+                        <p className="italic text-blue-600">
+                          Format: jpg/png/jpeg
+                        </p>
+                        <ul className="list-disc pl-5 space-y-1 mt-2 text-xs">
+                          <li>Artist or profile name is visible.</li>
+                          <li>Username, handle, or profile URL is visible.</li>
+                          <li>
+                            Profile photo or verified badge is visible if
+                            available.
+                          </li>
+                          <li>
+                            Bio, public posts, page category, or channel content
+                            proves this is the official artist account.
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Platform</Label>
+                      <Select value={socialPlatform} onValueChange={setSocialPlatform}>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select a platform" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          {SOCIAL_PLATFORMS.map((p) => (
+                            <SelectItem key={p} value={p}>
+                              {p}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Profile Link</Label>
+                      <Input
+                        value={socialLink}
+                        onChange={(e) => setSocialLink(e.target.value)}
+                        placeholder="https://"
+                      />
+                    </div>
+                  </div>
+
+                  {/* DISTRIBUTOR OR LABEL BACKEND */}
+                  <div className="space-y-3">
+                    <p className="font-medium">
+                      Distributor or Label Backend{" "}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
+                    </p>
+                    <div className="flex gap-4">
+                      <label className="h-28 w-28 shrink-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg"
+                          className="hidden"
+                          onChange={(e) =>
+                            setLabelImageName(e.target.files?.[0]?.name || "")
+                          }
+                        />
+                        <div className="flex flex-col items-center text-muted-foreground">
+                          <Plus className="h-6 w-6" />
+                          {labelImageName && (
+                            <span className="text-[10px] text-center px-1 mt-1 break-all">
+                              {labelImageName}
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                      <p className="text-sm text-muted-foreground self-center">
+                        If your music is managed through a Distributor, label, or
+                        agent, add content management backend proof
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
                 <Button
                   className="w-full"
                   size="lg"

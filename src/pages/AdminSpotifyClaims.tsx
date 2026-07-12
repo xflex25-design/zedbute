@@ -46,6 +46,13 @@ interface Claim {
   link: string | null;
   distributor: string | null;
   notes: string | null;
+  country_code: string | null;
+  mobile_number: string | null;
+  email_verified: boolean | null;
+  social_platform: string | null;
+  social_profile_link: string | null;
+  social_proof_file: string | null;
+  label_proof_file: string | null;
   payment_status: string;
   payment_transaction_id: string | null;
   payment_amount: number | null;
@@ -108,13 +115,13 @@ const AdminSpotifyClaims = () => {
       (supabase as any)
         .from("spotify_claims")
         .select(
-          "id, name, email, spotify_link, distributor, notes, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
+          "id, name, email, spotify_link, distributor, notes, country_code, mobile_number, email_verified, social_platform, social_profile_link, social_proof_file, label_proof_file, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
         )
         .order("created_at", { ascending: false }),
       (supabase as any)
         .from("boomplay_claims")
         .select(
-          "id, name, email, boomplay_link, distributor, notes, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
+          "id, name, email, boomplay_link, distributor, notes, country_code, mobile_number, email_verified, social_platform, social_profile_link, social_proof_file, label_proof_file, payment_status, payment_transaction_id, payment_amount, claim_status, admin_notes, created_at"
         )
         .order("created_at", { ascending: false }),
     ]);
@@ -322,6 +329,37 @@ const AdminSpotifyClaims = () => {
                     <span className="font-medium">Txn:</span>{" "}
                     {c.payment_transaction_id}
                   </p>
+                )}
+
+                {(c.country_code || c.mobile_number || c.social_platform || c.social_profile_link || c.social_proof_file || c.label_proof_file) && (
+                  <div className="rounded-md bg-muted/40 border border-border p-3 text-xs space-y-1">
+                    <p className="font-medium mb-1">Identity proof</p>
+                    {(c.country_code || c.mobile_number) && (
+                      <p className="text-muted-foreground">
+                        <span className="font-medium">Mobile:</span>{" "}
+                        {[c.country_code, c.mobile_number].filter(Boolean).join(" ")}
+                        {c.email_verified ? " · email verified" : ""}
+                      </p>
+                    )}
+                    {!c.country_code && !c.mobile_number && c.email_verified && (
+                      <p className="text-muted-foreground">
+                        <span className="font-medium">Email:</span> verified
+                      </p>
+                    )}
+                    {c.social_platform && (
+                      <p className="text-muted-foreground">
+                        <span className="font-medium">Social:</span> {c.social_platform}
+                        {c.social_profile_link ? ` — ${c.social_profile_link}` : ""}
+                        {c.social_proof_file ? ` (${c.social_proof_file})` : ""}
+                      </p>
+                    )}
+                    {c.label_proof_file && (
+                      <p className="text-muted-foreground">
+                        <span className="font-medium">Label/Distributor proof:</span>{" "}
+                        {c.label_proof_file}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
