@@ -276,7 +276,7 @@ const AdminSpotifyClaims = () => {
                   </CardTitle>
                   <div className="flex flex-wrap gap-2">
                     <Badge className="bg-slate-500 hover:bg-slate-500 text-white">
-                      Paid: {c.payment_status}
+                      Payment: {c.payment_status}
                     </Badge>
                     <Badge className={statusBadgeClass[c.claim_status]}>
                       {c.claim_status}

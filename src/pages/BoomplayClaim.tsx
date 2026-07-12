@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import {
@@ -31,8 +31,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const CLAIM_FEE = 40;
-
 const DISTRIBUTORS = [
   "DistroKid",
   "TuneCore",
@@ -42,14 +40,11 @@ const DISTRIBUTORS = [
   "Other",
 ];
 
-const PAYMENT_SESSION_KEY = "boomplayClaimPayment";
-
-type Stage = "loading" | "eligibility" | "no-song" | "payment" | "form" | "done";
+type Stage = "loading" | "eligibility" | "no-song" | "form" | "done";
 
 interface ExistingClaim {
   id: string;
   claim_status: string;
-  payment_status: string;
   boomplay_link: string | null;
   distributor: string | null;
   admin_notes: string | null;
@@ -58,7 +53,6 @@ interface ExistingClaim {
 const BoomplayClaim = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
 
   const [stage, setStage] = useState<Stage>("loading");
   const [user, setUser] = useState<any>(null);
@@ -99,21 +93,13 @@ const BoomplayClaim = () => {
 
       const { data: claim } = await (supabase as any)
         .from("boomplay_claims")
-        .select("id, claim_status, payment_status, boomplay_link, distributor, admin_notes")
+        .select("id, claim_status, boomplay_link, distributor, admin_notes")
         .eq("user_id", session.user.id)
         .maybeSingle();
 
       if (claim) {
         setExisting(claim as ExistingClaim);
         setStage("done");
-        return;
-      }
-
-      // Reached this page after a successful payment (eligibility already passed).
-      if (searchParams.get("paid") === "1") {
-        setName(profile?.artist_name || profile?.full_name || "");
-        setEmail(user?.email || profile?.email || "");
-        setStage("form");
         return;
       }
 
@@ -136,15 +122,7 @@ const BoomplayClaim = () => {
     }
     setName(profile?.artist_name || profile?.full_name || "");
     setEmail(user?.email || profile?.email || "");
-    setStage("payment");
-  }
-
-  function goToPayment() {
-    navigate(
-      `/payment?type=boomplay-claim&amount=${CLAIM_FEE}&returnUrl=${encodeURIComponent(
-        "/boomplay-claim?paid=1"
-      )}`
-    );
+    setStage("form");
   }
 
   async function submitForm() {
@@ -162,12 +140,6 @@ const BoomplayClaim = () => {
       return;
     }
 
-    const raw = sessionStorage.getItem(PAYMENT_SESSION_KEY);
-    const payment = raw ? JSON.parse(raw) : null;
-    const paymentStatus: "paid" | "pending" =
-      payment?.status === "verified" ? "paid" : "pending";
-    const transactionId: string | null = payment?.transactionId ?? null;
-
     setSubmitting(true);
     try {
       const { data: inserted, error: insertError } = await (supabase as any)
@@ -179,9 +151,9 @@ const BoomplayClaim = () => {
           boomplay_link: boomplayLink.trim() || null,
           distributor,
           notes: notes.trim() || null,
-          payment_status: paymentStatus,
-          payment_transaction_id: transactionId,
-          payment_amount: CLAIM_FEE,
+          payment_status: "unpaid",
+          payment_transaction_id: null,
+          payment_amount: null,
           claim_status: "New",
         })
         .select("id")
@@ -221,11 +193,9 @@ const BoomplayClaim = () => {
         });
       }
 
-      sessionStorage.removeItem(PAYMENT_SESSION_KEY);
       setExisting({
         id: inserted?.id,
         claim_status: "Instructions Sent",
-        payment_status: paymentStatus,
         boomplay_link: boomplayLink.trim() || null,
         distributor,
         admin_notes: null,
@@ -264,8 +234,8 @@ const BoomplayClaim = () => {
             </h1>
             <p className="text-muted-foreground">
               We never log into Boomplay for you and never ask for your Boomplay
-              password. We simply gate access, collect your fee, and send you
-              the exact steps to claim it yourself.
+              password. Tell us a bit about your profile and we'll send you the
+              exact steps to claim it yourself.
             </p>
           </div>
 
@@ -327,43 +297,14 @@ const BoomplayClaim = () => {
             </Card>
           )}
 
-          {/* PAYMENT */}
-          {stage === "payment" && (
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Boomplay Claim — Processing Fee</CardTitle>
-                <CardDescription>
-                  Pay a small one-time fee to start your claim. After payment
-                  you'll fill in a short form and get your instructions by email.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
-                  <p className="text-3xl font-bold">K{CLAIM_FEE}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Secure checkout via Lenco (Mobile Money or Card)
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button variant="outline" onClick={() => setStage("eligibility")}>
-                    Back
-                  </Button>
-                  <Button className="flex-1" size="lg" onClick={goToPayment}>
-                    Pay K{CLAIM_FEE} &amp; Continue
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* MANUAL FORM (always shown after payment) */}
+          {/* MANUAL FORM */}
           {stage === "form" && (
             <Card className="shadow-card">
               <CardHeader>
                 <CardTitle>Complete your claim details</CardTitle>
                 <CardDescription>
-                  Payment received. Fill this in so we can send you the right
-                  instructions.
+                  Fill this in so we can send you the right instructions to
+                  claim your profile on Boomplay.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -449,9 +390,6 @@ const BoomplayClaim = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-green-600 hover:bg-green-600 text-white">
-                    Payment: {existing?.payment_status ?? "paid"}
-                  </Badge>
                   <Badge className="bg-primary hover:bg-primary text-primary-foreground">
                     Status: {existing?.claim_status ?? "New"}
                   </Badge>
