@@ -30,6 +30,9 @@ import {
   Download,
   Filter,
   Wallet,
+  ListMusic,
+  Bell,
+  Check,
 } from "lucide-react";
 
 type Release = {
@@ -85,6 +88,28 @@ const verificationBadge = (status: string | null) => {
   }
 };
 
+const subReviewVariant = (status: string | null) => {
+  switch (status) {
+    case "approved":
+      return "bg-green-500/15 text-green-600 border-green-500/30";
+    case "rejected":
+      return "bg-red-500/15 text-red-600 border-red-500/30";
+    case "changes_requested":
+      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
+    default:
+      return "bg-gray-500/15 text-gray-500 border-gray-500/30";
+  }
+};
+
+const subReviewLabel = (status: string | null) => {
+  switch (status) {
+    case "approved": return "Approved";
+    case "rejected": return "Rejected";
+    case "changes_requested": return "Changes Requested";
+    default: return "Pending Review";
+  }
+};
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -100,6 +125,8 @@ const Dashboard = () => {
   const [submittingPromo, setSubmittingPromo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -122,6 +149,40 @@ const Dashboard = () => {
     setProfile(profileData);
     setVerification(verificationData);
     setReleases(releasesData ?? []);
+
+    const [{ data: subsData }, { data: notifData }] = await Promise.all([
+      (supabase as any)
+        .from("playlist_submissions")
+        .select(
+          "id, song_title, playlist_id, payment_status, review_status, created_at"
+        )
+        .eq("artist_id", userId)
+        .order("created_at", { ascending: false }),
+      (supabase as any)
+        .from("notifications")
+        .select("id, title, message, is_read, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+
+    if (subsData && subsData.length) {
+      const pIds = [...new Set(subsData.map((s: any) => s.playlist_id))];
+      const { data: pls } = await (supabase as any)
+        .from("playlists")
+        .select("id, name")
+        .in("id", pIds);
+      const nameMap = new Map((pls || []).map((p: any) => [p.id, p.name]));
+      setSubmissions(
+        subsData.map((s: any) => ({
+          ...s,
+          playlist_name: nameMap.get(s.playlist_id) || "Playlist",
+        }))
+      );
+    } else {
+      setSubmissions([]);
+    }
+    setNotifications(notifData ?? []);
   };
 
   const fetchPromotions = async (userId: string) => {
@@ -164,6 +225,13 @@ const Dashboard = () => {
       navigate(`/payment?type=promotion&promotionId=${promo.id}`);
     }
     setSubmittingPromo(false);
+  };
+
+  const markRead = async (id: string) => {
+    await (supabase as any).from("notifications").update({ is_read: true }).eq("id", id);
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
   };
 
   useEffect(() => {
@@ -322,12 +390,106 @@ return (
           </div>
         </Card>
 
+        {/* Playlist Submissions + Notifications */}
         <Card className="mb-4 bg-card border border-border rounded-lg">
           <div className="p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <ArrowUpRight className="h-5 w-5 text-foreground" />
-              <h2 className="text-base font-semibold">Manage Royalties</h2>
+            <div className="flex items-center justify-between gap-3 mb-1">
+              <div className="flex items-center gap-2">
+                <ListMusic className="h-5 w-5 text-foreground" />
+                <h2 className="text-base font-semibold">My Playlist Submissions</h2>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate("/playlists")}
+                className="rounded-lg text-xs"
+              >
+                <ListMusic className="h-3.5 w-3.5" />
+                Submit
+              </Button>
             </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Track the review status of songs you submitted to ZedBute playlists.
+            </p>
+
+            {submissions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No playlist submissions yet.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {submissions.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{s.song_title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {s.playlist_name}
+                        {s.payment_status !== "paid" && " · unpaid"}
+                      </p>
+                    </div>
+                    <Badge className={subReviewVariant(s.review_status)}>
+                      {subReviewLabel(s.review_status)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {notifications.length > 0 && (
+          <Card className="mb-4 bg-card border border-border rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <Bell className="h-5 w-5 text-foreground" />
+                <h2 className="text-base font-semibold">Notifications</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                Updates about your submissions and account.
+              </p>
+              <div className="space-y-2">
+                {notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`rounded-lg border px-3 py-2 ${
+                      n.is_read
+                        ? "border-border bg-background"
+                        : "border-primary/30 bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{n.title}</p>
+                        <p className="text-xs text-muted-foreground">{n.message}</p>
+                      </div>
+                      {!n.is_read && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="shrink-0 h-7 text-xs"
+                          onClick={() => markRead(n.id)}
+                        >
+                          <Check className="h-3.5 w-3.5 mr-1" />
+                          Mark read
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <Card className="mb-4 bg-card border border-border rounded-lg">
+          <div className="p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <ArrowUpRight className="h-5 w-5 text-foreground" />
+            <h2 className="text-base font-semibold">Manage Royalties</h2>
+          </div>
             <p className="text-xs text-muted-foreground mb-4">Go to settings to request withdrawals and view royalty history.</p>
             <Button
               onClick={() => navigate("/settings")}

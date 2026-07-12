@@ -158,9 +158,17 @@ const Admin = () => {
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h1 className="text-3xl font-bold">Admin — Releases</h1>
-          <Button variant="outline" onClick={() => navigate("/admin/spotify-claims")}>
-            Spotify Claims
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin/spotify-claims")}>
+              Spotify Claims
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/playlist-submissions")}>
+              Playlist Submissions
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/playlists")}>
+              Manage Playlists
+            </Button>
+          </div>
         </div>
           {banner && (
           <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 text-green-600 rounded-lg flex items-center gap-2 animate-fade-in">

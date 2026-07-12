@@ -15,6 +15,10 @@ import Admin from "./pages/Admin";
 import SpotifyClaim from "./pages/SpotifyClaim";
 import BoomplayClaim from "./pages/BoomplayClaim";
 import AdminSpotifyClaims from "./pages/AdminSpotifyClaims";
+import MyPlaylists from "./pages/MyPlaylists";
+import PlaylistSubmit from "./pages/PlaylistSubmit";
+import AdminPlaylistSubmissions from "./pages/AdminPlaylistSubmissions";
+import AdminPlaylists from "./pages/AdminPlaylists";
 import UploadRelease from "./pages/UploadRelease";
 import UploadEP from "./pages/UploadEP";
 import UploadAlbum from "./pages/UploadAlbum";
@@ -48,6 +52,10 @@ const App = () => (
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/spotify-claims" element={<AdminSpotifyClaims />} />
+                <Route path="/playlists" element={<MyPlaylists />} />
+                <Route path="/submit-to-playlist" element={<PlaylistSubmit />} />
+                <Route path="/admin/playlist-submissions" element={<AdminPlaylistSubmissions />} />
+                <Route path="/admin/playlists" element={<AdminPlaylists />} />
                 <Route path="/spotify-claim" element={<SpotifyClaim />} />
                 <Route path="/boomplay-claim" element={<BoomplayClaim />} />
                 <Route path="/admin/promotions" element={<AdminPromotions />} />

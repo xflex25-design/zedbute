@@ -54,13 +54,15 @@ export default function Payment() {
         ? "Boomplay Claim"
         : paymentType === "spotify-claim"
           ? "Spotify Claim"
-          : paymentType === "promotion"
-          ? "Promote Release"
-          : paymentType === "ep"
-            ? "EP Upload"
-            : paymentType === "album"
-              ? "Album Upload"
-              : "Single Upload";
+          : paymentType === "playlist-submission"
+            ? "Playlist Submission"
+            : paymentType === "promotion"
+              ? "Promote Release"
+              : paymentType === "ep"
+                ? "EP Upload"
+                : paymentType === "album"
+                  ? "Album Upload"
+                  : "Single Upload";
 
   // Use amount from URL if provided, otherwise use defaults
   const defaultAmount = paymentType === "boomplay-claim"
@@ -317,6 +319,35 @@ export default function Payment() {
           searchParams.get("returnUrl") ||
           (paymentType === "spotify-claim" ? "/spotify-claim" : "/boomplay-claim");
         navigate(returnUrl);
+      } else if (paymentType === "playlist-submission") {
+        const batchId = searchParams.get("batchId");
+        if (batchId && user) {
+          const paymentStatus: "paid" | "pending" =
+            status === "verified" ? "paid" : "pending";
+
+          const { error: updErr } = await (supabase as any)
+            .from("playlist_submissions")
+            .update({ payment_status: paymentStatus })
+            .eq("payment_batch_id", batchId);
+
+          if (!updErr) {
+            await supabase.functions.invoke("notify-playlist-submission", {
+              body: { batchId },
+            });
+          }
+        }
+
+        toast({
+          title:
+            status === "verified"
+              ? "Payment Successful"
+              : "Payment Submitted",
+          description:
+            status === "verified"
+              ? "Your submission is ready for review."
+              : "Payment confirmation is pending.",
+        });
+        navigate("/playlists?paid=1");
       } else if (paymentType === "promotion") {
         navigate("/dashboard");
       } else {
