@@ -84,69 +84,64 @@ const MyPlaylists = () => {
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {playlists.map((p) => {
-                const [imgFailed, setImgFailed] = useState(false);
-                const showImage = p.cover_image && !imgFailed;
-
-                return (
-                  <div
-                    key={p.id}
-                    className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl border border-white/20"
-                    style={{ minHeight: "360px" }}
-                    onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
-                  >
-                    {showImage && (
-                      <div
-                        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-110"
-                        style={{ backgroundImage: `url(${p.cover_image})` }}
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20 group-hover:from-black/90 transition-colors" />
-                    <div className="relative z-10 flex flex-col h-full p-6">
-                      <div className="flex-1" />
-                      <div>
-                        <CardHeader className="p-0 mb-3">
-                          <CardTitle className="text-3xl font-bold text-white leading-tight drop-shadow-lg">
-                            {p.name}
-                          </CardTitle>
-                          <CardDescription className="flex flex-wrap items-center gap-2 text-gray-100 font-medium mt-2">
-                            {p.genre && (
-                              <Badge variant="secondary" className="bg-black/60 text-white border-white/40 backdrop-blur-md">
-                                {p.genre}
-                              </Badge>
-                            )}
-                          </CardDescription>
-                          {p.description && (
-                            <p className="text-sm text-gray-200 mt-2 line-clamp-2 drop-shadow">
-                              {p.description}
-                            </p>
+              {playlists.map((p) => (
+                <div
+                  key={p.id}
+                  className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl border border-white/20"
+                  style={{ minHeight: "360px", background: "transparent" }}
+                  onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
+                >
+                  {p.cover_image && (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${p.cover_image})` }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20 group-hover:from-black/90 transition-colors" />
+                  <div className="relative z-10 flex flex-col h-full p-6">
+                    <div className="flex-1" />
+                    <div>
+                      <CardHeader className="p-0 mb-3">
+                        <CardTitle className="text-3xl font-bold text-white leading-tight drop-shadow-lg">
+                          {p.name}
+                        </CardTitle>
+                        <CardDescription className="flex flex-wrap items-center gap-2 text-gray-100 font-medium mt-2">
+                          {p.genre && (
+                            <Badge variant="secondary" className="bg-black/60 text-white border-white/40 backdrop-blur-md">
+                              {p.genre}
+                            </Badge>
                           )}
-                        </CardHeader>
-                        <CardContent className="p-0 space-y-3">
-                          <div className="flex items-end justify-between gap-3">
-                            <p className="text-3xl font-bold text-white drop-shadow-md">
-                              K{p.submission_fee}
-                              <span className="text-base font-normal text-gray-200">
-                                {" "}submission fee
-                              </span>
-                            </p>
-                            <Button
-                              className="bg-white text-black hover:bg-gray-100 font-semibold shadow-lg"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/submit-to-playlist?playlist=${p.id}`);
-                              }}
-                            >
-                              <Send className="h-4 w-4 mr-2" />
-                              Submit
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </div>
+                        </CardDescription>
+                        {p.description && (
+                          <p className="text-sm text-gray-200 mt-2 line-clamp-2 drop-shadow">
+                            {p.description}
+                          </p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-0 space-y-3">
+                        <div className="flex items-end justify-between gap-3">
+                          <p className="text-3xl font-bold text-white drop-shadow-md">
+                            K{p.submission_fee}
+                            <span className="text-base font-normal text-gray-200">
+                              {" "}submission fee
+                            </span>
+                          </p>
+                          <Button
+                            className="bg-white text-black hover:bg-gray-100 font-semibold shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/submit-to-playlist?playlist=${p.id}`);
+                            }}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Submit
+                          </Button>
+                        </div>
+                      </CardContent>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           )}
         </div>
