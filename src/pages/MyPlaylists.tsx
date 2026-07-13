@@ -87,7 +87,8 @@ const MyPlaylists = () => {
               {playlists.map((p) => (
                 <Card
                   key={p.id}
-                  className="shadow-card overflow-hidden relative group cursor-pointer"
+                  className="shadow-card overflow-hidden relative group cursor-pointer border-white/20 bg-transparent"
+                  style={{ minHeight: "320px" }}
                   onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
                 >
                   {p.cover_image && (
@@ -97,41 +98,43 @@ const MyPlaylists = () => {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 group-hover:from-black/80 transition-colors" />
-                  <CardHeader className="relative z-10 pb-2">
-                    <CardTitle className="text-xl text-white leading-tight">
-                      {p.name}
-                    </CardTitle>
-                    <CardDescription className="flex flex-wrap items-center gap-2 text-gray-200">
-                      {p.genre && (
-                        <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                          {p.genre}
-                        </Badge>
+                  <div className="relative z-10 flex flex-col h-full p-6">
+                    <CardHeader className="p-0 flex-1">
+                      <CardTitle className="text-xl text-white leading-tight">
+                        {p.name}
+                      </CardTitle>
+                      <CardDescription className="flex flex-wrap items-center gap-2 text-gray-200">
+                        {p.genre && (
+                          <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                            {p.genre}
+                          </Badge>
+                        )}
+                      </CardDescription>
+                      {p.description && (
+                        <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                          {p.description}
+                        </p>
                       )}
-                    </CardDescription>
-                    {p.description && (
-                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-                        {p.description}
+                    </CardHeader>
+                    <CardContent className="p-0 mt-4 space-y-3">
+                      <p className="text-2xl font-bold text-white">
+                        K{p.submission_fee}
+                        <span className="text-sm font-normal text-gray-300">
+                          {" "}submission fee
+                        </span>
                       </p>
-                    )}
-                  </CardHeader>
-                  <CardContent className="relative z-10 mt-auto space-y-3">
-                    <p className="text-2xl font-bold text-white">
-                      K{p.submission_fee}
-                      <span className="text-sm font-normal text-gray-300">
-                        {" "}submission fee
-                      </span>
-                    </p>
-                    <Button
-                      className="w-full bg-white text-black hover:bg-gray-100"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/submit-to-playlist?playlist=${p.id}`);
-                      }}
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit
-                    </Button>
-                  </CardContent>
+                      <Button
+                        className="w-full bg-white text-black hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/submit-to-playlist?playlist=${p.id}`);
+                        }}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit
+                      </Button>
+                    </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>
