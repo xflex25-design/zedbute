@@ -143,9 +143,6 @@ const MyPlaylists = () => {
                 </Card>
               ))}
             </div>
-                </Card>
-              ))}
-            </div>
           )}
         </div>
       </div>
