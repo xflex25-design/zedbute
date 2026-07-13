@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -87,8 +80,8 @@ const MyPlaylists = () => {
               {playlists.map((p) => (
                 <div
                   key={p.id}
-                  className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl"
-                  style={{ minHeight: "360px", border: "1px solid rgba(255,255,255,0.2)" }}
+                  className="relative overflow-hidden rounded-xl cursor-pointer group"
+                  style={{ minHeight: "360px", background: "transparent" }}
                   onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
                 >
                   {p.cover_image && (
@@ -108,52 +101,48 @@ const MyPlaylists = () => {
                     style={{
                       zIndex: 1,
                       background:
-                        "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%)",
+                        "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.25) 100%)",
                     }}
                   />
                   <div
                     className="relative flex flex-col h-full p-6"
-                    style={{ zIndex: 2 }}
+                    style={{ zIndex: 2, background: "transparent" }}
                   >
                     <div style={{ flex: 1 }} />
                     <div>
-                      <CardHeader className="p-0 mb-3">
-                        <CardTitle className="text-3xl font-bold text-white leading-tight drop-shadow-lg">
-                          {p.name}
-                        </CardTitle>
-                        <CardDescription className="flex flex-wrap items-center gap-2 text-gray-100 font-medium mt-2">
-                          {p.genre && (
-                            <Badge variant="secondary" className="bg-black/60 text-white border-white/40 backdrop-blur-md">
-                              {p.genre}
-                            </Badge>
-                          )}
-                        </CardDescription>
-                        {p.description && (
-                          <p className="text-sm text-gray-200 mt-2 line-clamp-2 drop-shadow">
-                            {p.description}
-                          </p>
+                      <h3 className="text-3xl font-bold text-white leading-tight drop-shadow-lg mb-2">
+                        {p.name}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 text-gray-100 font-medium mt-2">
+                        {p.genre && (
+                          <span className="bg-black/60 text-white border border-white/40 backdrop-blur-md rounded-md px-2 py-0.5 text-sm">
+                            {p.genre}
+                          </span>
                         )}
-                      </CardHeader>
-                      <CardContent className="p-0 space-y-3">
-                        <div className="flex items-end justify-between gap-3">
-                          <p className="text-3xl font-bold text-white drop-shadow-md">
-                            K{p.submission_fee}
-                            <span className="text-base font-normal text-gray-200">
-                              {" "}submission fee
-                            </span>
-                          </p>
-                          <Button
-                            className="bg-white text-black hover:bg-gray-100 font-semibold shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/submit-to-playlist?playlist=${p.id}`);
-                            }}
-                          >
-                            <Send className="h-4 w-4 mr-2" />
-                            Submit
-                          </Button>
-                        </div>
-                      </CardContent>
+                      </div>
+                      {p.description && (
+                        <p className="text-sm text-gray-200 mt-2 line-clamp-2 drop-shadow">
+                          {p.description}
+                        </p>
+                      )}
+                      <div className="flex items-end justify-between gap-3 mt-4">
+                        <p className="text-3xl font-bold text-white drop-shadow-md">
+                          K{p.submission_fee}
+                          <span className="text-base font-normal text-gray-200">
+                            {" "}submission fee
+                          </span>
+                        </p>
+                        <Button
+                          className="bg-white text-black hover:bg-gray-100 font-semibold shadow-lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/submit-to-playlist?playlist=${p.id}`);
+                          }}
+                        >
+                          <Send className="h-4 w-4 mr-2" />
+                          Submit
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
