@@ -22,6 +22,7 @@ interface Playlist {
   name: string;
   genre: string | null;
   submission_fee: number;
+  cover_image: string | null;
 }
 
 const isValidUrl = (value: string) => {
@@ -59,7 +60,7 @@ const PlaylistSubmit = () => {
     const [playlistsRes, profileRes] = await Promise.all([
       (supabase as any)
         .from("playlists")
-        .select("id, name, genre, submission_fee")
+        .select("id, name, genre, submission_fee, cover_image")
         .eq("is_active", true)
         .order("created_at", { ascending: true }),
       supabase
@@ -247,6 +248,13 @@ const PlaylistSubmit = () => {
                         checked={selected.includes(p.id)}
                         onCheckedChange={() => toggle(p.id)}
                       />
+                      {p.cover_image && (
+                        <img
+                          src={p.cover_image}
+                          alt={p.name}
+                          className="w-10 h-10 object-cover rounded shrink-0"
+                        />
+                      )}
                       <span className="flex-1 text-sm font-medium">
                         {p.name}
                         {p.genre && (

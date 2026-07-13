@@ -20,6 +20,8 @@ interface Playlist {
   genre: string | null;
   submission_fee: number;
   is_active: boolean;
+  description: string | null;
+  cover_image: string | null;
 }
 
 const MyPlaylists = () => {
@@ -36,7 +38,7 @@ const MyPlaylists = () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
       .from("playlists")
-      .select("id, name, genre, submission_fee, is_active")
+      .select("id, name, genre, description, submission_fee, cover_image, is_active")
       .eq("is_active", true)
       .order("created_at", { ascending: true });
 
@@ -83,25 +85,48 @@ const MyPlaylists = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {playlists.map((p) => (
-                <Card key={p.id} className="shadow-card flex flex-col">
-                  <CardHeader>
-                    <CardTitle className="text-lg">{p.name}</CardTitle>
-                    <CardDescription className="flex flex-wrap items-center gap-2">
-                      {p.genre && <Badge variant="secondary">{p.genre}</Badge>}
+                <Card
+                  key={p.id}
+                  className="shadow-card overflow-hidden relative group cursor-pointer"
+                  onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
+                >
+                  {p.cover_image && (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                      style={{ backgroundImage: `url(${p.cover_image})` }}
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20 group-hover:from-black/80 transition-colors" />
+                  <CardHeader className="relative z-10 pb-2">
+                    <CardTitle className="text-xl text-white leading-tight">
+                      {p.name}
+                    </CardTitle>
+                    <CardDescription className="flex flex-wrap items-center gap-2 text-gray-200">
+                      {p.genre && (
+                        <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                          {p.genre}
+                        </Badge>
+                      )}
                     </CardDescription>
+                    {p.description && (
+                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                        {p.description}
+                      </p>
+                    )}
                   </CardHeader>
-                  <CardContent className="mt-auto space-y-3">
-                    <p className="text-2xl font-bold">
+                  <CardContent className="relative z-10 mt-auto space-y-3">
+                    <p className="text-2xl font-bold text-white">
                       K{p.submission_fee}
-                      <span className="text-sm font-normal text-muted-foreground">
+                      <span className="text-sm font-normal text-gray-300">
                         {" "}submission fee
                       </span>
                     </p>
                     <Button
-                      className="w-full"
-                      onClick={() =>
-                        navigate(`/submit-to-playlist?playlist=${p.id}`)
-                      }
+                      className="w-full bg-white text-black hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/submit-to-playlist?playlist=${p.id}`);
+                      }}
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Submit

@@ -22,11 +22,15 @@ interface Playlist {
   genre: string | null;
   submission_fee: number;
   is_active: boolean;
+  description: string | null;
+  cover_image: string | null;
 }
 
 const empty = {
   name: "",
   genre: "",
+  description: "",
+  cover_image: "",
   submission_fee: "30",
   is_active: true,
 };
@@ -64,7 +68,7 @@ const AdminPlaylists = () => {
   async function load() {
     const { data } = await (supabase as any)
       .from("playlists")
-      .select("id, name, genre, submission_fee, is_active")
+      .select("id, name, genre, description, cover_image, submission_fee, is_active")
       .order("created_at", { ascending: true });
     setPlaylists(data || []);
   }
@@ -74,6 +78,8 @@ const AdminPlaylists = () => {
       setForm({
         name: p.name,
         genre: p.genre || "",
+        description: p.description || "",
+        cover_image: p.cover_image || "",
         submission_fee: String(p.submission_fee || 0),
         is_active: p.is_active,
       });
@@ -94,6 +100,8 @@ const AdminPlaylists = () => {
       const payload = {
         name: form.name.trim(),
         genre: form.genre.trim() || null,
+        description: form.description.trim() || null,
+        cover_image: form.cover_image.trim() || null,
         submission_fee: parseFloat(form.submission_fee || "0") || 0,
         is_active: form.is_active,
       };
@@ -195,6 +203,22 @@ const AdminPlaylists = () => {
                 placeholder="Afrobeat"
               />
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Description</Label>
+              <Input
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Short description shown on the playlist card"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Cover Image URL</Label>
+              <Input
+                value={form.cover_image}
+                onChange={(e) => setForm({ ...form, cover_image: e.target.value })}
+                placeholder="https://... .jpg"
+              />
+            </div>
             <div className="space-y-2">
               <Label>Submission Fee (ZMW)</Label>
               <Input
@@ -229,8 +253,15 @@ const AdminPlaylists = () => {
         <div className="space-y-3">
           {playlists.map((p) => (
             <Card key={p.id} className="shadow-card">
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                <div>
+              <CardContent className="flex flex-wrap items-center gap-4 py-4">
+                {p.cover_image && (
+                  <img
+                    src={p.cover_image}
+                    alt={p.name}
+                    className="w-16 h-16 object-cover rounded-lg shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold flex items-center gap-2">
                     {p.name}
                     {!p.is_active && (
@@ -240,6 +271,11 @@ const AdminPlaylists = () => {
                   <p className="text-xs text-muted-foreground">
                     {p.genre || "No genre"} · K{p.submission_fee}
                   </p>
+                  {p.description && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                      {p.description}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => startEdit(p)}>
