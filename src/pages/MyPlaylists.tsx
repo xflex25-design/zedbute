@@ -88,16 +88,17 @@ const MyPlaylists = () => {
                 <div
                   key={p.id}
                   className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl border border-white/20"
-                  style={{ minHeight: "360px", background: "transparent" }}
+                  style={{ minHeight: "360px" }}
                   onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
                 >
                   {p.cover_image && (
-                    <div
-                      className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 group-hover:scale-110"
-                      style={{ backgroundImage: `url(${p.cover_image})` }}
+                    <img
+                      src={p.cover_image}
+                      alt={p.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-black/20 group-hover:from-black/90 transition-colors" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 group-hover:from-black/80 transition-colors" />
                   <div className="relative z-10 flex flex-col h-full p-6">
                     <div className="flex-1" />
                     <div>
