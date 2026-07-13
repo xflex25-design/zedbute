@@ -293,9 +293,10 @@ const AdminPlaylistSubmissions = () => {
           ))}
 
           {subs.length === 0 && (
-            <p className="text-muted-foreground text-center">
-              No paid submissions awaiting review.
-            </p>
+            <div className="text-center py-12">
+              <CheckCircle2 className="mx-auto h-12 w-12 text-gray-600 mb-3" />
+              <p className="text-muted-foreground">No paid submissions awaiting review.</p>
+            </div>
           )}
         </div>
       </div>

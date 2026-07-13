@@ -2,20 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ListMusic, Send } from "lucide-react";
+import { Loader2, ListMusic, Send, Music2, Smartphone, CreditCard } from "lucide-react";
 
 interface Playlist {
   id: string;
@@ -33,6 +26,21 @@ const isValidUrl = (value: string) => {
     return false;
   }
 };
+
+const PaymentBadges = () => (
+  <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/10">
+    <span className="text-xs text-gray-400 font-medium">Pay with:</span>
+    <span className="inline-flex items-center gap-1 text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-full px-2 py-0.5 font-semibold">
+      <Smartphone className="h-3 w-3" /> Airtel Money
+    </span>
+    <span className="inline-flex items-center gap-1 text-xs bg-yellow-400/20 text-yellow-200 border border-yellow-400/30 rounded-full px-2 py-0.5 font-semibold">
+      <Smartphone className="h-3 w-3" /> MTN MoMo
+    </span>
+    <span className="inline-flex items-center gap-1 text-xs bg-white/10 text-gray-300 border border-white/20 rounded-full px-2 py-0.5 font-medium">
+      <CreditCard className="h-3 w-3" /> Card
+    </span>
+  </div>
+);
 
 const PlaylistSubmit = () => {
   const navigate = useNavigate();
@@ -166,7 +174,7 @@ const PlaylistSubmit = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -175,143 +183,151 @@ const PlaylistSubmit = () => {
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
       <div className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-xl mx-auto">
-          <div className="mb-6 text-center">
-            <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-              <ListMusic className="h-7 w-7 text-[#F7931E]" />
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-3 flex items-center justify-center gap-2">
+              <ListMusic className="h-8 w-8 text-[#F7931E]" />
               Submit to Playlist
             </h1>
             <p className="text-muted-foreground">
               Send your song to one or more ZedBute playlists. You'll pay the
-              combined submission fee, then our curators review it.
+              combined submission fee securely, then our curators review it.
             </p>
           </div>
 
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle>Submission details</CardTitle>
-              <CardDescription>
-                Fill in your song and pick the playlists you want.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="rounded-2xl border border-white/10 bg-[#0f0f1a]/80 backdrop-blur-sm shadow-card p-5 sm:p-8 space-y-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-200">
+                Song Title <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                value={songTitle}
+                onChange={(e) => setSongTitle(e.target.value)}
+                placeholder="e.g. Summer Vibes"
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary/50 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-200">
+                Artist Name <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                value={artistName}
+                onChange={(e) => setArtistName(e.target.value)}
+                placeholder="Your artist name"
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary/50 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-200">
+                Release Link (Boomplay) <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                type="url"
+                value={releaseLink}
+                onChange={(e) => setReleaseLink(e.target.value)}
+                placeholder="https://boomplay.com/..."
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary/50 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-gray-200">
+                Select Playlist(s) <span className="text-red-400">*</span>
+              </Label>
               <div className="space-y-2">
-                <Label>
-                  Song Title <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={songTitle}
-                  onChange={(e) => setSongTitle(e.target.value)}
-                  placeholder="e.g. Summer Vibes"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  Artist Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  value={artistName}
-                  onChange={(e) => setArtistName(e.target.value)}
-                  placeholder="Your artist name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  Release Link (Boomplay) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="url"
-                  value={releaseLink}
-                  onChange={(e) => setReleaseLink(e.target.value)}
-                  placeholder="https://boomplay.com/..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>
-                  Select Playlist(s) <span className="text-red-500">*</span>
-                </Label>
-                <div className="space-y-2 rounded-lg border border-border p-3">
-                  {playlists.length === 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      No playlists available.
-                    </p>
-                  )}
-                  {playlists.map((p) => (
-                    <label
-                      key={p.id}
-                      className="flex items-center gap-3 cursor-pointer"
-                    >
-                      <Checkbox
-                        checked={selected.includes(p.id)}
-                        onCheckedChange={() => toggle(p.id)}
-                      />
-                      {p.cover_image && (
-                        <img
-                          src={p.cover_image}
-                          alt={p.name}
-                          className="w-10 h-10 object-cover rounded shrink-0"
-                        />
-                      )}
-                      <span className="flex-1 text-sm font-medium">
-                        {p.name}
-                        {p.genre && (
-                          <span className="text-muted-foreground font-normal">
-                            {" "}
-                            · {p.genre}
-                          </span>
-                        )}
-                      </span>
-                      <span className="text-sm font-semibold">
-                        K{p.submission_fee}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Message to Curator (optional)</Label>
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Anything you'd like the curator to know"
-                  rows={3}
-                />
-              </div>
-
-              {selected.length > 0 && (
-                <div className="rounded-lg bg-primary/10 border border-primary/20 p-4 flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    Total ({selected.length} playlist
-                    {selected.length > 1 ? "s" : ""})
-                  </span>
-                  <span className="text-2xl font-bold">K{total}</span>
-                </div>
-              )}
-
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={submitting}
-                onClick={handleSubmit}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Submitting...
-                  </>
+                {playlists.length === 0 ? (
+                  <div className="text-center py-8 rounded-lg border border-dashed border-white/10 bg-white/5">
+                    <Music2 className="h-8 w-8 text-gray-500 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">No playlists available right now.</p>
+                  </div>
                 ) : (
-                  <>
-                    <Send className="mr-2 h-5 w-5" />
-                    Submit & Continue to Payment
-                  </>
+                  playlists.map((p) => {
+                    const isSelected = selected.includes(p.id);
+                    return (
+                      <label
+                        key={p.id}
+                        className={`flex items-center gap-3 cursor-pointer rounded-xl border p-3 transition-all duration-200 ${
+                          isSelected
+                            ? "border-primary/50 bg-primary/10 shadow-glow/20"
+                            : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggle(p.id)}
+                          className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                        {p.cover_image && (
+                          <img
+                            src={p.cover_image}
+                            alt={p.name}
+                            className="w-11 h-11 object-cover rounded-lg shrink-0 ring-1 ring-white/10"
+                          />
+                        )}
+                        <span className="flex-1 text-sm font-medium text-gray-200">
+                          {p.name}
+                          {p.genre && (
+                            <span className="text-gray-400 font-normal">
+                              {" "}
+                              · {p.genre}
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-sm font-bold text-white">
+                          K{p.submission_fee}
+                        </span>
+                      </label>
+                    );
+                  })
                 )}
-              </Button>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-gray-200">Message to Curator (optional)</Label>
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Anything you'd like the curator to know"
+                rows={3}
+                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-primary/50 focus:ring-primary/20 resize-none"
+              />
+            </div>
+
+            {selected.length > 0 && (
+              <div className="rounded-xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-gray-300">
+                    Total ({selected.length} playlist{selected.length > 1 ? "s" : ""})
+                  </span>
+                  <span className="text-3xl font-bold text-white">K{total}</span>
+                </div>
+                <PaymentBadges />
+              </div>
+            )}
+
+            <Button
+              className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
+              size="lg"
+              disabled={submitting}
+              onClick={handleSubmit}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-5 w-5" />
+                  Submit & Continue to Payment
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

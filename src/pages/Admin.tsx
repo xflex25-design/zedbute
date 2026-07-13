@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldAlert, CheckCircle2 } from "lucide-react";
+import { Loader2, ShieldAlert, CheckCircle2, Disc } from "lucide-react";
 
 const EMAILJS = {
   publicKey: "y6dBkyYNeiQ5-ONrT",
@@ -216,7 +216,12 @@ const Admin = () => {
               </CardContent>
             </Card>
           ))}
-          {releases.length === 0 && <p className="text-muted-foreground text-center">No releases yet.</p>}
+          {releases.length === 0 && (
+            <div className="text-center py-12">
+              <Disc className="mx-auto h-12 w-12 text-gray-600 mb-3" />
+              <p className="text-muted-foreground">No releases yet.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

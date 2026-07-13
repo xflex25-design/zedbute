@@ -115,9 +115,9 @@ const Index = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {features.map((feature, index) => (
-                <Card key={feature.title} className="animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                <Card key={feature.title} className="animate-fade-in transition-all duration-300 hover:scale-[1.02] hover:shadow-glow hover:-translate-y-1 cursor-default" style={{ animationDelay: `${index * 100}ms` }}>
                   <CardHeader className="p-6 sm:p-8">
-                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mb-5">
+                    <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110">
                       <feature.icon className="h-6 w-6 text-primary-foreground" />
                     </div>
                     <CardTitle className="text-xl mb-2">{feature.title}</CardTitle>

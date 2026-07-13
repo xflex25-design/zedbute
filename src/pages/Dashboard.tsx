@@ -413,9 +413,17 @@ return (
             </p>
 
             {submissions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No playlist submissions yet.
-              </p>
+              <div className="text-center py-10 space-y-3">
+                <ListMusic className="mx-auto h-10 w-10 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">No playlist submissions yet</p>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/playlists")}
+                  className="rounded-lg bg-gradient-primary text-primary-foreground hover:opacity-90"
+                >
+                  Browse Playlists
+                </Button>
+              </div>
             ) : (
               <div className="space-y-2">
                 {submissions.map((s) => (
@@ -562,6 +570,7 @@ return (
 
                 {filteredReleases.length === 0 ? (
                   <div className="text-center py-10 space-y-3">
+                    <Disc className="mx-auto h-10 w-10 text-muted-foreground/40" />
                     <p className="text-sm text-muted-foreground">No releases match your search.</p>
                   </div>
                 ) : (
