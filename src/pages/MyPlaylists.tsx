@@ -87,20 +87,35 @@ const MyPlaylists = () => {
               {playlists.map((p) => (
                 <div
                   key={p.id}
-                  className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl border border-white/20"
-                  style={{ minHeight: "360px" }}
+                  className="shadow-card overflow-hidden relative group cursor-pointer rounded-xl"
+                  style={{ minHeight: "360px", border: "1px solid rgba(255,255,255,0.2)" }}
                   onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
                 >
                   {p.cover_image && (
                     <img
                       src={p.cover_image}
                       alt={p.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      style={{ zIndex: 0 }}
+                      onError={(e) => {
+                        console.error("Failed to load playlist cover:", p.cover_image);
+                        e.currentTarget.style.display = "none";
+                      }}
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-black/30 group-hover:from-black/80 transition-colors" />
-                  <div className="relative z-10 flex flex-col h-full p-6">
-                    <div className="flex-1" />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      zIndex: 1,
+                      background:
+                        "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%)",
+                    }}
+                  />
+                  <div
+                    className="relative flex flex-col h-full p-6"
+                    style={{ zIndex: 2 }}
+                  >
+                    <div style={{ flex: 1 }} />
                     <div>
                       <CardHeader className="p-0 mb-3">
                         <CardTitle className="text-3xl font-bold text-white leading-tight drop-shadow-lg">
