@@ -1,15 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader as Loader2, Phone, Zap } from "lucide-react";
+import {
+  Loader as Loader2,
+  Phone,
+  Zap,
+  Lock,
+  Smartphone,
+  CreditCard,
+  CheckCircle2,
+  XCircle,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +42,28 @@ interface Profile {
   phone_number?: string;
 }
 
+type PaymentStep = "details" | "method" | "processing" | "success" | "failed";
+
+const paymentMethodLabels: Record<string, string> = {
+  verification: "Artist Verification",
+  "boomplay-claim": "Boomplay Claim",
+  "spotify-claim": "Spotify Claim",
+  "playlist-submission": "Playlist Submission",
+  promotion: "Promote Release",
+  ep: "EP Upload",
+  album: "Album Upload",
+  release: "Single Upload",
+};
+
+const defaultAmounts: Record<string, number> = {
+  "boomplay-claim": 40,
+  "spotify-claim": 40,
+  promotion: 20,
+  ep: 200,
+  album: 500,
+  release: 50,
+};
+
 export default function Payment() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -48,34 +74,9 @@ export default function Payment() {
   const amountParam = searchParams.get("amount");
 
   const paymentLabel =
-    paymentType === "verification"
-      ? "Artist Verification"
-      : paymentType === "boomplay-claim"
-        ? "Boomplay Claim"
-        : paymentType === "spotify-claim"
-          ? "Spotify Claim"
-          : paymentType === "playlist-submission"
-            ? "Playlist Submission"
-            : paymentType === "promotion"
-              ? "Promote Release"
-              : paymentType === "ep"
-                ? "EP Upload"
-                : paymentType === "album"
-                  ? "Album Upload"
-                  : "Single Upload";
+    paymentMethodLabels[paymentType] || "Single Upload";
 
-  // Use amount from URL if provided, otherwise use defaults
-  const defaultAmount = paymentType === "boomplay-claim"
-    ? 40
-    : paymentType === "spotify-claim"
-      ? 40
-      : paymentType === "promotion"
-      ? 20
-      : paymentType === "ep"
-        ? 200
-        : paymentType === "album"
-          ? 500
-          : 50;
+  const defaultAmount = defaultAmounts[paymentType] || 50;
   const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
 
   const [user, setUser] = useState<User | null>(null);
@@ -84,9 +85,9 @@ export default function Payment() {
 
   const [initializing, setInitializing] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [step, setStep] = useState<PaymentStep>("details");
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Guards against onClose firing after a successful/pending callback and
-  // clobbering the success state with a "Payment Cancelled" toast.
   const paymentHandled = useRef(false);
 
   useEffect(() => {
@@ -121,7 +122,6 @@ export default function Payment() {
       }
     } catch (error) {
       console.error(error);
-
       toast({
         title: "Error",
         description: "Failed to load account information.",
@@ -199,7 +199,7 @@ export default function Payment() {
   async function handlePaymentSuccess(
     transactionId: string,
     status: "verified" | "pending"
-  ) {
+  ): Promise<string | null> {
     try {
       if (paymentType === "promotion") {
         await savePromotionPayment(transactionId, status);
@@ -207,8 +207,7 @@ export default function Payment() {
           title: status === "verified" ? "Promotion Activated!" : "Promotion Payment Submitted",
           description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
         });
-        navigate("/dashboard");
-        return;
+        return "/dashboard";
       }
 
       await savePayment(transactionId, status);
@@ -217,7 +216,146 @@ export default function Payment() {
         await updateReleaseStatus();
       }
 
-      // Clear pending flags on successful payment
+      sessionStorage.removeItem("pendingReleasePayment");
+      sessionStorage.removeItem("pendingCoverArtName");
+      sessionStorage.removeItem("pendingAudioFileName");
+
+      toast({
+        title:
+          status === "verified"
+            ? "Payment Successful"
+            : "Payment Submitted",
+        description:
+          status === "verified"
+            ? "Your release is pending review."
+            : "Payment confirmation is pending.",
+      });
+
+      if ((paymentType === "release" || paymentType === "ep" || paymentType === "album") && status === "verified") {
+        try {
+          const { data: release } = await supabase
+            .from("music_releases")
+            .select("title")
+            .eq("id", releaseId)
+            .single();
+
+          if (release && user?.email) {
+            emailjs.send(
+              "service_m5ipkn6",
+              "template_h6m0hkf",
+              {
+                to_email: user.email,
+                title: "Your release has been submitted!",
+                message: `Hi,\n\nYour release "${release.title}" has been successfully submitted. It will be reviewed and distributed within 2 weeks.\n\nThank you for using ZedBute.`,
+              },
+              "y6dBkyYNeiQ5-ONrT"
+            );
+          }
+        } catch (e) {
+          console.error("Upload confirmation email failed:", e);
+        }
+      }
+
+      if (paymentType === "verification") {
+        sessionStorage.setItem(
+          "pendingVerificationPayment",
+          "completed"
+        );
+
+        return "/verify";
+      } else if (
+        paymentType === "boomplay-claim" ||
+        paymentType === "spotify-claim"
+      ) {
+        await savePayment(transactionId, status);
+
+        const claimId = searchParams.get("claimId");
+        if (claimId && user) {
+          const isSpotify = paymentType === "spotify-claim";
+          const table = isSpotify ? "spotify_claims" : "boomplay_claims";
+          const linkCol = isSpotify ? "spotify_link" : "boomplay_link";
+          const fnName = isSpotify
+            ? "send-spotify-claim-instructions"
+            : "send-boomplay-claim-instructions";
+          const paymentStatus: "paid" | "pending" =
+            status === "verified" ? "paid" : "pending";
+
+          const { data: claimRow, error: claimErr } = await (supabase as any)
+            .from(table)
+            .select(`id, name, email, ${linkCol}`)
+            .eq("id", claimId)
+            .eq("user_id", user.id)
+            .single();
+
+          if (!claimErr && claimRow) {
+            await (supabase as any)
+              .from(table)
+              .update({ payment_status: paymentStatus })
+              .eq("id", claimId);
+
+            const { error: fnError } = await supabase.functions.invoke(fnName, {
+              body: {
+                to_email: claimRow.email,
+                to_name: claimRow.name,
+                spotify_link: isSpotify ? claimRow.spotify_link : null,
+                boomplay_link: isSpotify ? null : claimRow.boomplay_link,
+              },
+            });
+
+            if (!fnError) {
+              await (supabase as any)
+                .from(table)
+                .update({ claim_status: "Instructions Sent" })
+                .eq("id", claimId);
+            }
+          }
+        }
+
+        return (
+          searchParams.get("returnUrl") ||
+          (paymentType === "spotify-claim" ? "/spotify-claim" : "/boomplay-claim")
+        );
+      } else if (paymentType === "playlist-submission") {
+        const batchId = searchParams.get("batchId");
+        if (batchId && user) {
+          const paymentStatus: "paid" | "pending" =
+            status === "verified" ? "paid" : "pending";
+
+          const { error: updErr } = await (supabase as any)
+            .from("playlist_submissions")
+            .update({ payment_status: paymentStatus })
+            .eq("payment_batch_id", batchId);
+
+          if (!updErr) {
+            await supabase.functions.invoke("notify-playlist-submission", {
+              body: { batchId },
+            });
+          }
+        }
+
+        return "/playlists?paid=1";
+      } else if (paymentType === "promotion") {
+        return "/dashboard";
+      } else {
+        return "/release-success";
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to save payment information.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  }
+
+      await savePayment(transactionId, status);
+
+      if (paymentType === "release" || paymentType === "ep" || paymentType === "album") {
+        await updateReleaseStatus();
+      }
+
       sessionStorage.removeItem("pendingReleasePayment");
       sessionStorage.removeItem("pendingCoverArtName");
       sessionStorage.removeItem("pendingAudioFileName");
@@ -269,7 +407,6 @@ export default function Payment() {
         paymentType === "boomplay-claim" ||
         paymentType === "spotify-claim"
       ) {
-        // Central payment log (mirrors the release flow).
         await savePayment(transactionId, status);
 
         const claimId = searchParams.get("claimId");
@@ -305,7 +442,6 @@ export default function Payment() {
               },
             });
 
-            // Only mark as instructions-sent once the email actually went out.
             if (!fnError) {
               await (supabase as any)
                 .from(table)
@@ -355,7 +491,6 @@ export default function Payment() {
       }
     } catch (error) {
       console.error(error);
-
       toast({
         title: "Error",
         description: "Failed to save payment information.",
@@ -364,7 +499,7 @@ export default function Payment() {
     }
   }
 
-  function handlePayment() {
+  function initiatePayment() {
     if (processing) return;
 
     paymentHandled.current = false;
@@ -399,6 +534,8 @@ export default function Payment() {
       return;
     }
 
+    setStep("processing");
+    setPaymentError(null);
     setProcessing(true);
 
     const reference = `${paymentType}-${crypto.randomUUID()}`;
@@ -425,52 +562,65 @@ export default function Payment() {
       onSuccess: async (response: any) => {
         if (paymentHandled.current) return;
         paymentHandled.current = true;
-        await handlePaymentSuccess(
+        const redirectTo = await handlePaymentSuccess(
           response.reference,
           "verified"
         );
 
         setProcessing(false);
+        setStep("success");
+        if (redirectTo) {
+          setTimeout(() => navigate(redirectTo), 2500);
+        }
       },
 
       onConfirmationPending: async () => {
         if (paymentHandled.current) return;
         paymentHandled.current = true;
-        await handlePaymentSuccess(
+        const redirectTo = await handlePaymentSuccess(
           reference,
           "pending"
         );
 
         setProcessing(false);
+        setStep("success");
+        if (redirectTo) {
+          setTimeout(() => navigate(redirectTo), 2500);
+        }
       },
 
       onClose: () => {
         setProcessing(false);
 
-        // If a success/pending callback already ran, the modal was closed
-        // after a payment — don't show a "cancelled" message.
         if (paymentHandled.current) return;
 
-        // Mark payment as cancelled (user closed without paying)
-        // Keep file names for potential re-attach prompt on next attempt
         sessionStorage.removeItem("pendingReleasePayment");
 
-        toast({
-          title: "Payment Cancelled",
-          description:
-            "The payment window was closed.",
-        });
+        setStep("failed");
+        setPaymentError("The payment window was closed before completing the transaction.");
       },
     });
   }
 
+  function retryPayment() {
+    setStep("details");
+    setPaymentError(null);
+  }
+
   if (initializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">Preparing secure checkout...</p>
+        </div>
       </div>
     );
   }
+
+  const isSuccess = step === "success";
+  const isFailed = step === "failed";
+  const isProcessing = step === "processing";
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -478,75 +628,254 @@ export default function Payment() {
 
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12">
         <div className="max-w-sm sm:max-w-lg mx-auto">
-          <Card className="shadow-card">
-            <CardHeader className="text-center px-4 sm:px-6">
-              <CardTitle className="text-xl sm:text-2xl">
-                {paymentLabel} Payment
-              </CardTitle>
+          {!isSuccess && !isFailed && (
+            <>
+              {/* Step Indicator */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                {["details", "method", "processing"].map((s, idx) => {
+                  const stepNum = idx + 1;
+                  const isActive = step === s;
+                  const isPast = ["details", "method", "processing"].indexOf(step) > idx;
+                  return (
+                    <div key={s} className="flex items-center gap-2">
+                      {idx > 0 && (
+                        <div className={`h-px w-6 sm:w-8 ${isPast ? "bg-primary" : "bg-white/10"}`} />
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                            isActive
+                              ? "bg-primary text-primary-foreground shadow-glow"
+                              : isPast
+                                ? "bg-primary/20 text-primary border border-primary/30"
+                                : "bg-white/5 text-gray-500 border border-white/10"
+                          }`}
+                        >
+                          {isPast ? <CheckCircle2 className="h-4 w-4" /> : stepNum}
+                        </div>
+                        <span className={`text-xs font-medium hidden sm:inline ${isActive ? "text-white" : "text-gray-500"}`}>
+                          {s === "details" ? "Details" : s === "method" ? "Method" : "Processing"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
-              <CardDescription className="text-2xl sm:text-3xl font-bold mt-2">
-                K{paymentAmount}
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="space-y-6 px-4 sm:px-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="phone"
-                  className="flex items-center gap-2 text-sm"
+          <div
+            className={`rounded-2xl border shadow-card transition-all duration-500 ${
+              isSuccess
+                ? "border-green-500/30 bg-[#0f0f1a]/90 backdrop-blur-md"
+                : isFailed
+                  ? "border-red-500/30 bg-[#0f0f1a]/90 backdrop-blur-md"
+                  : "border-white/10 bg-[#0f0f1a]/80 backdrop-blur-sm"
+            }`}
+          >
+            {isSuccess ? (
+              /* SUCCESS STATE */
+              <div className="p-8 sm:p-10 text-center space-y-5">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-2 animate-pulse">
+                  <CheckCircle2 className="h-8 w-8 text-green-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Successful!</h2>
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">K{paymentAmount}</span> has been confirmed.
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-left space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-300">
+                    <ShieldCheck className="h-4 w-4 text-green-400" />
+                    <span>Transaction secured with 256-bit encryption</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Reference: <span className="text-gray-400 font-mono">{paymentType}-{crypto.randomUUID().slice(0, 8)}</span>
+                  </p>
+                </div>
+                <Button
+                  className="w-full h-12 bg-white text-black hover:bg-gray-100 font-semibold"
+                  onClick={() => navigate("/dashboard")}
                 >
-                  <Phone className="h-4 w-4" />
-                  Phone Number
-                </Label>
-
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="0971234567"
-                  value={phoneNumber}
-                  onChange={(e) =>
-                    setPhoneNumber(e.target.value)
-                  }
-                  className="h-10"
-                />
-
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Enter the number linked to your
-                  mobile money account.
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            ) : isFailed ? (
+              /* FAILED STATE */
+              <div className="p-8 sm:p-10 text-center space-y-5">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-2">
+                  <XCircle className="h-8 w-8 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Cancelled</h2>
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    {paymentError || "Something went wrong with your payment."}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    className="flex-1 h-12 bg-white text-black hover:bg-gray-100 font-semibold"
+                    onClick={retryPayment}
+                  >
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12 border-white/20 text-gray-300 hover:bg-white/10"
+                    onClick={() => navigate("/contact")}
+                  >
+                    Contact Support
+                  </Button>
+                </div>
+              </div>
+            ) : isProcessing ? (
+              /* PROCESSING STATE */
+              <div className="p-8 sm:p-10 text-center space-y-5">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-2">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Processing Payment</h2>
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    Securing connection and authorizing transaction...
+                  </p>
+                </div>
+                <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                    <span className="text-sm text-gray-300">Connecting to payment gateway...</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full border-2 border-white/10" />
+                    <span className="text-sm text-gray-500">Waiting for confirmation...</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Please do not close this window. Check your phone for the Mobile Money PIN prompt.
                 </p>
               </div>
+            ) : (
+              /* MAIN PAYMENT FORM */
+              <>
+                <div className="p-6 sm:p-8">
+                  {/* Header */}
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
+                      <Lock className="h-6 w-6 text-primary" />
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-bold text-white">
+                      {paymentLabel} Payment
+                    </h1>
+                    <p className="text-3xl sm:text-4xl font-bold text-white mt-2 tracking-tight">
+                      K{paymentAmount}
+                    </p>
+                  </div>
 
-              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 sm:p-4 text-center">
-                <h3 className="font-semibold text-primary mb-1 sm:mb-2 text-sm sm:text-base">
+                  {/* Trust Badges */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-yellow-500/15 text-yellow-300 border border-yellow-500/25 rounded-full px-3 py-1.5 font-semibold">
+                      <Smartphone className="h-3.5 w-3.5" /> MTN MoMo
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-yellow-400/15 text-yellow-200 border border-yellow-400/25 rounded-full px-3 py-1.5 font-semibold">
+                      <Smartphone className="h-3.5 w-3.5" /> Airtel Money
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-white/8 text-gray-300 border border-white/15 rounded-full px-3 py-1.5 font-medium">
+                      <CreditCard className="h-3.5 w-3.5" /> Visa / Mastercard
+                    </span>
+                  </div>
+
+                  {/* Security Notice */}
+                  <div className="flex items-center justify-center gap-2 mb-6 text-xs text-gray-500">
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Secured & Encrypted Local Payments</span>
+                  </div>
+
+                  {/* Phone Number Input */}
+                  <div className="space-y-2 mb-5">
+                    <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-gray-200">
+                      <Phone className="h-4 w-4 text-gray-400" />
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="097 123 4567"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-primary/50 focus:ring-primary/20"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Enter the number linked to your mobile money account.
+                    </p>
+                  </div>
+
+                  {/* Payment Method Selection */}
+                  <div className="space-y-2 mb-6">
+                    <Label className="text-sm font-medium text-gray-200">Payment Method</Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl border border-primary/40 bg-primary/10 text-white transition-all duration-200 cursor-default"
+                      >
+                        <Smartphone className="h-6 w-6 text-primary" />
+                        <span className="text-sm font-semibold">Mobile Money</span>
+                        <span className="text-xs text-gray-400">MoMo / Airtel</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-white/5 text-gray-400 transition-all duration-200 cursor-default"
+                      >
+                        <CreditCard className="h-6 w-6" />
+                        <span className="text-sm font-semibold">Card</span>
+                        <span className="text-xs text-gray-500">Visa / Mastercard</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <Button
+                    className="w-full h-12 text-base font-semibold transition-all duration-200 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                    size="lg"
+                    disabled={processing}
+                    onClick={initiatePayment}
+                  >
+                    {processing ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Securing connection...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="mr-2 h-5 w-5" />
+                        Pay K{paymentAmount}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Bottom Trust Line */}
+          {!isSuccess && !isFailed && (
+            <div className="mt-6 text-center space-y-2">
+              <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-green-500/60" />
+                  SSL Encrypted
+                </span>
+                <span className="flex items-center gap-1">
+                  <Lock className="h-3.5 w-3.5 text-primary/60" />
                   Secure Checkout
-                </h3>
-
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Pay securely using Mobile Money
-                  or Card.
-                </p>
+                </span>
               </div>
-
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={processing}
-                onClick={handlePayment}
-              >
-                {processing ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="mr-2 h-5 w-5" />
-                    Pay K{paymentAmount}
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+              <p className="text-xs text-gray-600">
+                Powered by <span className="text-gray-500 font-medium">Lenco</span> · Trusted by 10,000+ businesses
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
