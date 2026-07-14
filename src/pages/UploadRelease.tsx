@@ -73,7 +73,7 @@ const UploadRelease = () => {
     legalName: "",
     releaseType: "single",
     genre: "",
-    releaseDate: undefined as Date | undefined,
+    releaseDate: addWeeks(new Date(), 2) as Date | undefined,
     coverArt: null as File | null,
     audioFile: null as File | null,
     rightsConfirmed: false,
@@ -577,7 +577,7 @@ const UploadRelease = () => {
                       mode="single"
                       selected={formData.releaseDate}
                       onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
-                      disabled={(date) => date < new Date()}
+                      disabled={(date) => date < addWeeks(new Date(), 2)}
                       initialFocus
                       className={cn("p-3 pointer-events-auto")}
                     />
