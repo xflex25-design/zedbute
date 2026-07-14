@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Youtube } from "lucide-react";
 
-const LENCO_PUBLIC_KEY = "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
-
 type Platform = "youtube";
 
 const PLATFORM_CONFIG: Record<Platform, { label: string; amount: number; accent: string }> = {
@@ -97,88 +95,56 @@ const Verify = () => {
     if (error) throw error;
   };
 
-  const runLencoPayment = async (platform: Platform, validate: () => string | null, buildPayload: () => any, phone: string) => {
-    if (verifiedPlatforms.has(platform)) {
-      toast({ title: "Already submitted", description: `Your ${PLATFORM_CONFIG[platform].label} verification is already in review.` });
-      return;
-    }
-    const err = validate();
+  const saveVerificationDraft = async (platform: Platform, payload: any) => {
+    const { data, error } = await (supabase as any)
+      .from("artist_verifications")
+      .insert({
+        user_id: user.id,
+        platform,
+        artist_name: payload.artist_name,
+        youtube_url: payload.youtube_url ?? null,
+        topic_channel_url: payload.topic_channel_url ?? null,
+        distributor_name: payload.distributor_name ?? null,
+        payment_status: "unpaid",
+        payment_transaction_id: null,
+        payment_phone_number: payload.phone,
+        status: "pending",
+      })
+      .select("id")
+      .single();
+
+    if (error) throw error;
+    return data.id;
+  };
+
+  const goToPayment = async () => {
+    const err = validateYouTube(youtubeForm);
     if (err) {
       toast({ title: "Missing info", description: err, variant: "destructive" });
       return;
     }
-    if (typeof LencoPay === "undefined") {
-      toast({ title: "Payment unavailable", description: "Payment system is still loading. Please try again.", variant: "destructive" });
-      return;
-    }
 
-    setLoadingPlatform(platform);
-    const amount = PLATFORM_CONFIG[platform].amount;
-    const reference = `verification-${platform}-${user.id}-${Date.now()}`;
-
-    let paymentHandled = false;
-
-    const writePayment = async (status: "verified" | "pending") => {
-      await supabase.from("release_payments").insert({
-        user_id: user.id,
-        amount,
-        payment_method: "lenco_inline",
-        phone_number: phone,
-        transaction_id: reference,
-        status,
-        verified_at: status === "verified" ? new Date().toISOString() : null,
+    setLoadingPlatform("youtube");
+    try {
+      const verificationId = await saveVerificationDraft("youtube", {
+        artist_name: youtubeForm.artistName,
+        youtube_url: youtubeForm.youtubeUrl,
+        topic_channel_url: youtubeForm.topicChannelUrl,
+        distributor_name: youtubeForm.distributorName,
+        phone: youtubeForm.phone,
       });
-    };
 
-    const finalize = async (status: "verified" | "pending") => {
-      try {
-        await writePayment(status);
-        await submitToDb(platform, buildPayload(), reference);
-        setVerifiedPlatforms((prev) => new Set(prev).add(platform));
-        toast({
-          title: "Payment Confirmed via Lenco!",
-          description: "Your request is being processed. 🚀",
-        });
-      } catch (e: any) {
-        console.error(e);
-        toast({
-          title: "Submission failed",
-          description: e.message ?? "Could not save verification. Contact support.",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingPlatform(null);
-      }
-    };
-
-    LencoPay.getPaid({
-      key: LENCO_PUBLIC_KEY,
-      reference,
-      email: user.email,
-      amount,
-      currency: "ZMW",
-      channels: ["card", "mobile-money"],
-      customer: {
-        firstName: profile?.full_name?.split(" ")[0] || "Customer",
-        lastName: profile?.full_name?.split(" ").slice(1).join(" ") || "",
-        phone,
-      },
-      onSuccess: async () => {
-        if (paymentHandled) return;
-        paymentHandled = true;
-        await finalize("verified");
-      },
-      onConfirmationPending: () => {
-        if (paymentHandled) return;
-        paymentHandled = true;
-        finalize("pending");
-      },
-      onClose: () => {
-        setLoadingPlatform(null);
-        if (paymentHandled) return;
-        toast({ title: "Payment cancelled", description: "You closed the payment window. No charge was made." });
-      },
-    });
+      navigate(`/payment?type=verification&amount=${PLATFORM_CONFIG.youtube.amount}&verificationId=${verificationId}`);
+    } catch (e: any) {
+      console.error(e);
+      toast({
+        title: "Submission failed",
+        description: e.message ?? "Could not save verification. Contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingPlatform(null);
+    }
   };
 
   if (!user) {
@@ -197,7 +163,7 @@ const Verify = () => {
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold mb-2">Artist Verification Center</h1>
             <p className="text-muted-foreground">
-              Choose your platform and pay securely via Lenco to start the verification process.
+              Choose your platform and pay securely via Lenco (Mobile Money) or Stripe (Card) to start the verification process.
             </p>
           </div>
 
@@ -207,7 +173,7 @@ const Verify = () => {
                 <CardTitle className="flex items-center gap-2 text-red-600">
                   <Youtube className="h-5 w-5" /> YouTube Official Artist Channel
                 </CardTitle>
-                <Badge className="bg-red-600 hover:bg-red-600 text-white">Processing Fee: K260 Kwacha via Lenco</Badge>
+                 <Badge className="bg-red-600 hover:bg-red-600 text-white">Processing Fee: K260 Kwacha (~$10.40 USD)</Badge>
               </div>
               <CardDescription>Apply for a YouTube Official Artist Channel (OAC).</CardDescription>
             </CardHeader>
@@ -262,24 +228,13 @@ const Verify = () => {
               <Button
                 className={`w-full font-bold py-3 sm:py-4 text-sm sm:text-base ${PLATFORM_CONFIG.youtube.accent}`}
                 disabled={loadingPlatform !== null || verifiedPlatforms.has("youtube")}
-                onClick={() =>
-                  runLencoPayment(
-                    "youtube",
-                    () => validateYouTube(youtubeForm),
-                    () => ({
-                      artist_name: youtubeForm.artistName,
-                      youtube_url: youtubeForm.youtubeUrl,
-                      topic_channel_url: youtubeForm.topicChannelUrl,
-                      distributor_name: youtubeForm.distributorName,
-                      phone: youtubeForm.phone,
-                    }),
-                    youtubeForm.phone
-                  )
-                }
+                onClick={goToPayment}
               >
                 {loadingPlatform === "youtube" ? (
-                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing payment…</>
-                ) : "Pay K260 & Submit via Lenco"}
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing…</>
+                ) : (
+                  <>Pay K{PLATFORM_CONFIG.youtube.amount} (${(PLATFORM_CONFIG.youtube.amount / 25).toFixed(2)} USD) — Lenco or Card</>
+                )}
               </Button>
             </CardContent>
           </Card>

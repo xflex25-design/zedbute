@@ -37,7 +37,7 @@ const PaymentBadges = () => (
       <Smartphone className="h-3 w-3" /> MTN MoMo
     </span>
     <span className="inline-flex items-center gap-1 text-xs bg-white/10 text-gray-300 border border-white/20 rounded-full px-2 py-0.5 font-medium">
-      <CreditCard className="h-3 w-3" /> Card
+      <CreditCard className="h-3 w-3" /> Card (Stripe)
     </span>
   </div>
 );
@@ -277,7 +277,7 @@ const PlaylistSubmit = () => {
                           )}
                         </span>
                         <span className="text-sm font-bold text-white">
-                          K{p.submission_fee}
+                          K{p.submission_fee} <span className="text-xs text-gray-400">(${(p.submission_fee / 25).toFixed(2)} USD)</span>
                         </span>
                       </label>
                     );
@@ -303,7 +303,7 @@ const PlaylistSubmit = () => {
                   <span className="text-sm text-gray-300">
                     Total ({selected.length} playlist{selected.length > 1 ? "s" : ""})
                   </span>
-                  <span className="text-3xl font-bold text-white">K{total}</span>
+                   <span className="text-3xl font-bold text-white">K{total} <span className="text-base text-gray-400">(${(total / 25).toFixed(2)} USD)</span></span>
                 </div>
                 <PaymentBadges />
               </div>

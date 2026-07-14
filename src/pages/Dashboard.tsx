@@ -168,7 +168,7 @@ const Dashboard = () => {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Promotion submitted!", description: "Complete the K20 payment to activate your promotion." });
+      toast({ title: "Promotion submitted!", description: "Complete the K20 ($0.80 USD) payment to activate your promotion." });
       setShowPromoForm(false);
       setPromoSocials("");
       setPromoAudience("");
@@ -596,7 +596,7 @@ return (
                               }}
                             >
                               <CreditCard className="h-4 w-4 mr-2" />
-                              Complete Payment — K50
+                               Complete Payment — K50 ($2.00 USD)
                             </Button>
                           )}
                         </div>
@@ -617,7 +617,7 @@ return (
                 <TrendingUp className="h-5 w-5" />
                 Promote Your Music
               </h2>
-              <p className="text-xs text-muted-foreground mb-4">Pay K20 to get featured on our homepage AND Boomplay playlist</p>
+               <p className="text-xs text-muted-foreground mb-4">Pay K20 ($0.80 USD) to get featured on our homepage AND Boomplay playlist</p>
 
               {!promotingReleaseId ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -649,7 +649,7 @@ return (
                             onClick={() => setPromotingReleaseId(r.id)}
                             className="rounded-lg bg-gradient-primary text-primary-foreground text-xs"
                           >
-                            Promote — K20
+                             Promote — K20 ($0.80 USD)
                           </Button>
                         ) : (
                           <span className="text-xs text-muted-foreground">Pay to promote</span>
@@ -661,7 +661,7 @@ return (
               ) : (
                 <div className="rounded-lg border border-border bg-background p-4 space-y-3">
                   <p className="text-sm font-medium">Promote Release</p>
-                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 to get featured on the homepage AND Boomplay playlist for 7 days.</p>
+                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 ($0.80 USD) to get featured on the homepage AND Boomplay playlist for 7 days.</p>
                   <div className="space-y-2">
                     <div>
                       <Label htmlFor="promoSocials">Social Handles (optional)</Label>
@@ -677,7 +677,7 @@ return (
                     </div>
                     <div className="flex gap-2 pt-2">
                       <Button onClick={() => handlePromote(promotingReleaseId)} disabled={submittingPromo} className="flex-1 bg-gradient-primary text-primary-foreground">
-                        {submittingPromo ? "Submitting..." : "Proceed to Pay K20"}
+                        {submittingPromo ? "Submitting..." : "Proceed to Pay K20 ($0.80 USD)"}
                       </Button>
                       <Button variant="outline" onClick={() => { setPromotingReleaseId(null); setShowPromoForm(false); }} className="flex-1">Cancel</Button>
                     </div>

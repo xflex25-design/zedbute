@@ -69,6 +69,14 @@ const defaultAmounts: Record<string, number> = {
   ep: 200,
   album: 500,
   release: 50,
+  verification: 260,
+};
+
+const ZMK_TO_USD_RATE = 25;
+
+const formatZmkWithUsd = (zmk: number) => {
+  const usd = zmk / ZMK_TO_USD_RATE;
+  return `K${zmk.toFixed(2)} ($${usd.toFixed(2)} USD)`;
 };
 
 export default function Payment() {
@@ -78,6 +86,9 @@ export default function Payment() {
   const paymentType = searchParams.get("type") || "release";
   const releaseId = searchParams.get("releaseId");
   const promotionId = searchParams.get("promotionId");
+  const claimId = searchParams.get("claimId");
+  const batchId = searchParams.get("batchId");
+  const verificationId = searchParams.get("verificationId");
   const amountParam = searchParams.get("amount");
 
   const paymentLabel =
@@ -85,6 +96,7 @@ export default function Payment() {
 
   const defaultAmount = defaultAmounts[paymentType] || 50;
   const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
+  const paymentAmountUsd = paymentAmount / ZMK_TO_USD_RATE;
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -276,7 +288,7 @@ export default function Payment() {
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            amount: paymentAmount,
+            amount: paymentAmountUsd,
             currency: "usd",
             metadata,
           }),
@@ -395,6 +407,13 @@ export default function Payment() {
           "pendingVerificationPayment",
           "completed"
         );
+
+        if (verificationId) {
+          await supabase
+            .from("artist_verifications")
+            .update({ payment_status: "paid", payment_transaction_id: transactionId })
+            .eq("id", verificationId);
+        }
 
         return "/verify";
       } else if (
@@ -674,9 +693,9 @@ export default function Payment() {
                 </div>
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Successful!</h2>
-                  <p className="text-gray-400 text-sm sm:text-base">
-                    Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">K{paymentAmount}</span> has been confirmed.
-                  </p>
+                      <p className="text-gray-400 text-sm sm:text-base">
+                        Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">{formatZmkWithUsd(paymentAmount)}</span> has been confirmed.
+                      </p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-left space-y-2">
                   <div className="flex items-center gap-2 text-sm text-gray-300">
@@ -762,7 +781,7 @@ export default function Payment() {
                       {paymentLabel} Payment
                     </h1>
                     <p className="text-3xl sm:text-4xl font-bold text-white mt-2 tracking-tight">
-                      K{paymentAmount}
+                      {formatZmkWithUsd(paymentAmount)}
                     </p>
                   </div>
 
@@ -866,7 +885,7 @@ export default function Payment() {
                     ) : (
                       <>
                         <Zap className="mr-2 h-5 w-5" />
-                        Pay K{paymentAmount}
+                        Pay {formatZmkWithUsd(paymentAmount)}
                       </>
                     )}
                   </Button>
