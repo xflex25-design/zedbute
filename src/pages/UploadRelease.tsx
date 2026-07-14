@@ -42,6 +42,30 @@ const GENRES = [
   "Jazz",
 ];
 
+// --- FIX: max audio size + a generic timeout helper so uploads can never hang forever ---
+const MAX_AUDIO_SIZE_MB = 100;
+const AUDIO_UPLOAD_TIMEOUT_MS = 120_000; // 2 minutes
+const COVER_UPLOAD_TIMEOUT_MS = 60_000; // 1 minute
+
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, ms);
+
+    promise
+      .then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+// --- END FIX ---
+
 const UploadRelease = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -195,6 +219,20 @@ const UploadRelease = () => {
       return;
     }
 
+    // --- FIX: reject oversized files immediately instead of letting the
+    // upload attempt hang/stall on a doomed request ---
+    const fileSizeMB = file.size / 1024 / 1024;
+    if (fileSizeMB > MAX_AUDIO_SIZE_MB) {
+      toast({
+        title: "File Too Large",
+        description: `Audio file must be under ${MAX_AUDIO_SIZE_MB}MB. Your file is ${fileSizeMB.toFixed(1)}MB.`,
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+    // --- END FIX ---
+
     setFormData({ ...formData, audioFile: file });
     // Save file name for potential re-attach prompt
     sessionStorage.setItem("pendingAudioFileName", file.name);
@@ -291,9 +329,15 @@ const UploadRelease = () => {
       // 1) Upload cover art
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("cover-art")
-        .upload(fileName, formData.coverArt);
+
+      // --- FIX: wrap cover upload in a timeout so it can't hang forever either ---
+      const { error: uploadError } = await withTimeout(
+        supabase.storage.from("cover-art").upload(fileName, formData.coverArt),
+        COVER_UPLOAD_TIMEOUT_MS,
+        "Cover art upload timed out. Please check your connection and try again."
+      );
+      // --- END FIX ---
+
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from("cover-art")
@@ -317,11 +361,25 @@ const UploadRelease = () => {
         setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
       }, 300);
 
-      const { error: audioUploadError } = await supabase.storage
-        .from("audio-files")
-        .upload(audioFileName, formData.audioFile!);
+      let audioUploadError: any = null;
+      try {
+        // --- FIX: this was the main cause of the infinite "stuck loading".
+        // The raw supabase upload() call had no timeout, so a stalled
+        // network request or bucket/RLS misconfiguration would leave the
+        // UI spinning at 90% forever with no error surfaced. Wrapping it
+        // in withTimeout guarantees the promise settles either way. ---
+        const result = await withTimeout(
+          supabase.storage.from("audio-files").upload(audioFileName, formData.audioFile!),
+          AUDIO_UPLOAD_TIMEOUT_MS,
+          "Audio upload timed out. This can happen with a slow connection or a large file — please try again."
+        );
+        audioUploadError = result.error;
+        // --- END FIX ---
+      } catch (timeoutOrNetworkError: any) {
+        audioUploadError = timeoutOrNetworkError;
+      }
 
-      // Clear interval after upload completes
+      // Clear interval after upload completes (success, error, or timeout)
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
