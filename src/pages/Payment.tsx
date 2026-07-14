@@ -12,6 +12,7 @@ import {
   ArrowRight,
   ShieldCheck,
 } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
 
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -36,12 +37,18 @@ const LENCO_PUBLIC_KEY =
   import.meta.env.VITE_LENCO_PUBLIC_KEY ||
   "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
 
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    "pk_test_51Te97T1m8Q0Tr55xOucqmlGslKu4h3g5xEL1owd0NK6DS4uBcXVyvAkTpfGZkCyVZHIEaITxIbAxiM4fPSsQk3RX00LfHve2HN"
+);
+
 interface Profile {
   id: string;
   full_name?: string;
   phone_number?: string;
 }
 
+type PaymentMethod = "mobile_money" | "card";
 type PaymentStep = "details" | "method" | "processing" | "success" | "failed";
 
 const paymentMethodLabels: Record<string, string> = {
@@ -87,12 +94,50 @@ export default function Payment() {
   const [processing, setProcessing] = useState(false);
   const [step, setStep] = useState<PaymentStep>("details");
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mobile_money");
 
   const paymentHandled = useRef(false);
+  const cardElementRef = useRef<HTMLDivElement>(null);
+  const stripeElementRef = useRef<any>(null);
 
   useEffect(() => {
     initializePage();
   }, []);
+
+  useEffect(() => {
+    let element: any = null;
+    let mounted = false;
+
+    async function initStripeElement() {
+      if (paymentMethod !== "card" || !cardElementRef.current) return;
+      mounted = true;
+
+      const stripe = await stripePromise;
+      if (!stripe || !cardElementRef.current) return;
+
+      const elements = stripe.elements();
+      element = elements.create("card", {
+        style: {
+          base: {
+            fontSize: "16px",
+            color: "#fff",
+            "::placeholder": { color: "#9CA3AF" },
+          },
+        },
+      });
+      element.mount(cardElementRef.current);
+      stripeElementRef.current = element;
+    }
+
+    initStripeElement();
+
+    return () => {
+      mounted = false;
+      if (element) {
+        element.unmount();
+      }
+    };
+  }, [paymentMethod]);
 
   async function initializePage() {
     try {
@@ -139,7 +184,8 @@ export default function Payment() {
 
   async function savePayment(
     transactionId: string,
-    status: "verified" | "pending"
+    status: "verified" | "pending",
+    method: PaymentMethod = "mobile_money"
   ) {
     if (!user) return;
 
@@ -148,8 +194,8 @@ export default function Payment() {
       .insert({
         user_id: user.id,
         amount: paymentAmount,
-        payment_method: "lenco_inline",
-        phone_number: phoneNumber,
+        payment_method: method === "card" ? "stripe" : "lenco_inline",
+        phone_number: method === "mobile_money" ? phoneNumber : null,
         transaction_id: transactionId,
         status,
         verified_at:
@@ -178,13 +224,13 @@ export default function Payment() {
     }
   }
 
-  async function savePromotionPayment(transactionId: string, status: "verified" | "pending") {
+  async function savePromotionPayment(transactionId: string, status: "verified" | "pending", method: PaymentMethod = "mobile_money") {
     if (!user || !promotionId) return;
     const { error } = await supabase.from("promotion_payments").insert({
       promotion_id: promotionId,
       user_id: user.id,
       amount: 20,
-      payment_method: "lenco_inline",
+      payment_method: method === "card" ? "stripe" : "lenco_inline",
       transaction_id: transactionId,
       status,
       payment_proof: null,
@@ -196,13 +242,101 @@ export default function Payment() {
     }
   }
 
+  async function handleStripePayment() {
+    if (!user) return;
+
+    setProcessing(true);
+    setPaymentError(null);
+
+    try {
+      const stripe = await stripePromise;
+      if (!stripe) {
+        throw new Error("Stpe not loaded");
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      const metadata: Record<string, string> = {
+        type: paymentType,
+      };
+      if (releaseId) metadata.releaseId = releaseId;
+      if (promotionId) metadata.promotionId = promotionId;
+      if (searchParams.get("batchId")) metadata.batchId = searchParams.get("batchId")!;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-stripe-payment-intent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            amount: paymentAmount,
+            currency: "usd",
+            metadata,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to initialize payment");
+      }
+
+      const { error: confirmError } = await stripe.confirmCardPayment(
+        result.clientSecret,
+        {
+          payment_method: {
+            card: stripeElementRef.current,
+            billing_details: {
+              name: profile?.full_name || user.email || "Customer",
+              email: user.email,
+            },
+          },
+        }
+      );
+
+      if (confirmError) {
+        throw new Error(confirmError.message || "Card payment failed");
+      }
+
+      const redirectTo = await handlePaymentSuccess(
+        result.paymentIntentId,
+        "verified",
+        "card"
+      );
+
+      setProcessing(false);
+      setStep("success");
+      if (redirectTo) {
+        setTimeout(() => navigate(redirectTo), 2500);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Payment failed";
+      setPaymentError(message);
+      setStep("failed");
+      setProcessing(false);
+      toast({
+        title: "Payment Failed",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  }
+
   async function handlePaymentSuccess(
     transactionId: string,
-    status: "verified" | "pending"
+    status: "verified" | "pending",
+    method: PaymentMethod = "mobile_money"
   ): Promise<string | null> {
     try {
       if (paymentType === "promotion") {
-        await savePromotionPayment(transactionId, status);
+        await savePromotionPayment(transactionId, status, method);
         toast({
           title: status === "verified" ? "Promotion Activated!" : "Promotion Payment Submitted",
           description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
@@ -210,7 +344,7 @@ export default function Payment() {
         return "/dashboard";
       }
 
-      await savePayment(transactionId, status);
+      await savePayment(transactionId, status, method);
 
       if (paymentType === "release" || paymentType === "ep" || paymentType === "album") {
         await updateReleaseStatus();
@@ -267,7 +401,7 @@ export default function Payment() {
         paymentType === "boomplay-claim" ||
         paymentType === "spotify-claim"
       ) {
-        await savePayment(transactionId, status);
+      await savePayment(transactionId, status, method);
 
         const claimId = searchParams.get("claimId");
         if (claimId && user) {
@@ -357,100 +491,108 @@ export default function Payment() {
 
     if (!user) return;
 
-    if (!phoneNumber.trim()) {
-      toast({
-        title: "Phone Number Required",
-        description: "Please enter your mobile money number.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (paymentMethod === "mobile_money") {
+      if (!phoneNumber.trim()) {
+        toast({
+          title: "Phone Number Required",
+          description: "Please enter your mobile money number.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (!validatePhone(phoneNumber)) {
-      toast({
-        title: "Invalid Phone Number",
-        description:
-          "Please enter a valid Zambian mobile number.",
-        variant: "destructive",
-      });
-      return;
-    }
+      if (!validatePhone(phoneNumber)) {
+        toast({
+          title: "Invalid Phone Number",
+          description:
+            "Please enter a valid Zambian mobile number.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (!window.LencoPay) {
-      toast({
-        title: "Payment System Not Ready",
-        description: "Please try again in a moment.",
-        variant: "destructive",
-      });
-      return;
+      if (!window.LencoPay) {
+        toast({
+          title: "Payment System Not Ready",
+          description: "Please try again in a moment.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     setStep("processing");
     setPaymentError(null);
     setProcessing(true);
 
-    const reference = `${paymentType}-${crypto.randomUUID()}`;
+    if (paymentMethod === "card") {
+      handleStripePayment();
+    } else {
+      const reference = `${paymentType}-${crypto.randomUUID()}`;
 
-    window.LencoPay.getPaid({
-      key: LENCO_PUBLIC_KEY,
-      reference,
-      amount: paymentAmount,
-      currency: "ZMW",
-      email: user.email,
+      window.LencoPay.getPaid({
+        key: LENCO_PUBLIC_KEY,
+        reference,
+        amount: paymentAmount,
+        currency: "ZMW",
+        email: user.email,
 
-      channels: ["card", "mobile-money"],
+        channels: ["card", "mobile-money"],
 
-      customer: {
-        firstName:
-          profile?.full_name?.split(" ")[0] || "Customer",
+        customer: {
+          firstName:
+            profile?.full_name?.split(" ")[0] || "Customer",
 
-        lastName:
-          profile?.full_name?.split(" ").slice(1).join(" ") || "",
+          lastName:
+            profile?.full_name?.split(" ").slice(1).join(" ") || "",
 
-        phone: phoneNumber,
-      },
+          phone: phoneNumber,
+        },
 
-      onSuccess: async (response: any) => {
-        if (paymentHandled.current) return;
-        paymentHandled.current = true;
-        const redirectTo = await handlePaymentSuccess(
-          response.reference,
-          "verified"
-        );
+        onSuccess: async (response: any) => {
+          if (paymentHandled.current) return;
+          paymentHandled.current = true;
+          const redirectTo = await handlePaymentSuccess(
+            response.reference,
+            "verified",
+            "mobile_money"
+          );
 
-        setProcessing(false);
-        setStep("success");
-        if (redirectTo) {
-          setTimeout(() => navigate(redirectTo), 2500);
-        }
-      },
+          setProcessing(false);
+          setStep("success");
+          if (redirectTo) {
+            setTimeout(() => navigate(redirectTo), 2500);
+          }
+        },
 
-      onConfirmationPending: async () => {
-        if (paymentHandled.current) return;
-        paymentHandled.current = true;
-        const redirectTo = await handlePaymentSuccess(
-          reference,
-          "pending"
-        );
+        onConfirmationPending: async () => {
+          if (paymentHandled.current) return;
+          paymentHandled.current = true;
+          const redirectTo = await handlePaymentSuccess(
+            reference,
+            "pending",
+            "mobile_money"
+          );
 
-        setProcessing(false);
-        setStep("success");
-        if (redirectTo) {
-          setTimeout(() => navigate(redirectTo), 2500);
-        }
-      },
+          setProcessing(false);
+          setStep("success");
+          if (redirectTo) {
+            setTimeout(() => navigate(redirectTo), 2500);
+          }
+        },
 
-      onClose: () => {
-        setProcessing(false);
+        onClose: () => {
+          setProcessing(false);
 
-        if (paymentHandled.current) return;
+          if (paymentHandled.current) return;
 
-        sessionStorage.removeItem("pendingReleasePayment");
+          sessionStorage.removeItem("pendingReleasePayment");
 
-        setStep("failed");
-        setPaymentError("The payment window was closed before completing the transaction.");
-      },
-    });
+          setStep("failed");
+          setPaymentError("The payment window was closed before completing the transaction.");
+        },
+      });
+    }
   }
 
   function retryPayment() {
@@ -643,32 +785,18 @@ export default function Payment() {
                     <span>Secured & Encrypted Local Payments</span>
                   </div>
 
-                  {/* Phone Number Input */}
-                  <div className="space-y-2 mb-5">
-                    <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-gray-200">
-                      <Phone className="h-4 w-4 text-gray-400" />
-                      Phone Number
-                    </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="097 123 4567"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-primary/50 focus:ring-primary/20"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Enter the number linked to your mobile money account.
-                    </p>
-                  </div>
-
                   {/* Payment Method Selection */}
                   <div className="space-y-2 mb-6">
                     <Label className="text-sm font-medium text-gray-200">Payment Method</Label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        className="flex flex-col items-center gap-2 p-4 rounded-xl border border-primary/40 bg-primary/10 text-white transition-all duration-200 cursor-default"
+                        onClick={() => setPaymentMethod("mobile_money")}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                          paymentMethod === "mobile_money"
+                            ? "border-primary/40 bg-primary/10 text-white"
+                            : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20"
+                        }`}
                       >
                         <Smartphone className="h-6 w-6 text-primary" />
                         <span className="text-sm font-semibold">Mobile Money</span>
@@ -676,7 +804,12 @@ export default function Payment() {
                       </button>
                       <button
                         type="button"
-                        className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/10 bg-white/5 text-gray-400 transition-all duration-200 cursor-default"
+                        onClick={() => setPaymentMethod("card")}
+                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200 ${
+                          paymentMethod === "card"
+                            ? "border-primary/40 bg-primary/10 text-white"
+                            : "border-white/10 bg-white/5 text-gray-400 hover:border-white/20"
+                        }`}
                       >
                         <CreditCard className="h-6 w-6" />
                         <span className="text-sm font-semibold">Card</span>
@@ -684,6 +817,39 @@ export default function Payment() {
                       </button>
                     </div>
                   </div>
+
+                  {paymentMethod === "card" && (
+                    <div className="mb-6 p-4 rounded-xl border border-white/10 bg-white/5">
+                      <p className="text-xs text-gray-400 mb-3">
+                        Complete your card payment securely via Stripe.
+                      </p>
+                      <div
+                        id="stripe-card-element"
+                        ref={cardElementRef}
+                        className="p-3 rounded-lg bg-white border border-gray-200"
+                      />
+                    </div>
+                  )}
+
+                  {paymentMethod === "mobile_money" && (
+                    <div className="space-y-2 mb-6">
+                      <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-gray-200">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        Phone Number
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="097 123 4567"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-primary/50 focus:ring-primary/20"
+                      />
+                      <p className="text-xs text-gray-500">
+                        Enter the number linked to your mobile money account.
+                      </p>
+                    </div>
+                  )}
 
                   {/* CTA Button */}
                   <Button
@@ -695,7 +861,7 @@ export default function Payment() {
                     {processing ? (
                       <>
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Securing connection...
+                        {paymentMethod === "card" ? "Processing Card Payment..." : "Securing connection..."}
                       </>
                     ) : (
                       <>
@@ -723,7 +889,11 @@ export default function Payment() {
                 </span>
               </div>
               <p className="text-xs text-gray-600">
-                Powered by <span className="text-gray-500 font-medium">Lenco</span> · Trusted by 10,000+ businesses
+                Powered by{" "}
+                <span className="text-gray-500 font-medium">
+                  {paymentMethod === "card" ? "Stripe" : "Lenco"}
+                </span>
+                {paymentMethod !== "card" && " · Trusted by 10,000+ businesses"}
               </p>
             </div>
           )}
