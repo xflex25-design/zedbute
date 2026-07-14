@@ -26,7 +26,6 @@ import {
   Plus,
   Upload,
   TrendingUp,
-  ArrowUpRight,
   Download,
   Filter,
   Wallet,
@@ -495,15 +494,16 @@ return (
         <Card className="mb-4 bg-card border border-border rounded-lg">
           <div className="p-5">
           <div className="flex items-center gap-2 mb-1">
-            <ArrowUpRight className="h-5 w-5 text-foreground" />
-            <h2 className="text-base font-semibold">Manage Royalties</h2>
+            <Wallet className="h-5 w-5 text-foreground" />
+            <h2 className="text-base font-semibold">Royalty Wallet</h2>
           </div>
-            <p className="text-xs text-muted-foreground mb-4">Go to settings to request withdrawals and view royalty history.</p>
+            <p className="text-xs text-muted-foreground mb-4">Track earnings and request payouts to MTN MoMo or Airtel Money.</p>
             <Button
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/dashboard/royalties")}
               className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
             >
-              Request Withdrawal in Settings
+              <Wallet className="h-4 w-4 mr-2" />
+              View Wallet & Request Payout
             </Button>
           </div>
         </Card>

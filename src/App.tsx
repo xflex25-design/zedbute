@@ -28,6 +28,8 @@ import Payment from "./pages/Payment";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Royalties from "./pages/Royalties";
+import DashboardRoyalties from "./pages/DashboardRoyalties";
+import AdminPayouts from "./pages/AdminPayouts";
 import AdminPromotions from "./pages/AdminPromotions";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
@@ -66,6 +68,8 @@ const App = () => (
                 <Route path="/release-success" element={<ReleaseSuccess />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/dashboard/royalties" element={<DashboardRoyalties />} />
+                <Route path="/admin/payouts" element={<AdminPayouts />} />
                 <Route path="/royalties" element={<Royalties />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />

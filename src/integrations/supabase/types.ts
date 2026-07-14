@@ -568,6 +568,426 @@ export type Database = {
           },
         ]
       }
+      artist_royalties: {
+        Row: {
+          current_balance: number
+          id: string
+          total_earned: number
+          total_withdrawn: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_balance?: number
+          id?: string
+          total_earned?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_balance?: number
+          id?: string
+          total_earned?: number
+          total_withdrawn?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_royalties_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_requests: {
+        Row: {
+          account_name: string
+          amount: number
+          created_at: string
+          id: string
+          payment_method: string
+          phone_number: string
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          amount: number
+          created_at?: string
+          id?: string
+          payment_method: string
+          phone_number: string
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_method?: string
+          phone_number?: string
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      boomplay_claims: {
+        Row: {
+          admin_notes: string | null
+          boomplay_link: string | null
+          claim_status: string | null
+          country_code: string | null
+          created_at: string
+          distributor: string | null
+          email: string
+          email_code: string | null
+          email_verified: boolean | null
+          id: string
+          label_proof_file: string | null
+          mobile_number: string | null
+          name: string
+          notes: string | null
+          payment_amount: number | null
+          payment_status: string | null
+          payment_transaction_id: string | null
+          social_platform: string | null
+          social_profile_link: string | null
+          social_proof_file: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          boomplay_link?: string | null
+          claim_status?: string | null
+          country_code?: string | null
+          created_at?: string
+          distributor?: string | null
+          email: string
+          email_code?: string | null
+          email_verified?: boolean | null
+          id?: string
+          label_proof_file?: string | null
+          mobile_number?: string | null
+          name: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          social_platform?: string | null
+          social_profile_link?: string | null
+          social_proof_file?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          boomplay_link?: string | null
+          claim_status?: string | null
+          country_code?: string | null
+          created_at?: string
+          distributor?: string | null
+          email?: string
+          email_code?: string | null
+          email_verified?: boolean | null
+          id?: string
+          label_proof_file?: string | null
+          mobile_number?: string | null
+          name?: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          social_platform?: string | null
+          social_profile_link?: string | null
+          social_proof_file?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boomplay_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      playlists: {
+        Row: {
+          created_at: string
+          genre: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          submission_fee: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          submission_fee?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          genre?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          submission_fee?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      playlist_submissions: {
+        Row: {
+          admin_notes: string | null
+          artist_id: string
+          artist_name: string
+          created_at: string
+          curator_message: string | null
+          id: string
+          payment_batch_id: string | null
+          payment_status: string | null
+          release_link: string
+          review_status: string | null
+          song_title: string
+          playlist_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          artist_id: string
+          artist_name: string
+          created_at?: string
+          curator_message?: string | null
+          id?: string
+          payment_batch_id?: string | null
+          payment_status?: string | null
+          release_link: string
+          review_status?: string | null
+          song_title: string
+          playlist_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          artist_id?: string
+          artist_name?: string
+          created_at?: string
+          curator_message?: string | null
+          id?: string
+          payment_batch_id?: string | null
+          payment_status?: string | null
+          release_link?: string
+          review_status?: string | null
+          song_title?: string
+          playlist_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "playlist_submissions_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "playlist_submissions_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "playlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      release_tracks: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          release_id: string
+          title: string
+          track_number: number
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          release_id: string
+          title: string
+          track_number: number
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          release_id?: string
+          title?: string
+          track_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "release_tracks_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "music_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotify_claims: {
+        Row: {
+          admin_notes: string | null
+          claim_status: string | null
+          country_code: string | null
+          created_at: string
+          distributor: string | null
+          email: string
+          email_code: string | null
+          email_verified: boolean | null
+          id: string
+          label_proof_file: string | null
+          mobile_number: string | null
+          name: string
+          notes: string | null
+          payment_amount: number | null
+          payment_status: string | null
+          payment_transaction_id: string | null
+          social_platform: string | null
+          social_profile_link: string | null
+          social_proof_file: string | null
+          spotify_link: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          claim_status?: string | null
+          country_code?: string | null
+          created_at?: string
+          distributor?: string | null
+          email: string
+          email_code?: string | null
+          email_verified?: boolean | null
+          id?: string
+          label_proof_file?: string | null
+          mobile_number?: string | null
+          name: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          social_platform?: string | null
+          social_profile_link?: string | null
+          social_proof_file?: string | null
+          spotify_link?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          claim_status?: string | null
+          country_code?: string | null
+          created_at?: string
+          distributor?: string | null
+          email?: string
+          email_code?: string | null
+          email_verified?: boolean | null
+          id?: string
+          label_proof_file?: string | null
+          mobile_number?: string | null
+          name?: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_status?: string | null
+          payment_transaction_id?: string | null
+          social_platform?: string | null
+          social_profile_link?: string | null
+          social_proof_file?: string | null
+          spotify_link?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotify_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_stats: {
         Row: {
           created_at: string
@@ -615,6 +1035,30 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      admin_credit_wallet: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_note?: string | null
+        }
+        Returns: {
+          wallet_id: string
+          new_total_earned: number
+          new_balance: number
+        }[]
+      }
+      complete_payout_request: {
+        Args: {
+          p_payout_request_id: string
+          p_rejection_reason?: string | null
+        }
+        Returns: {
+          payout_request_id: string
+          new_status: string
+          new_balance: number | null
+          new_total_withdrawn: number | null
+        }[]
       }
     }
     Enums: {

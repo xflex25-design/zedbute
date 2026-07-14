@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,25 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let ignore = false;
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        if (!ignore) setIsAdmin(!!data?.some((r: { role: string }) => r.role === "admin"));
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -60,12 +80,16 @@ export const Navbar = () => {
             {user && (
               <>
                 <Link to="/dashboard" className={linkClass(location.pathname === "/dashboard")}>Dashboard</Link>
+                <Link to="/dashboard/royalties" className={linkClass(location.pathname === "/dashboard/royalties")}>Royalties</Link>
                 <Link to="/upload-release" className={linkClass(location.pathname === "/upload-release")}>Upload Release</Link>
                 <Link to="/verify" className={linkClass(location.pathname === "/verify")}>Get Verified</Link>
                 <Link to="/spotify-claim" className={linkClass(location.pathname === "/spotify-claim")}>Claim Spotify</Link>
                 <Link to="/boomplay-claim" className={linkClass(location.pathname === "/boomplay-claim")}>Claim Boomplay</Link>
                 <Link to="/playlists" className={linkClass(location.pathname === "/playlists")}>My Playlists</Link>
                 <Link to="/settings" className={linkClass(location.pathname === "/settings")}>Settings</Link>
+                {isAdmin && (
+                  <Link to="/admin/payouts" className={linkClass(location.pathname === "/admin/payouts")}>Manage Payouts</Link>
+                )}
               </>
             )}
             <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
@@ -112,12 +136,16 @@ export const Navbar = () => {
           {user && (
             <>
               <Link to="/dashboard" className={mobileLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
+              <Link to="/dashboard/royalties" className={mobileLinkClass(location.pathname === "/dashboard/royalties")} onClick={closeMobile}>Royalties</Link>
               <Link to="/upload-release" className={mobileLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
               <Link to="/verify" className={mobileLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>
               <Link to="/spotify-claim" className={mobileLinkClass(location.pathname === "/spotify-claim")} onClick={closeMobile}>Claim Spotify</Link>
               <Link to="/boomplay-claim" className={mobileLinkClass(location.pathname === "/boomplay-claim")} onClick={closeMobile}>Claim Boomplay</Link>
               <Link to="/playlists" className={mobileLinkClass(location.pathname === "/playlists")} onClick={closeMobile}>My Playlists</Link>
               <Link to="/settings" className={mobileLinkClass(location.pathname === "/settings")} onClick={closeMobile}>Settings</Link>
+              {isAdmin && (
+                <Link to="/admin/payouts" className={mobileLinkClass(location.pathname === "/admin/payouts")} onClick={closeMobile}>Manage Payouts</Link>
+              )}
             </>
           )}
           <Link to="/pricing" className={mobileLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
