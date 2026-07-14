@@ -29,7 +29,6 @@ import {
   Download,
   Filter,
   Wallet,
-  ListMusic,
   Bell,
   Check,
 } from "lucide-react";
@@ -87,28 +86,6 @@ const verificationBadge = (status: string | null) => {
   }
 };
 
-const subReviewVariant = (status: string | null) => {
-  switch (status) {
-    case "approved":
-      return "bg-green-500/15 text-green-600 border-green-500/30";
-    case "rejected":
-      return "bg-red-500/15 text-red-600 border-red-500/30";
-    case "changes_requested":
-      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
-    default:
-      return "bg-gray-500/15 text-gray-500 border-gray-500/30";
-  }
-};
-
-const subReviewLabel = (status: string | null) => {
-  switch (status) {
-    case "approved": return "Approved";
-    case "rejected": return "Rejected";
-    case "changes_requested": return "Changes Requested";
-    default: return "Pending Review";
-  }
-};
-
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -124,7 +101,6 @@ const Dashboard = () => {
   const [submittingPromo, setSubmittingPromo] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [submissions, setSubmissions] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -149,14 +125,7 @@ const Dashboard = () => {
     setVerification(verificationData);
     setReleases(releasesData ?? []);
 
-    const [{ data: subsData }, { data: notifData }] = await Promise.all([
-      (supabase as any)
-        .from("playlist_submissions")
-        .select(
-          "id, song_title, playlist_id, payment_status, review_status, created_at"
-        )
-        .eq("artist_id", userId)
-        .order("created_at", { ascending: false }),
+    const [{ data: notifData }] = await Promise.all([
       (supabase as any)
         .from("notifications")
         .select("id, title, message, is_read, created_at")
@@ -165,22 +134,6 @@ const Dashboard = () => {
         .limit(20),
     ]);
 
-    if (subsData && subsData.length) {
-      const pIds = [...new Set(subsData.map((s: any) => s.playlist_id))];
-      const { data: pls } = await (supabase as any)
-        .from("playlists")
-        .select("id, name")
-        .in("id", pIds);
-      const nameMap = new Map((pls || []).map((p: any) => [p.id, p.name]));
-      setSubmissions(
-        subsData.map((s: any) => ({
-          ...s,
-          playlist_name: nameMap.get(s.playlist_id) || "Playlist",
-        }))
-      );
-    } else {
-      setSubmissions([]);
-    }
     setNotifications(notifData ?? []);
   };
 
@@ -386,64 +339,6 @@ return (
               Upload Album
             </button>
           </div>
-          </div>
-        </Card>
-
-        {/* Playlist Submissions + Notifications */}
-        <Card className="mb-4 bg-card border border-border rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center justify-between gap-3 mb-1">
-              <div className="flex items-center gap-2">
-                <ListMusic className="h-5 w-5 text-foreground" />
-                <h2 className="text-base font-semibold">My Playlist Submissions</h2>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigate("/playlists")}
-                className="rounded-lg text-xs"
-              >
-                <ListMusic className="h-3.5 w-3.5" />
-                Submit
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              Track the review status of songs you submitted to ZedBute playlists.
-            </p>
-
-            {submissions.length === 0 ? (
-              <div className="text-center py-10 space-y-3">
-                <ListMusic className="mx-auto h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No playlist submissions yet</p>
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/playlists")}
-                  className="rounded-lg bg-gradient-primary text-primary-foreground hover:opacity-90"
-                >
-                  Browse Playlists
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {submissions.map((s) => (
-                  <div
-                    key={s.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{s.song_title}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {s.playlist_name}
-                        {s.payment_status !== "paid" && " · unpaid"}
-                      </p>
-                    </div>
-                    <Badge className={subReviewVariant(s.review_status)}>
-                      {subReviewLabel(s.review_status)}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </Card>
 
