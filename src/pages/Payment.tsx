@@ -251,7 +251,7 @@ export default function Payment() {
     try {
       const stripe = await stripePromise;
       if (!stripe) {
-        throw new Error("Stpe not loaded");
+        throw new Error("Stripe not loaded");
       }
 
       const { data: { session } } = await supabase.auth.getSession();
