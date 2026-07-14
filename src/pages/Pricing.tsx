@@ -53,7 +53,7 @@ const Pricing = () => {
                     <span className="text-sm text-muted-foreground ml-2">Mobile Money</span>
                   </div>
                   <div>
-                    <span className="text-2xl xs:text-3xl font-bold text-primary">$2.30</span>
+                     <span className="text-2xl xs:text-3xl font-bold text-primary">$2.30 USD</span>
                     <span className="text-sm text-muted-foreground ml-2">Card (Stripe)</span>
                   </div>
                 </div>
