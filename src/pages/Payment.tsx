@@ -72,6 +72,10 @@ const defaultAmounts: Record<string, number> = {
   verification: 260,
 };
 
+const stripeUsdAmounts: Record<string, number> = {
+  release: 2.30,
+};
+
 const ZMK_TO_USD_RATE = 25;
 
 const formatZmkWithUsd = (zmk: number) => {
@@ -97,6 +101,12 @@ export default function Payment() {
   const defaultAmount = defaultAmounts[paymentType] || 50;
   const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
   const paymentAmountUsd = paymentAmount / ZMK_TO_USD_RATE;
+  const stripeAmountUsd = stripeUsdAmounts[paymentType] ?? paymentAmountUsd;
+
+  const displayAmount =
+    paymentMethod === "card"
+      ? `$${stripeAmountUsd.toFixed(2)}`
+      : `K${paymentAmount.toFixed(2)} ($${paymentAmountUsd.toFixed(2)} USD)`;
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -288,7 +298,7 @@ export default function Payment() {
             Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
-            amount: paymentAmountUsd,
+            amount: stripeAmountUsd,
             currency: "usd",
             metadata,
           }),
@@ -694,7 +704,7 @@ export default function Payment() {
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Successful!</h2>
                       <p className="text-gray-400 text-sm sm:text-base">
-                        Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">{formatZmkWithUsd(paymentAmount)}</span> has been confirmed.
+                        Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">{displayAmount}</span> has been confirmed.
                       </p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-left space-y-2">
@@ -781,7 +791,7 @@ export default function Payment() {
                       {paymentLabel} Payment
                     </h1>
                     <p className="text-3xl sm:text-4xl font-bold text-white mt-2 tracking-tight">
-                      {formatZmkWithUsd(paymentAmount)}
+                      {displayAmount}
                     </p>
                   </div>
 
@@ -885,7 +895,7 @@ export default function Payment() {
                     ) : (
                       <>
                         <Zap className="mr-2 h-5 w-5" />
-                        Pay {formatZmkWithUsd(paymentAmount)}
+                        Pay {displayAmount}
                       </>
                     )}
                   </Button>

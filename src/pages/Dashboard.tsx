@@ -596,7 +596,7 @@ return (
                               }}
                             >
                               <CreditCard className="h-4 w-4 mr-2" />
-                               Complete Payment — K50 ($2.00 USD)
+                               Complete Payment — K50 Mobile / $2.30 Card
                             </Button>
                           )}
                         </div>

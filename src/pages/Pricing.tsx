@@ -42,18 +42,25 @@ const Pricing = () => {
             <div className="absolute -top-3 xs:-top-4 left-1/2 -translate-x-1/2 px-2 xs:px-4 py-0.5 xs:py-1 rounded-full text-xs xs:text-sm font-semibold text-primary-foreground">
               Release Upload
             </div>
-            <CardHeader className="text-center pt-6 xs:pt-8">
-              <div className="mx-auto mb-3 xs:mb-4 h-12 xs:h-14 w-12 xs:w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                <Music className="h-6 xs:h-7 w-6 xs:w-7 text-primary" />
-              </div>
-              <CardTitle className="text-xl xs:text-2xl">Upload Your Release</CardTitle>
-              <div className="mt-3 xs:mt-4">
-                <span className="text-4xl xs:text-5xl font-bold">K50</span>
-              </div>
-              <CardDescription className="mt-1 xs:mt-2 text-sm xs:text-base">
-                Per release, one-time payment
-              </CardDescription>
-            </CardHeader>
+              <CardHeader className="text-center pt-6 xs:pt-8">
+                <div className="mx-auto mb-3 xs:mb-4 h-12 xs:h-14 w-12 xs:w-14 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Music className="h-6 xs:h-7 w-6 xs:w-7 text-primary" />
+                </div>
+                <CardTitle className="text-xl xs:text-2xl">Upload Your Release</CardTitle>
+                <div className="mt-3 xs:mt-4 space-y-1">
+                  <div>
+                    <span className="text-4xl xs:text-5xl font-bold">K50</span>
+                    <span className="text-sm text-muted-foreground ml-2">Mobile Money</span>
+                  </div>
+                  <div>
+                    <span className="text-2xl xs:text-3xl font-bold text-primary">$2.30</span>
+                    <span className="text-sm text-muted-foreground ml-2">Card (Stripe)</span>
+                  </div>
+                </div>
+                <CardDescription className="mt-1 xs:mt-2 text-sm xs:text-base">
+                  Per release, one-time payment
+                </CardDescription>
+              </CardHeader>
             <CardContent>
               <ul className="space-y-2.5 xs:space-y-3 mb-5 xs:mb-6">
                 {features.map((feature) => (
@@ -76,7 +83,7 @@ const Pricing = () => {
 
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">
-            Payments accepted via Mobile Money (Airtel, MTN, Zamtel) and Card through Lenco.
+            Payments accepted via Mobile Money (Airtel, MTN, Zamtel) and Card through Stripe.
           </p>
         </div>
       </div>
