@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import type { AuthUser } from "@supabase/supabase-js";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +57,7 @@ const UploadAlbum = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -99,12 +100,11 @@ const UploadAlbum = () => {
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
     };
-  }, []);
-
-  useEffect(() => {
-    checkUser();
-  }, []);
+  }, [imagePreview]);
 
   useEffect(() => {
     const pendingPayment = sessionStorage.getItem("pendingReleasePayment");
@@ -127,7 +127,7 @@ const UploadAlbum = () => {
     }
   }, [toast]);
 
-  const checkUser = async () => {
+  const checkUser = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/auth");
@@ -135,13 +135,19 @@ const UploadAlbum = () => {
     }
     setUser(user);
     setAuthChecked(true);
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    checkUser();
+  }, [checkUser]);
 
   const validateImage = (file: File): Promise<boolean> => {
     return new Promise((resolve) => {
       const img = new Image();
+      const url = URL.createObjectURL(file);
       img.onload = () => {
         const isValid = img.width >= 1000 && img.height >= 1000 && img.width === img.height;
+        URL.revokeObjectURL(url);
         if (!isValid) {
           toast({
             title: "Invalid Image Dimensions",
@@ -152,6 +158,7 @@ const UploadAlbum = () => {
         resolve(isValid);
       };
       img.onerror = () => {
+        URL.revokeObjectURL(url);
         toast({
           title: "Image Load Error",
           description: "Could not load the image. Please try a different file.",
@@ -159,7 +166,7 @@ const UploadAlbum = () => {
         });
         resolve(false);
       };
-      img.src = URL.createObjectURL(file);
+      img.src = url;
     });
   };
 
@@ -182,6 +189,7 @@ const UploadAlbum = () => {
     setValidatingImage(false);
 
     if (isValid) {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
       setFormData({ ...formData, coverArt: file });
       setImagePreview(URL.createObjectURL(file));
       sessionStorage.setItem("pendingCoverArtName", file.name);
@@ -461,11 +469,12 @@ const UploadAlbum = () => {
 
       navigate(`/payment?type=album&releaseId=${inserted.id}&amount=${ALBUM_PRICE}`);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submitting album:", error);
+      const message = error instanceof Error ? error.message : "An error occurred while submitting your album";
       toast({
         title: "Submission Failed",
-        description: error.message || "An error occurred while submitting your album",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -765,6 +774,7 @@ const UploadAlbum = () => {
                           setImagePreview(null);
                           setFormData({ ...formData, coverArt: null });
                           sessionStorage.removeItem("pendingCoverArtName");
+                          if (coverArtRef.current) coverArtRef.current.value = "";
                         }}
                       >
                         Remove Image
