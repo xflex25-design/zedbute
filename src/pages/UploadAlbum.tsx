@@ -45,6 +45,18 @@ const GENRES = [
 const ALBUM_PRICE = 500;
 const ALBUM_MIN_TRACKS = 7;
 const ALBUM_MAX_TRACKS = 30;
+const MAX_AUDIO_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_COVER_FILE_SIZE = 10 * 1024 * 1024;
+const UPLOAD_TIMEOUT = 5 * 60 * 1000;
+
+const withTimeout = (promise: Promise<any>, timeoutMs: number, label: string): Promise<any> => {
+  return Promise.race([
+    promise,
+      new Promise<any>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s. Please check your connection and try again.`)), timeoutMs)
+    )
+  ]);
+};
 
 interface Track {
   id: string;
@@ -184,6 +196,16 @@ const UploadAlbum = () => {
       return;
     }
 
+    if (file.size > MAX_COVER_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: `Cover art must be under ${MAX_COVER_FILE_SIZE / 1024 / 1024}MB.`,
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
     setValidatingImage(true);
     const isValid = await validateImage(file);
     setValidatingImage(false);
@@ -212,6 +234,16 @@ const UploadAlbum = () => {
       toast({
         title: "Invalid File Type",
         description: "Please upload an audio file (MP3, WAV, etc.)",
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_AUDIO_FILE_SIZE) {
+      toast({
+        title: "File Too Large",
+        description: `Audio file must be under ${MAX_AUDIO_FILE_SIZE / 1024 / 1024}MB.`,
         variant: "destructive",
       });
       e.target.value = "";
@@ -370,9 +402,13 @@ const UploadAlbum = () => {
     try {
       const fileExt = formData.coverArt.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from("cover-art")
-        .upload(fileName, formData.coverArt);
+      const { error: uploadError } = await withTimeout(
+        supabase.storage
+          .from("cover-art")
+          .upload(fileName, formData.coverArt),
+        UPLOAD_TIMEOUT,
+        "Cover art upload"
+      );
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from("cover-art")
@@ -423,9 +459,13 @@ const UploadAlbum = () => {
         const audioExt = track.file.name.split(".").pop();
         const audioFileName = `${user.id}/${inserted.id}/track_${track.trackNumber}_${Date.now()}.${audioExt}`;
 
-        const { error: audioUploadError } = await supabase.storage
-          .from("audio-files")
-          .upload(audioFileName, track.file);
+        const { error: audioUploadError } = await withTimeout(
+          supabase.storage
+            .from("audio-files")
+            .upload(audioFileName, track.file),
+          UPLOAD_TIMEOUT,
+          "Audio upload"
+        );
 
         if (progressIntervalRef.current) {
           clearInterval(progressIntervalRef.current);
