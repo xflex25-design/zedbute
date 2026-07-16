@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ListMusic, Send, Music2, Smartphone, CreditCard } from "lucide-react";
+import { Loader2, ListMusic, Send, Music2, Smartphone } from "lucide-react";
 
 interface Playlist {
   id: string;

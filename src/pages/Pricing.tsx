@@ -20,7 +20,7 @@ const Pricing = () => {
     "One-time fee per release",
     "Distribute to Boomplay & Spotify",
     "Keep 100% of your royalties",
-    "Pay securely via Mobile Money or Card (Lenco)",
+    "Pay securely via Mobile Money",
     "Processing within 2 weeks",
   ];
 
@@ -47,14 +47,10 @@ const Pricing = () => {
                   <Music className="h-6 xs:h-7 w-6 xs:w-7 text-primary" />
                 </div>
                 <CardTitle className="text-xl xs:text-2xl">Upload Your Release</CardTitle>
-                <div className="mt-3 xs:mt-4 space-y-1">
+                 <div className="mt-3 xs:mt-4 space-y-1">
                   <div>
                     <span className="text-4xl xs:text-5xl font-bold">K50</span>
                     <span className="text-sm text-muted-foreground ml-2">Mobile Money</span>
-                  </div>
-                  <div>
-                     <span className="text-2xl xs:text-3xl font-bold text-primary">$2.30 USD</span>
-                    <span className="text-sm text-muted-foreground ml-2">Card (Stripe)</span>
                   </div>
                 </div>
                 <CardDescription className="mt-1 xs:mt-2 text-sm xs:text-base">
@@ -83,7 +79,7 @@ const Pricing = () => {
 
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground">
-            Payments accepted via Mobile Money (Airtel, MTN, Zamtel) and Card through Stripe.
+            Payments accepted via Mobile Money (Airtel, MTN, Zamtel).
           </p>
         </div>
       </div>

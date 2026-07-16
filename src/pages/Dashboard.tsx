@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import {
   BadgeCheck,
-  CreditCard,
+  Smartphone,
   Disc,
   Music,
   Plus,
@@ -425,7 +425,7 @@ return (
             {/* Unpaid releases banner */}
             {releases.some((r) => r.status === "unpaid") && (
               <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-                <CreditCard className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                <Smartphone className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-amber-600">Payment required</p>
                   <p className="text-xs text-amber-600/80 mt-0.5">
@@ -528,7 +528,7 @@ return (
                                         navigate(`/payment?type=release&releaseId=${r.id}`);
                                       }}
                                     >
-                                      <CreditCard className="h-3 w-3 mr-1" />
+                                      <Smartphone className="h-3 w-3 mr-1" />
                                       Pay Now
                                     </Button>
                                   )}
@@ -595,8 +595,8 @@ return (
                                 navigate(`/payment?type=release&releaseId=${r.id}`);
                               }}
                             >
-                              <CreditCard className="h-4 w-4 mr-2" />
-                               Complete Payment — K50 Mobile / $2.30 Card
+                              <Smartphone className="h-4 w-4 mr-2" />
+                               Complete Payment — K50 Mobile
                             </Button>
                           )}
                         </div>
