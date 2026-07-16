@@ -163,7 +163,7 @@ const Verify = () => {
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold mb-2">Artist Verification Center</h1>
             <p className="text-muted-foreground">
-              Choose your platform and pay securely via Lenco (Mobile Money) or Stripe (Card) to start the verification process.
+              Choose your platform and pay securely via Lenco (Mobile Money) to start the verification process.
             </p>
           </div>
 
