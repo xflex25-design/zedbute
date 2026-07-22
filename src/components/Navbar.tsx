@@ -99,8 +99,8 @@ export const Navbar = () => {
               <Button onClick={handleSignOut} variant="outline" size="sm">Sign Out</Button>
             ) : (
               <div className="flex gap-3">
-                <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>Login</Button>
-                <Button variant="hero" size="sm" onClick={() => navigate("/auth")}>Get Started</Button>
+                <Button variant="ghost" size="sm" onClick={() =>window.location.href="https://music.zedbute.com"}>Login</Button>
+                <Button variant="hero" size="sm" onClick={() => window.location.href="https://music.zedbute.com"}>Get Started</Button>
               </div>
             )}
           </div>
