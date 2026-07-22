@@ -82,7 +82,7 @@ const Index = () => {
               <Button
                 size="lg"
                 variant="hero"
-                onClick={() => navigate(user ? "/dashboard" : "/auth")}
+                onClick={() => window.location.href="https://music.zedbute.com"}
               >
                 {user ? "Go to Dashboard" : "Start Distributing"}
               </Button>
