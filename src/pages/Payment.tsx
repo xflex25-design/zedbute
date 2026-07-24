@@ -82,6 +82,7 @@ export default function Payment() {
   const batchId = searchParams.get("batchId");
   const verificationId = searchParams.get("verificationId");
   const amountParam = searchParams.get("amount");
+  const returnUrl = searchParams.get("returnUrl");
 
   const paymentLabel =
     paymentMethodLabels[paymentType] || "Single Upload";
@@ -218,7 +219,7 @@ export default function Payment() {
           title: status === "verified" ? "Promotion Activated!" : "Promotion Payment Submitted",
           description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
         });
-        return "/dashboard";
+        return returnUrl || "/dashboard";
       }
 
       await savePayment(transactionId, status);
@@ -280,7 +281,7 @@ export default function Payment() {
             .eq("id", verificationId);
         }
 
-        return "/verify";
+        return returnUrl || "/verify";
       } else if (
         paymentType === "boomplay-claim" ||
         paymentType === "spotify-claim"
@@ -330,7 +331,7 @@ export default function Payment() {
         }
 
         return (
-          searchParams.get("returnUrl") ||
+          returnUrl ||
           (paymentType === "spotify-claim" ? "/spotify-claim" : "/boomplay-claim")
         );
       } else if (paymentType === "playlist-submission") {
@@ -351,11 +352,11 @@ export default function Payment() {
           }
         }
 
-        return "/playlists?paid=1";
+        return returnUrl || "/playlists?paid=1";
       } else if (paymentType === "promotion") {
-        return "/dashboard";
+        return returnUrl || "/dashboard";
       } else {
-        return "/release-success";
+        return returnUrl || "/release-success";
       }
     } catch (error) {
       console.error(error);
@@ -439,7 +440,7 @@ export default function Payment() {
         setProcessing(false);
         setStep("success");
         if (redirectTo) {
-          setTimeout(() => navigate(redirectTo), 2500);
+          setTimeout(() => goTo(redirectTo), 2500);
         }
       },
 
@@ -454,7 +455,7 @@ export default function Payment() {
         setProcessing(false);
         setStep("success");
         if (redirectTo) {
-          setTimeout(() => navigate(redirectTo), 2500);
+          setTimeout(() => goTo(redirectTo), 2500);
         }
       },
 
@@ -474,6 +475,14 @@ export default function Payment() {
   function retryPayment() {
     setStep("details");
     setPaymentError(null);
+  }
+
+  function goTo(url: string) {
+    if (/^https?:\/\//i.test(url)) {
+      window.location.href = url;
+    } else {
+      navigate(url);
+    }
   }
 
   if (initializing) {
@@ -565,7 +574,7 @@ export default function Payment() {
                 </div>
                 <Button
                   className="w-full h-12 bg-white text-black hover:bg-gray-100 font-semibold"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => goTo(returnUrl || "/dashboard")}
                 >
                   Go to Dashboard
                   <ArrowRight className="h-4 w-4 ml-2" />
