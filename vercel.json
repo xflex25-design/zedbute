@@ -3,16 +3,24 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "redirects": [
-{
-  "source": "/:path*",
-  "destination": "https://www.zedbute.com/:path*",
-  "permanent": true,
-  "has": [
+    { "source": "/dashboard", "destination": "https://music.zedbute.com/dashboard", "permanent": false },
+    { "source": "/dashboard/:path*", "destination": "https://music.zedbute.com/dashboard/:path*", "permanent": false },
+    { "source": "/payment", "destination": "https://music.zedbute.com/payment", "permanent": false },
+    { "source": "/payment/:path*", "destination": "https://music.zedbute.com/payment/:path*", "permanent": false },
+    { "source": "/upload-release", "destination": "https://music.zedbute.com/upload-release", "permanent": false },
+    { "source": "/upload-release/:path*", "destination": "https://music.zedbute.com/upload-release/:path*", "permanent": false },
+    { "source": "/verify", "destination": "https://music.zedbute.com/verify", "permanent": false },
+    { "source": "/spotify-claim", "destination": "https://music.zedbute.com/spotify-claim", "permanent": false },
+    { "source": "/boomplay-claim", "destination": "https://music.zedbute.com/boomplay-claim", "permanent": false },
+    { "source": "/playlists", "destination": "https://music.zedbute.com/playlists", "permanent": false },
+    { "source": "/settings", "destination": "https://music.zedbute.com/settings", "permanent": false },
     {
-      "type": "host",
-      "value": "zedbute.vercel.app"
+      "source": "/:path*",
+      "destination": "https://www.zedbute.com/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "zedbute.vercel.app" }
+      ]
     }
-  ]
-}
   ]
 }
