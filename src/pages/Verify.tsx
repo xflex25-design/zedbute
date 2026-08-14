@@ -162,8 +162,8 @@ const Verify = () => {
         <div className="max-w-2xl mx-auto">
           <div className="mb-8 text-center">
             <h1 className="text-4xl font-bold mb-2">Artist Verification Center</h1>
-            <p className="text-muted-foreground">
-              Choose your platform and pay securely via Lenco (Mobile Money) to start the verification process.
+              <p className="text-muted-foreground">
+              Choose your platform and pay securely via Pesapal (Mobile Money) to start the verification process.
             </p>
           </div>
 
@@ -233,7 +233,7 @@ const Verify = () => {
                 {loadingPlatform === "youtube" ? (
                   <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing…</>
                 ) : (
-                  <>Pay K{PLATFORM_CONFIG.youtube.amount} (${(PLATFORM_CONFIG.youtube.amount / 25).toFixed(2)} USD) — Lenco or Card</>
+                  <>Pay K{PLATFORM_CONFIG.youtube.amount} (${(PLATFORM_CONFIG.youtube.amount / 25).toFixed(2)} USD) — Pesapal or Card</>
                 )}
               </Button>
             </CardContent>

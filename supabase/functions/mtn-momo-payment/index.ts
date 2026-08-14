@@ -5,123 +5,77 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const LENCO_BASE_URL = 'https://api.lenco.co/access/v2';
-
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const { amount, phoneNumber, externalId, payerMessage, payeeNote } = await req.json();
 
-    const lencoToken = Deno.env.get('LENCO_API_TOKEN');
-    if (!lencoToken) {
-      console.error('Missing LENCO_API_TOKEN');
-      return new Response(
-        JSON.stringify({ error: 'Payment service not configured', userMessage: 'Payment service is not configured. Please contact support.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const consumerKey = Deno.env.get('PESAPAL_CONSUMER_KEY') || '4KELk9gVxyKMnj2rrzY9P8Z9Dyu8ysiY';
+    const consumerSecret = Deno.env.get('PESAPAL_CONSUMER_SECRET') || 'DWUbYGRnyNM4h0jU3bXs5dk20qk=';
+
+    if (!consumerKey || !consumerSecret) {
+      console.error('Missing Pesapal credentials');
+      return new Response(JSON.stringify({ error: 'Payment service not configured', userMessage: 'Payment service not configured.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Format phone: keep local format with leading zero for Lenco
+    // Format phone local
     let formattedPhone = phoneNumber.replace(/\s+/g, '');
-    // Remove country code if present, Lenco expects local format
     formattedPhone = formattedPhone.replace(/^\+?260/, '0');
-    // Ensure starts with 0
-    if (!formattedPhone.startsWith('0')) {
-      formattedPhone = '0' + formattedPhone;
-    }
+    if (!formattedPhone.startsWith('0')) formattedPhone = '0' + formattedPhone;
 
     const reference = externalId || crypto.randomUUID();
-    console.log('Processing MTN MoMo payment via Lenco for:', formattedPhone, 'Amount:', amount);
 
-    const response = await fetch(`${LENCO_BASE_URL}/collections/mobile-money`, {
+    // Request token
+    const tokenResp = await fetch(`https://pay.pesapal.com/v3/api/Auth/RequestToken`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lencoToken}`,
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-      },
-      body: JSON.stringify({
-        amount: Number(amount),
-        phone: formattedPhone,
-        operator: 'mtn',
-        country: 'zm',
-        reference,
-        narration: payerMessage || 'Payment for Mziki service',
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ consumer_key: consumerKey, consumer_secret: consumerSecret }),
     });
 
-    let data: any;
-    try {
-      data = await response.json();
-    } catch (e) {
-      const responseText = await response.text();
-      console.warn('Failed to parse Lenco response JSON, falling back to text:', responseText);
-      data = { message: responseText };
+    if (!tokenResp.ok) {
+      const txt = await tokenResp.text();
+      console.error('Pesapal auth failed', tokenResp.status, txt);
+      return new Response(JSON.stringify({ error: 'Auth failed' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    console.log('Lenco response:', response.status, JSON.stringify(data));
+    const tokenJson = await tokenResp.json();
+    const bearer = tokenJson?.token || tokenJson?.access_token || tokenJson?.data?.token;
+    if (!bearer) return new Response(JSON.stringify({ error: 'Auth token missing' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    if (!response.ok || !data.status) {
-      const userMessage = mapLencoError(response.status, data);
-      return new Response(
-        JSON.stringify({ error: data.message || 'Payment failed', userMessage }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const orderPayload = {
+      amount: Number(amount),
+      currency: 'ZMW',
+      description: payeMessage || payeeNote || 'MTN MoMo Payment',
+      reference,
+      customer: { phone_number: formattedPhone },
+    };
+
+    const submitResp = await fetch(`https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${bearer}` },
+      body: JSON.stringify(orderPayload),
+    });
+
+    let submitJson: any;
+    try { submitJson = await submitResp.json(); } catch (e) { submitJson = { message: await submitResp.text() }; }
+
+    if (!submitResp.ok) {
+      console.error('Pesapal submit failed', submitResp.status, submitJson);
+      return new Response(JSON.stringify({ error: 'Payment creation failed', details: submitJson }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const collectionId = data.data?.id;
-    const collectionStatus = data.data?.status;
+    const redirect = submitJson?.redirect_url || submitJson?.data?.redirect_url || submitJson?.checkout_url || submitJson?.data?.checkout_url;
 
-    if (collectionStatus === 'successful') {
-      return new Response(
-        JSON.stringify({
-          success: true,
-          referenceId: collectionId || reference,
-          status: 'SUCCESSFUL',
-          message: 'Payment completed successfully',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    return new Response(JSON.stringify({ success: true, redirectUrl: redirect, raw: submitJson }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    if (collectionStatus === 'failed') {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          referenceId: collectionId || reference,
-          status: 'FAILED',
-          error: data.data?.reasonForFailure || 'Payment failed',
-          userMessage: data.data?.reasonForFailure || 'Payment was declined. Please try again.',
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Payment pending, returning PENDING to client. collectionId:', collectionId, 'reference:', reference);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        referenceId: collectionId || reference,
-        status: 'PENDING',
-        message: 'Payment is processing. Confirmations will follow asynchronously.',
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error: unknown) {
-    console.error('MTN MoMo payment error:', error);
-    const msg = error instanceof Error ? error.message : 'Internal server error';
-    return new Response(
-      JSON.stringify({ error: msg, userMessage: 'Failed to process payment. Please try again.' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+  } catch (err) {
+    console.error('MTN MoMo payment error:', err);
+    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : 'Internal error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
 
-function mapLencoError(status: number, data: any): string {
+function mapPesapalError(status: number, data: any): string {
   const msg = String(data?.message || '').toLowerCase();
   if (status === 401) return 'Payment service authentication failed. Please contact support.';
   if (msg.includes('insufficient')) return 'Insufficient funds. Please top up and try again.';

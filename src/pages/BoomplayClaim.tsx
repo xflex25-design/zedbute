@@ -609,8 +609,8 @@ const BoomplayClaim = () => {
               <CardContent className="space-y-5">
                  <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 text-center">
                    <p className="text-3xl font-bold">K{CLAIM_FEE} <span className="text-base text-muted-foreground">(${(CLAIM_FEE / 25).toFixed(2)} USD)</span></p>
-                   <p className="text-xs text-muted-foreground mt-1">
-                     Secure checkout via Lenco (Mobile Money)
+                     <p className="text-xs text-muted-foreground mt-1">
+                     Secure checkout via Pesapal (Mobile Money)
                    </p>
                  </div>
                 <div className="flex flex-col sm:flex-row gap-3">

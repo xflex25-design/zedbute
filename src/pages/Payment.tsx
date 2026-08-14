@@ -23,17 +23,8 @@ import { toast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
 
-declare global {
-  interface Window {
-    LencoPay?: {
-      getPaid: (config: Record<string, any>) => void;
-    };
-  }
-}
-
-const LENCO_PUBLIC_KEY =
-  import.meta.env.VITE_LENCO_PUBLIC_KEY ||
-  "pub-6f90c9d7234ba5738a66ac8036942f6200ab2da1851e0e0c";
+const PESAPAL_CONSUMER_KEY = import.meta.env.VITE_PESAPAL_CONSUMER_KEY || "4KELk9gVxyKMnj2rrzY9P8Z9Dyu8ysiY";
+const PESAPAL_CONSUMER_SECRET = import.meta.env.VITE_PESAPAL_CONSUMER_SECRET || "DWUbYGRnyNM4h0jU3bXs5dk20qk=";
 
 interface Profile {
   id: string;
@@ -160,7 +151,7 @@ export default function Payment() {
       .insert({
         user_id: user.id,
         amount: paymentAmount,
-        payment_method: "lenco_inline",
+        payment_method: "pesapal_redirect",
         phone_number: phoneNumber,
         transaction_id: transactionId,
         status,
@@ -196,7 +187,7 @@ export default function Payment() {
       promotion_id: promotionId,
       user_id: user.id,
       amount: 20,
-      payment_method: "lenco_inline",
+      payment_method: "pesapal_redirect",
       transaction_id: transactionId,
       status,
       payment_proof: null,
@@ -395,81 +386,48 @@ export default function Payment() {
       return;
     }
 
-    if (!window.LencoPay) {
-      toast({
-        title: "Payment System Not Ready",
-        description: "Please try again in a moment.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setStep("processing");
     setPaymentError(null);
     setProcessing(true);
 
     const reference = `${paymentType}-${crypto.randomUUID()}`;
 
-    window.LencoPay.getPaid({
-      key: LENCO_PUBLIC_KEY,
-      reference,
-      amount: paymentAmount,
-      currency: "ZMW",
-      email: user.email,
-
-      channels: ["mobile-money"],
-
-      customer: {
-        firstName:
-          profile?.full_name?.split(" ")[0] || "Customer",
-
-        lastName:
-          profile?.full_name?.split(" ").slice(1).join(" ") || "",
-
-        phone: phoneNumber,
-      },
-
-      onSuccess: async (response: any) => {
-        if (paymentHandled.current) return;
-        paymentHandled.current = true;
-        const redirectTo = await handlePaymentSuccess(
-          response.reference,
-          "verified"
-        );
-
-        setProcessing(false);
-        setStep("success");
-        if (redirectTo) {
-          setTimeout(() => goTo(redirectTo), 2500);
-        }
-      },
-
-      onConfirmationPending: async () => {
-        if (paymentHandled.current) return;
-        paymentHandled.current = true;
-        const redirectTo = await handlePaymentSuccess(
+    try {
+      const { data, error } = await supabase.functions.invoke('pesapal-create-order', {
+        body: {
+          amount: paymentAmount,
+          currency: 'ZMW',
           reference,
-          "pending"
-        );
+          description: paymentLabel,
+          callback_url: returnUrl || `${window.location.origin}/api/pesapal/callback`,
+          redirect_url: returnUrl || `${window.location.origin}/payment-return`,
+          customer: {
+            firstName: profile?.full_name?.split(' ')[0] || 'Customer',
+            lastName: profile?.full_name?.split(' ').slice(1).join(' ') || '',
+            email: user.email || '',
+            phone: phoneNumber,
+          },
+        },
+      });
 
-        setProcessing(false);
-        setStep("success");
-        if (redirectTo) {
-          setTimeout(() => goTo(redirectTo), 2500);
-        }
-      },
+      if (error) {
+        throw error;
+      }
 
-      onClose: () => {
-        setProcessing(false);
+      const redirectUrl = (data as any)?.redirectUrl || (data as any)?.raw?.redirect_url;
+      if (!redirectUrl) {
+        throw new Error('No redirect URL returned from payment provider');
+      }
 
-        if (paymentHandled.current) return;
-
-        sessionStorage.removeItem("pendingReleasePayment");
-
-        setStep("failed");
-        setPaymentError("The payment window was closed before completing the transaction.");
-      },
-    });
+      // redirect user to Pesapal checkout
+      window.location.href = redirectUrl;
+    } catch (err: any) {
+      console.error('Payment initiation failed', err);
+      toast({ title: 'Payment Error', description: err?.message || 'Failed to initiate payment', variant: 'destructive' });
+      setProcessing(false);
+      setStep('failed');
+      setPaymentError(err?.message || 'Failed to initiate payment');
+    }
   }
 
   function retryPayment() {
@@ -723,10 +681,10 @@ export default function Payment() {
                   Secure Checkout
                 </span>
               </div>
-              <p className="text-xs text-gray-600">
+                <p className="text-xs text-gray-600">
                 Powered by{" "}
-                <span className="text-gray-500 font-medium">
-                  Lenco
+                  <span className="text-gray-500 font-medium">
+                  Pesapal
                 </span>
                 · Trusted by 10,000+ businesses
               </p>

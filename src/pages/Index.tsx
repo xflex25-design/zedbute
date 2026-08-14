@@ -15,7 +15,7 @@ const faqs = [
   { q: "How long does music distribution take?", a: "Most releases go live on major platforms within 1–7 business days after submission, depending on each store's review process. We recommend submitting at least 2 weeks before your release date." },
   { q: "Do I keep 100% of your royalties?", a: "Yes. ZedBute never takes a cut of your streaming or download royalties. You pay a flat plan fee and keep everything you earn from streams and sales." },
   { q: "Which platforms can I distribute to?", a: "Spotify, Apple Music, YouTube Music, TikTok, Amazon Music, Deezer, Tidal, Boomplay and 150+ more digital stores and streaming services worldwide." },
-  { q: "Can I distribute music from Zambia?", a: "Absolutely. ZedBute is built for Zambian and African artists. You can pay in ZMW via Airtel Money, MTN MoMo, or card through our secure Lenco integration." },
+  { q: "Can I distribute music from Zambia?", a: "Absolutely. ZedBute is built for Zambian and African artists. You can pay in ZMW via Airtel Money, MTN MoMo, or card through our secure Pesapal integration." },
   { q: "Do I need to be a verified artist?", a: "No, anyone can distribute. But getting verified through ZedBute boosts your credibility on streaming platforms and unlocks artist profile control on Spotify and Apple Music." },
 ];
 
