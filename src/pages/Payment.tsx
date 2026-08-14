@@ -360,7 +360,7 @@ export default function Payment() {
     }
   }
 
-  function initiatePayment() {
+  async function initiatePayment() {
     if (processing) return;
 
     paymentHandled.current = false;
