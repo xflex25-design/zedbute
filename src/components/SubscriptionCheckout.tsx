@@ -8,12 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { SUBSCRIPTION_PLANS, type SubscriptionPlan } from "@/lib/subscription";
 
 export default function SubscriptionCheckout() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const plan = params.get("plan") === "monthly" ? "monthly" : "annual";
-  const amount = plan === "monthly" ? 200 : 500;
+  const plan: SubscriptionPlan = params.get("plan") === "monthly" ? "monthly" : "annual";
+  const amount = SUBSCRIPTION_PLANS[plan].amount;
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
