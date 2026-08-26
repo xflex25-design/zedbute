@@ -90,6 +90,7 @@ const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
+  const [subscription, setSubscription] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
   const [promotions, setPromotions] = useState<any[]>([]);
   const [loadingPromotions, setLoadingPromotions] = useState(false);
@@ -124,6 +125,15 @@ const Dashboard = () => {
     setProfile(profileData);
     setVerification(verificationData);
     setReleases(releasesData ?? []);
+
+    const { data: subscriptionData } = await (supabase as any)
+      .from("subscriptions")
+      .select("id, plan, amount_zmw, status, starts_at, expires_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setSubscription(subscriptionData);
 
     const [{ data: notifData }] = await Promise.all([
       (supabase as any)
@@ -247,6 +257,19 @@ return (
             Manage your music distribution and verification status
           </p>
         </div>
+
+        {/* Subscription Status card */}
+        <Card className="mb-4 border-primary/30 bg-card">
+          <div className="p-5">
+            <div className="mb-1 flex items-center gap-2"><Wallet className="h-5 w-5 text-primary" /><h2 className="text-base font-semibold">Subscription</h2></div>
+            <p className="mb-4 text-xs text-muted-foreground">Keep your catalog live across every major platform.</p>
+            {subscription?.status === "active" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><Badge variant="secondary">Active</Badge><p className="mt-2 text-sm">{subscription.plan === "annual" ? "Annual" : "Monthly"} Plan · K{subscription.amount_zmw}</p><p className="text-xs text-muted-foreground">Expires {new Date(subscription.expires_at).toLocaleDateString()}</p></div><Button variant="outline" onClick={() => navigate(`/payment?type=subscription&plan=${subscription.plan}&amount=${subscription.amount_zmw}`)}>Renew plan</Button></div>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">{subscription?.status === "pending" ? "Payment is being confirmed." : "Choose a plan to activate distribution."}</p><Button variant="hero" onClick={() => navigate("/pricing")}>{subscription?.status === "pending" ? "View payment" : "Choose a plan"}</Button></div>
+            )}
+          </div>
+        </Card>
 
         {/* Verification Status card */}
         <Card className="mb-4 bg-card border border-border rounded-lg">

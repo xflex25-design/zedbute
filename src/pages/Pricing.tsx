@@ -1,88 +1,89 @@
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Music } from "lucide-react";
+import { Check, Crown, Music, ShieldCheck, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+const plans = [
+  {
+    id: "monthly",
+    name: "Monthly Plan",
+    amount: 200,
+    cadence: "month",
+    description: "Flexible access for artists building momentum.",
+    icon: Zap,
+    features: ["Distribute to 100+ platforms", "Manage unlimited releases", "Artist profile & catalog", "Detailed analytics", "Royalty earnings", "Priority support"],
+  },
+  {
+    id: "annual",
+    name: "Annual Plan",
+    amount: 500,
+    cadence: "year",
+    description: "The best value for a year of consistent releases.",
+    icon: Crown,
+    features: ["Everything in Monthly", "12 months of distribution", "Priority review queue", "Advanced catalog support", "Royalty earnings", "Dedicated support"],
+  },
+] as const;
 
 const Pricing = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [billing, setBilling] = useState<"monthly" | "annual">("annual");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
   }, []);
 
-  const features = [
-    "One-time fee per release",
-    "Distribute to Boomplay & Spotify",
-    "Keep 100% of your royalties",
-    "Pay securely via Mobile Money",
-    "Processing within 2 weeks",
-  ];
+  const selected = plans.find((plan) => plan.id === billing) ?? plans[1];
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 sm:pb-16">
-        <div className="text-center mb-8 xs:mb-10 sm:mb-12 md:mb-16 max-w-2xl mx-auto">
-          <h1 className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 xs:mb-4 text-balance">
-            Simple, Transparent Pricing
-          </h1>
-          <p className="text-base xs:text-lg sm:text-xl text-muted-foreground px-2">
-            One flat fee. No subscriptions. No hidden costs.
-          </p>
+      <main className="container mx-auto px-4 pb-16 pt-28 sm:pt-32">
+        <section className="mx-auto max-w-3xl text-center">
+          <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Music className="size-7" />
+          </div>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">Built for independent artists</p>
+          <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl">Simple pricing. Powerful results.</h1>
+          <p className="mx-auto mt-4 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground">Choose the plan that keeps your music moving. Pay once, distribute everywhere, and keep 100% of your royalties.</p>
+        </section>
+
+        <div className="mx-auto mt-10 flex w-fit items-center gap-1 rounded-full border border-border bg-card p-1">
+          {plans.map((plan) => (
+            <button key={plan.id} type="button" onClick={() => setBilling(plan.id)} className={`rounded-full px-5 py-2 text-sm font-medium transition-colors ${billing === plan.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              {plan.id === "annual" ? "Annual" : "Monthly"}
+            </button>
+          ))}
         </div>
 
-        <div className="max-w-xs sm:max-w-md mx-auto">
-          <Card className="shadow-glow border-primary relative transition-transform hover:-translate-y-1 duration-300 mx-4 sm:mx-0">
-            <div className="absolute -top-3 xs:-top-4 left-1/2 -translate-x-1/2 px-2 xs:px-4 py-0.5 xs:py-1 rounded-full text-xs xs:text-sm font-semibold text-primary-foreground">
-              Release Upload
-            </div>
-              <CardHeader className="text-center pt-6 xs:pt-8">
-                <div className="mx-auto mb-3 xs:mb-4 h-12 xs:h-14 w-12 xs:w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Music className="h-6 xs:h-7 w-6 xs:w-7 text-primary" />
-                </div>
-                <CardTitle className="text-xl xs:text-2xl">Upload Your Release</CardTitle>
-                 <div className="mt-3 xs:mt-4 space-y-1">
-                  <div>
-                    <span className="text-4xl xs:text-5xl font-bold">K50</span>
-                    <span className="text-sm text-muted-foreground ml-2">Mobile Money</span>
-                  </div>
-                </div>
-                <CardDescription className="mt-1 xs:mt-2 text-sm xs:text-base">
-                  Per release, one-time payment
-                </CardDescription>
-              </CardHeader>
-            <CardContent>
-              <ul className="space-y-2.5 xs:space-y-3 mb-5 xs:mb-6">
-                {features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-1.5 xs:gap-2">
-                    <Check className="h-4 xs:h-5 w-4 xs:w-5 text-primary shrink-0 mt-0.5" />
-                    <span className="text-sm xs:text-base">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant="hero"
-                className="w-full hover:scale-105 transition-transform h-10 xs:h-11"
-                onClick={() => navigate(user ? "/upload-release" : "/auth")}
-              >
-                {user ? "Upload a Release" : "Get Started"}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <section className="mx-auto mt-8 grid max-w-5xl gap-5 md:grid-cols-2">
+          {plans.map((plan) => {
+            const Icon = plan.icon;
+            const active = billing === plan.id;
+            return (
+              <Card key={plan.id} className={`relative overflow-hidden transition-all ${active ? "border-primary shadow-glow" : "border-border"}`}>
+                {plan.id === "annual" && <div className="absolute right-4 top-4 rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">BEST VALUE</div>}
+                <CardHeader className="p-7 pb-4">
+                  <div className="mb-5 flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></div>
+                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                  <CardDescription className="leading-relaxed">{plan.description}</CardDescription>
+                  <div className="pt-4"><span className="text-5xl font-bold tracking-tight">K{plan.amount}</span><span className="ml-2 text-muted-foreground">/ {plan.cadence}</span></div>
+                  <p className="text-sm text-muted-foreground">Billed every {plan.id === "annual" ? "365" : "30"} days</p>
+                </CardHeader>
+                <CardContent className="p-7 pt-2">
+                  <ul className="flex flex-col gap-3 border-t border-border py-6">{plan.features.map((feature) => <li key={feature} className="flex items-start gap-3 text-sm"><Check className="mt-0.5 size-4 shrink-0 text-primary" />{feature}</li>)}</ul>
+                  <Button className="w-full" variant={active ? "hero" : "outline"} onClick={() => navigate(user ? `/payment?type=subscription&plan=${plan.id}&amount=${plan.amount}` : "/auth")}>{user ? `Choose ${plan.id === "annual" ? "Annual" : "Monthly"} Plan` : "Get Started"}</Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </section>
 
-        <div className="mt-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            Payments accepted via Mobile Money (Airtel, MTN, Zamtel).
-          </p>
-        </div>
-      </div>
+        <div className="mx-auto mt-8 flex max-w-2xl items-center justify-center gap-3 text-center text-sm text-muted-foreground"><ShieldCheck className="size-4 text-primary" /> Secure mobile-money payment through Lenco. No hidden fees.</div>
+      </main>
     </div>
   );
 };

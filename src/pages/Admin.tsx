@@ -38,6 +38,7 @@ const Admin = () => {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [releases, setReleases] = useState<Release[]>([]);
+  const [subscriptionStats, setSubscriptionStats] = useState({ active: 0, pending: 0, expired: 0, revenue: 0 });
   const [progressInputs, setProgressInputs] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [banner, setBanner] = useState<string | null>(null);
@@ -77,6 +78,14 @@ const Admin = () => {
     }));
     setReleases(merged);
     setProgressInputs(Object.fromEntries(merged.map((r) => [r.id, r.upload_progress ?? 0])));
+    const { data: subscriptions } = await (supabase as any).from("subscriptions").select("status, amount_zmw");
+    const { data: payments } = await (supabase as any).from("payment_transactions").select("status, amount_zmw");
+    setSubscriptionStats({
+      active: subscriptions?.filter((s: any) => s.status === "active").length ?? 0,
+      pending: subscriptions?.filter((s: any) => s.status === "pending").length ?? 0,
+      expired: subscriptions?.filter((s: any) => s.status === "expired").length ?? 0,
+      revenue: payments?.filter((p: any) => p.status === "successful").reduce((sum: number, p: any) => sum + Number(p.amount_zmw || 0), 0) ?? 0,
+    });
   };
 
   const saveProgress = async (release: Release) => {
@@ -175,6 +184,11 @@ const Admin = () => {
             <CheckCircle2 className="h-5 w-5 shrink-0" /> <span>{banner}</span>
           </div>
         )}
+        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[['Active subscribers', subscriptionStats.active], ['Pending payments', subscriptionStats.pending], ['Expired', subscriptionStats.expired], ['Verified revenue', `K${subscriptionStats.revenue}`]].map(([label, value]) => (
+            <Card key={String(label)}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold text-primary">{value}</p></CardContent></Card>
+          ))}
+        </div>
         <div className="space-y-4">
           {releases.map((r) => (
             <Card key={r.id} className="shadow-card">

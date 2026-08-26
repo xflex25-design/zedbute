@@ -22,6 +22,7 @@ import { toast } from "@/hooks/use-toast";
 
 import type { User } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
+import SubscriptionCheckout from "@/components/SubscriptionCheckout";
 
 const PESAPAL_CONSUMER_KEY = import.meta.env.VITE_PESAPAL_CONSUMER_KEY || "4KELk9gVxyKMnj2rrzY9P8Z9Dyu8ysiY";
 const PESAPAL_CONSUMER_SECRET = import.meta.env.VITE_PESAPAL_CONSUMER_SECRET || "DWUbYGRnyNM4h0jU3bXs5dk20qk=";
@@ -452,6 +453,10 @@ export default function Payment() {
         </div>
       </div>
     );
+  }
+
+  if (paymentType === "subscription") {
+    return <SubscriptionCheckout />;
   }
 
   const isSuccess = step === "success";
