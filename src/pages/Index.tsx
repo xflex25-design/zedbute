@@ -65,17 +65,17 @@ const Index = () => {
         
         {/* Hero Section */}
         <section
-          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
+          className="relative min-h-[72vh] pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-background"
         >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)]" />
           <div className="container mx-auto text-center relative z-10 animate-fade-in">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white drop-shadow-lg text-balance">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground text-balance">
               Distribute Your Music
               <span className="block bg-gradient-primary bg-clip-text text-transparent drop-shadow-none">
                 To The World
               </span>
             </h1>
-            <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto px-2 drop-shadow text-balance">
+            <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto px-2 text-balance">
               Join thousands of artists distributing their music to Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
             </p>
             <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
