@@ -12,17 +12,25 @@ serve(async (req) => {
     const body = await req.json();
     const {
       amount,
-      currency = 'ZMW',
-      reference,
       payer,
-      provider = 'MTN_MOMO_ZMB',
+      payer_email,
+      payer_message,
+      provider,
     } = body;
+
+    const providerCodeMap: Record<string, string> = {
+      airtel: 'AIRTEL_OAPI_ZMB',
+      mtn: 'MTN_MOMO_ZMB',
+      zamtel: 'ZAMTEL_ZMB',
+    };
+
+    const finalProvider = providerCodeMap[String(provider || '').toLowerCase()] || String(provider || 'MTN_MOMO_ZMB');
 
     const apiKey = Deno.env.get('MOBILE_MONEY_API_KEY');
     const keyId = Deno.env.get('MOBILE_MONEY_KEY_ID');
     const walletId = Deno.env.get('MOBILE_MONEY_WALLET_ID');
     const merchantId = Deno.env.get('MOBILE_MONEY_MERCHANT_ID');
-    const baseUrl = Deno.env.get('MOBILE_MONEY_BASE_URL') || 'http://localhost:8000';
+    const baseUrl = Deno.env.get('MOBILE_MONEY_BASE_URL') || 'https://console.lipila.tech/api/v1';
 
     if (!apiKey || !keyId || !walletId || !merchantId) {
       console.error('Missing Mobile Money credentials', { hasApiKey: !!apiKey, hasKeyId: !!keyId, hasWalletId: !!walletId, hasMerchantId: !!merchantId });
@@ -32,22 +40,22 @@ serve(async (req) => {
       );
     }
 
-    if (!amount || !reference || !payer) {
+    if (!amount || !payer) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields', userMessage: 'Please provide amount, reference, and payer phone number.' }),
+        JSON.stringify({ error: 'Missing required fields', userMessage: 'Please provide amount, payer phone number, and provider.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const mobileMoneyPayload = {
-      reference: String(reference),
       amount: String(amount),
-      currency: String(currency),
       payer: String(payer),
-      provider: String(provider),
+      provider: finalProvider,
+      payer_email: payer_email ? String(payer_email) : '',
+      payer_message: payer_message ? String(payer_message) : '',
     };
 
-    const resp = await fetch(`${baseUrl}/api/v1/payments/mobile-money/${encodeURIComponent(walletId)}/`, {
+    const resp = await fetch(`${baseUrl}/payments/mobile-money/${encodeURIComponent(walletId)}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

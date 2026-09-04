@@ -396,10 +396,10 @@ export default function Payment() {
       const { data, error } = await supabase.functions.invoke('mtn-momo-payment', {
         body: {
           amount: paymentAmount,
-          currency: 'ZMW',
-          reference,
           payer: phoneNumber,
           provider: 'MTN_MOMO_ZMB',
+          payer_email: user?.email || '',
+          payer_message: reference,
         },
       });
 
