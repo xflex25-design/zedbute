@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -68,9 +68,14 @@ function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string)
 
 const UploadRelease = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingReleaseId, setEditingReleaseId] = useState<string | null>(null);
+  const [existingRelease, setExistingRelease] = useState<any>(null);
+  const [isLoadingRelease, setIsLoadingRelease] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -246,6 +251,62 @@ const UploadRelease = () => {
     );
   };
 
+  const loadReleaseForEdit = async (releaseId: string) => {
+    if (!user) return;
+
+    setIsLoadingRelease(true);
+    const { data, error } = await supabase
+      .from("music_releases")
+      .select("*")
+      .eq("id", releaseId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: "Release not found",
+        description: "We could not load this release for editing.",
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+      return;
+    }
+
+    setExistingRelease(data);
+    setFormData({
+      title: data.title || "",
+      artistName: data.artist_name || "",
+      producerName: data.producer_name || "",
+      legalName: data.legal_name || "",
+      releaseType: data.release_type || "single",
+      genre: data.genre || "",
+      releaseDate: data.release_date ? new Date(data.release_date) : addWeeks(new Date(), 2),
+      coverArt: null,
+      audioFile: null,
+      rightsConfirmed: !!data.rights_confirmed,
+    });
+    setSelectedLanguages(Array.isArray(data.language) ? data.language : []);
+    setImagePreview(data.cover_art_url || null);
+    setIsLoadingRelease(false);
+  };
+
+  useEffect(() => {
+    const releaseId = searchParams.get("id");
+    if (!releaseId) {
+      setIsEditMode(false);
+      setEditingReleaseId(null);
+      setExistingRelease(null);
+      setImagePreview(null);
+      return;
+    }
+
+    setIsEditMode(true);
+    setEditingReleaseId(releaseId);
+    if (user) {
+      loadReleaseForEdit(releaseId);
+    }
+  }, [searchParams, user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -262,6 +323,24 @@ const UploadRelease = () => {
       toast({
         title: "Missing Artist Name",
         description: "Please enter the artist name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.producerName.trim()) {
+      toast({
+        title: "Missing Producer Name",
+        description: "Please enter the producer name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.legalName.trim()) {
+      toast({
+        title: "Missing Legal Name",
+        description: "Please enter your full legal name",
         variant: "destructive",
       });
       return;
@@ -285,28 +364,31 @@ const UploadRelease = () => {
       return;
     }
 
-    if (!formData.coverArt) {
-      toast({
-        title: "No Cover Art",
-          description: "Please upload cover art (square, at least 1000x1000 pixels)",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.audioFile) {
-      toast({
-        title: "No Audio File",
-        description: "Please upload your music audio file",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!formData.releaseDate) {
       toast({
         title: "Missing Release Date",
         description: "Please pick a release date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const hasExistingCover = !!existingRelease?.cover_art_url;
+    const hasExistingAudio = !!existingRelease?.audio_url;
+
+    if (!formData.coverArt && !hasExistingCover) {
+      toast({
+        title: "No Cover Art",
+        description: "Please upload cover art (square, at least 1000x1000 pixels)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.audioFile && !hasExistingAudio) {
+      toast({
+        title: "No Audio File",
+        description: "Please upload your music audio file",
         variant: "destructive",
       });
       return;
@@ -326,114 +408,131 @@ const UploadRelease = () => {
     setUploadProgress(0);
 
     try {
-      // 1) Upload cover art
-      const fileExt = formData.coverArt.name.split(".").pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      let coverUrl = existingRelease?.cover_art_url || null;
+      let audioUrl = existingRelease?.audio_url || null;
 
-      // --- FIX: wrap cover upload in a timeout so it can't hang forever either ---
-      const { error: uploadError } = await withTimeout(
-        supabase.storage.from("cover-art").upload(fileName, formData.coverArt),
-        COVER_UPLOAD_TIMEOUT_MS,
-        "Cover art upload timed out. Please check your connection and try again."
-      );
-      // --- END FIX ---
+      if (formData.coverArt) {
+        const fileExt = formData.coverArt.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage
-        .from("cover-art")
-        .getPublicUrl(fileName);
+        const { error: uploadError } = await withTimeout(
+          supabase.storage.from("cover-art").upload(fileName, formData.coverArt),
+          COVER_UPLOAD_TIMEOUT_MS,
+          "Cover art upload timed out. Please check your connection and try again."
+        );
+
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage
+          .from("cover-art")
+          .getPublicUrl(fileName);
+        coverUrl = publicUrl;
+      }
 
       setUploadProgress(30);
 
-      // 2) Upload audio with proper interval cleanup
-      setIsUploadingAudio(true);
-      setAudioUploadProgress(0);
-      const audioExt = formData.audioFile!.name.split(".").pop();
-      const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
-
-      // Clear any existing interval
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-
-      // Track progress with ref for cleanup
-      progressIntervalRef.current = setInterval(() => {
-        setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
-      }, 300);
-
-      let audioUploadError: any = null;
-      try {
-        // --- FIX: this was the main cause of the infinite "stuck loading".
-        // The raw supabase upload() call had no timeout, so a stalled
-        // network request or bucket/RLS misconfiguration would leave the
-        // UI spinning at 90% forever with no error surfaced. Wrapping it
-        // in withTimeout guarantees the promise settles either way. ---
-        const result = await withTimeout(
-          supabase.storage.from("audio-files").upload(audioFileName, formData.audioFile!),
-          AUDIO_UPLOAD_TIMEOUT_MS,
-          "Audio upload timed out. This can happen with a slow connection or a large file — please try again."
-        );
-        audioUploadError = result.error;
-        // --- END FIX ---
-      } catch (timeoutOrNetworkError: any) {
-        audioUploadError = timeoutOrNetworkError;
-      }
-
-      // Clear interval after upload completes (success, error, or timeout)
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-
-      if (audioUploadError) {
-        setIsUploadingAudio(false);
+      if (formData.audioFile) {
+        setIsUploadingAudio(true);
         setAudioUploadProgress(0);
-        throw audioUploadError;
-      }
-      setAudioUploadProgress(100);
-      setIsUploadingAudio(false);
+        const audioExt = formData.audioFile.name.split(".").pop();
+        const audioFileName = `${user.id}/${Date.now()}.${audioExt}`;
 
-      const { data: { publicUrl: audioUrl } } = supabase.storage
-        .from("audio-files")
-        .getPublicUrl(audioFileName);
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+        }
+
+        progressIntervalRef.current = setInterval(() => {
+          setAudioUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
+        }, 300);
+
+        let audioUploadError: any = null;
+        try {
+          const result = await withTimeout(
+            supabase.storage.from("audio-files").upload(audioFileName, formData.audioFile),
+            AUDIO_UPLOAD_TIMEOUT_MS,
+            "Audio upload timed out. This can happen with a slow connection or a large file — please try again."
+          );
+          audioUploadError = result.error;
+        } catch (timeoutOrNetworkError: any) {
+          audioUploadError = timeoutOrNetworkError;
+        }
+
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+
+        if (audioUploadError) {
+          setIsUploadingAudio(false);
+          setAudioUploadProgress(0);
+          throw audioUploadError;
+        }
+
+        setAudioUploadProgress(100);
+        setIsUploadingAudio(false);
+
+        const { data: { publicUrl: uploadedAudioUrl } } = supabase.storage
+          .from("audio-files")
+          .getPublicUrl(audioFileName);
+        audioUrl = uploadedAudioUrl;
+      }
 
       setUploadProgress(70);
 
-      // 3) Insert release as 'unpaid' BEFORE navigating to payment
-      const { data: inserted, error: insertError } = await supabase
-        .from("music_releases")
-        .insert({
-          user_id: user.id,
-          title: formData.title,
-          artist_name: formData.artistName,
-          producer_name: formData.producerName || null,
-          legal_name: formData.legalName || null,
-          language: selectedLanguages,
-          release_type: formData.releaseType,
-          genre: formData.genre,
-          release_date: format(formData.releaseDate, "yyyy-MM-dd"),
-          cover_art_url: publicUrl,
-          audio_url: audioUrl,
-          rights_confirmed: formData.rightsConfirmed,
-          status: "unpaid",
-          upload_progress: 0,
-        })
-        .select("id")
-        .single();
+      const payload = {
+        user_id: user.id,
+        title: formData.title,
+        artist_name: formData.artistName,
+        producer_name: formData.producerName,
+        legal_name: formData.legalName,
+        language: selectedLanguages,
+        release_type: formData.releaseType,
+        genre: formData.genre,
+        release_date: format(formData.releaseDate, "yyyy-MM-dd"),
+        cover_art_url: coverUrl,
+        audio_url: audioUrl,
+        rights_confirmed: formData.rightsConfirmed,
+        status: isEditMode ? existingRelease?.status || "unpaid" : "unpaid",
+        upload_progress: 0,
+      };
 
-      if (insertError) throw insertError;
+      let result:
+        | { data: any; error: any }
+        | undefined;
+
+      if (isEditMode && editingReleaseId) {
+        result = await supabase
+          .from("music_releases")
+          .update(payload)
+          .eq("id", editingReleaseId)
+          .eq("user_id", user.id)
+          .select("id")
+          .single();
+      } else {
+        result = await supabase
+          .from("music_releases")
+          .insert(payload)
+          .select("id")
+          .single();
+      }
+
+      if (result.error) throw result.error;
 
       setUploadProgress(100);
 
-      toast({
-        title: "Release Saved",
-        description: "Redirecting you to complete payment...",
-      });
-
-      // Set pending payment flag before navigating
-      sessionStorage.setItem("pendingReleasePayment", "started");
-
-      navigate(`/payment?type=release&releaseId=${inserted.id}`);
+      if (isEditMode) {
+        toast({
+          title: "Release updated",
+          description: "Your release has been successfully updated.",
+        });
+        navigate("/dashboard");
+      } else {
+        toast({
+          title: "Release Saved",
+          description: "Redirecting you to complete payment...",
+        });
+        sessionStorage.setItem("pendingReleasePayment", "started");
+        navigate(`/payment?type=release&releaseId=${result.data.id}`);
+      }
 
     } catch (error: any) {
       console.error("Error submitting release:", error);
@@ -448,7 +547,6 @@ const UploadRelease = () => {
       setUploadProgress(0);
       setAudioUploadProgress(0);
       setIsUploadingAudio(false);
-      // Ensure interval is cleaned up
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
@@ -456,7 +554,7 @@ const UploadRelease = () => {
     }
   };
 
-  if (!user || !authChecked) {
+  if (!user || !authChecked || (isEditMode && isLoadingRelease)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -472,10 +570,12 @@ const UploadRelease = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Music className="h-6 w-6" />
-              Upload Music Release
+              {isEditMode ? "Edit Music Release" : "Upload Music Release"}
             </CardTitle>
             <CardDescription>
-              Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks.
+              {isEditMode
+                ? "Update your release details before saving changes."
+                : "Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks."}
             </CardDescription>
             <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
               <p className="text-sm text-amber-600 flex items-start gap-2">
@@ -523,27 +623,29 @@ const UploadRelease = () => {
                 />
               </div>
 
-              {/* Producer Name - Optional */}
+              {/* Producer Name */}
               <div className="space-y-2">
-                <Label htmlFor="producerName">Producer Name (Optional)</Label>
+                <Label htmlFor="producerName">Producer Name *</Label>
                 <Input
                   id="producerName"
                   value={formData.producerName}
                   onChange={(e) => setFormData({ ...formData, producerName: e.target.value })}
                   placeholder="Name of the producer"
                   maxLength={100}
+                  required
                 />
               </div>
 
-              {/* Legal Name - Optional */}
+              {/* Legal Name */}
               <div className="space-y-2">
-                <Label htmlFor="legalName">Full Legal Name (Optional)</Label>
+                <Label htmlFor="legalName">Full Legal Name *</Label>
                 <Input
                   id="legalName"
                   value={formData.legalName}
                   onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
                   placeholder="Your full legal name for royalty payments"
                   maxLength={150}
+                  required
                 />
               </div>
 
@@ -826,7 +928,7 @@ const UploadRelease = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving release...
+                    {isEditMode ? "Updating release..." : "Saving release..."}
                   </>
                 ) : validatingImage ? (
                   <>
@@ -834,12 +936,14 @@ const UploadRelease = () => {
                     Validating image...
                   </>
                 ) : (
-                  "Save & Continue to Payment"
+                  isEditMode ? "Save Changes" : "Save & Continue to Payment"
                 )}
               </Button>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Your release will be saved as unpaid before you're redirected to payment
-              </p>
+              {!isEditMode && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Your release will be saved as unpaid before you're redirected to payment
+                </p>
+              )}
             </form>
           </CardContent>
         </Card>

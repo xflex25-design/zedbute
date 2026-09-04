@@ -179,6 +179,26 @@ const Dashboard = () => {
     setSubmittingPromo(false);
   };
 
+  const handleDeleteRelease = async (releaseId: string, title: string) => {
+    if (!user) return;
+    const confirmed = window.confirm(`Are you sure you want to delete "${title}"?`);
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("music_releases")
+      .delete()
+      .eq("id", releaseId)
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Release deleted", description: `"${title}" was removed successfully.` });
+    fetchUserData(user.id);
+  };
+
   const markRead = async (id: string) => {
     await (supabase as any).from("notifications").update({ is_read: true }).eq("id", id);
     setNotifications((prev) =>
@@ -515,7 +535,7 @@ return (
                               <TableCell>{r.release_date ?? "—"}</TableCell>
                               <TableCell>{r.genre ?? "—"}</TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <Badge className={statusVariant(r.status)}>
                                     {statusLabel(r.status)}
                                   </Badge>
@@ -532,6 +552,28 @@ return (
                                       Pay Now
                                     </Button>
                                   )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(`/upload-release?id=${r.id}`);
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteRelease(r.id, r.title);
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -585,6 +627,30 @@ return (
                               <p className="text-muted-foreground">Genre</p>
                               <p className="font-medium">{r.genre ?? "—"}</p>
                             </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/upload-release?id=${r.id}`);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteRelease(r.id, r.title);
+                              }}
+                            >
+                              Delete
+                            </Button>
                           </div>
                           {r.status === "unpaid" && (
                             <Button
