@@ -151,7 +151,7 @@ export default function Payment() {
       .insert({
         user_id: user.id,
         amount: paymentAmount,
-        payment_method: "pesapal_redirect",
+        payment_method: "mobile_money",
         phone_number: phoneNumber,
         transaction_id: transactionId,
         status,
@@ -187,7 +187,7 @@ export default function Payment() {
       promotion_id: promotionId,
       user_id: user.id,
       amount: 20,
-      payment_method: "pesapal_redirect",
+      payment_method: "mobile_money",
       transaction_id: transactionId,
       status,
       payment_proof: null,
@@ -393,20 +393,13 @@ export default function Payment() {
     const reference = `${paymentType}-${crypto.randomUUID()}`;
 
     try {
-      const { data, error } = await supabase.functions.invoke('pesapal-create-order', {
+      const { data, error } = await supabase.functions.invoke('mtn-momo-payment', {
         body: {
           amount: paymentAmount,
           currency: 'ZMW',
           reference,
-          description: paymentLabel,
-          callback_url: returnUrl || `${window.location.origin}/api/pesapal/callback`,
-          redirect_url: returnUrl || `${window.location.origin}/payment-return`,
-          customer: {
-            firstName: profile?.full_name?.split(' ')[0] || 'Customer',
-            lastName: profile?.full_name?.split(' ').slice(1).join(' ') || '',
-            email: user.email || '',
-            phone: phoneNumber,
-          },
+          payer: phoneNumber,
+          provider: 'MTN_MOMO_ZMB',
         },
       });
 
@@ -419,7 +412,6 @@ export default function Payment() {
         throw new Error('No redirect URL returned from payment provider');
       }
 
-      // redirect user to Pesapal checkout
       window.location.href = redirectUrl;
     } catch (err: any) {
       console.error('Payment initiation failed', err);
