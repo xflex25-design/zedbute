@@ -23,6 +23,9 @@ import { toast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
 
+const PESAPAL_CONSUMER_KEY = import.meta.env.VITE_PESAPAL_CONSUMER_KEY || "4KELk9gVxyKMnj2rrzY9P8Z9Dyu8ysiY";
+const PESAPAL_CONSUMER_SECRET = import.meta.env.VITE_PESAPAL_CONSUMER_SECRET || "DWUbYGRnyNM4h0jU3bXs5dk20qk=";
+
 interface Profile {
   id: string;
   full_name?: string;
@@ -390,13 +393,13 @@ export default function Payment() {
     const reference = `${paymentType}-${crypto.randomUUID()}`;
 
     try {
-      const { data, error } = await supabase.functions.invoke("lenco-payment", {
+      const { data, error } = await supabase.functions.invoke('mtn-momo-payment', {
         body: {
           amount: paymentAmount,
-          phone: phoneNumber,
-          reference,
-          operator: "mtn",
-          country: "zm",
+          payer: phoneNumber,
+          provider: 'MTN_MOMO_ZMB',
+          payer_email: user?.email || '',
+          payer_message: reference,
         },
       });
 
