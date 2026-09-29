@@ -23,13 +23,13 @@ import { toast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
 
-const PESAPAL_CONSUMER_KEY = import.meta.env.VITE_PESAPAL_CONSUMER_KEY || "4KELk9gVxyKMnj2rrzY9P8Z9Dyu8ysiY";
-const PESAPAL_CONSUMER_SECRET = import.meta.env.VITE_PESAPAL_CONSUMER_SECRET || "DWUbYGRnyNM4h0jU3bXs5dk20qk=";
+const LENCO_PUBLIC_KEY = import.meta.env.VITE_LENCO_PUBLIC_KEY;
+const LENCO_WIDGET_SRC = "https://pay.lenco.co/js/v1/inline.js";
 
 interface Profile {
   id: string;
-  full_name?: string;
-  phone_number?: string;
+  full_name?: string | null;
+  phone_number?: string | null;
 }
 
 type PaymentStep = "details" | "method" | "processing" | "success" | "failed";
@@ -90,8 +90,60 @@ export default function Payment() {
   const [processing, setProcessing] = useState(false);
   const [step, setStep] = useState<PaymentStep>("details");
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [lencoReady, setLencoReady] = useState(
+    () => typeof window !== "undefined" && Boolean(window.LencoPay?.getPaid),
+  );
 
   const paymentHandled = useRef(false);
+
+  useEffect(() => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      "script[data-lenco-widget]",
+    );
+
+    const handleLoad = () => {
+      const ready = Boolean(window.LencoPay?.getPaid);
+      console.info("[Lenco] widget script loaded", {
+        src: LENCO_WIDGET_SRC,
+        getPaidAvailable: ready,
+      });
+      setLencoReady(ready);
+    };
+
+    const handleError = (event: Event) => {
+      console.error("[Lenco] widget script failed to load", {
+        src: LENCO_WIDGET_SRC,
+        event,
+      });
+      setLencoReady(false);
+    };
+
+    if (window.LencoPay?.getPaid) {
+      handleLoad();
+      return;
+    }
+
+    if (!existingScript) {
+      const script = document.createElement("script");
+      script.src = LENCO_WIDGET_SRC;
+      script.async = true;
+      script.dataset.lencoWidget = "true";
+      script.addEventListener("load", handleLoad);
+      script.addEventListener("error", handleError);
+      document.body.appendChild(script);
+      return () => {
+        script.removeEventListener("load", handleLoad);
+        script.removeEventListener("error", handleError);
+      };
+    }
+
+    existingScript.addEventListener("load", handleLoad);
+    existingScript.addEventListener("error", handleError);
+    return () => {
+      existingScript.removeEventListener("load", handleLoad);
+      existingScript.removeEventListener("error", handleError);
+    };
+  }, []);
 
   useEffect(() => {
     initializePage();
@@ -234,7 +286,13 @@ export default function Payment() {
             : "Payment confirmation is pending.",
       });
 
-      if ((paymentType === "release" || paymentType === "ep" || paymentType === "album") && status === "verified") {
+      if (
+        (paymentType === "release" ||
+          paymentType === "ep" ||
+          paymentType === "album") &&
+        status === "verified" &&
+        releaseId
+      ) {
         try {
           const { data: release } = await supabase
             .from("music_releases")
@@ -360,6 +418,88 @@ export default function Payment() {
     }
   }
 
+  async function verifyLencoPayment(reference: string) {
+    console.info("[Lenco] verifying payment reference via Supabase", {
+      reference,
+      function: "verify-lenco-payment",
+    });
+
+    const { data, error } = await supabase.functions.invoke(
+      "verify-lenco-payment",
+      {
+        body: {
+          reference,
+          amount: paymentAmount,
+          currency: "ZMW",
+        },
+      },
+    );
+
+    if (error) {
+      console.error("[Lenco] Supabase verification failed", error);
+      throw error;
+    }
+
+    const status = String(data?.status ?? data?.data?.status ?? "").toLowerCase();
+    console.info("[Lenco] verification response", {
+      reference,
+      status,
+      lencoReference: data?.data?.lencoReference,
+    });
+
+    if (!["successful", "pending"].includes(status)) {
+      throw new Error(
+        data?.message || `Lenco payment verification returned "${status || "unknown"}".`,
+      );
+    }
+
+    return {
+      status: status as "successful" | "pending",
+      reference: String(data?.data?.reference ?? reference),
+    };
+  }
+
+  function getLencoReference(response: LencoPaymentResponse) {
+    return response.reference || response.data?.reference;
+  }
+
+  async function finishLencoPayment(
+    reference: string,
+    fallbackStatus: "verified" | "pending",
+  ) {
+    try {
+      const verification = await verifyLencoPayment(reference);
+      const status =
+        verification.status === "successful" ? "verified" : fallbackStatus;
+      const nextUrl = await handlePaymentSuccess(verification.reference, status);
+
+      if (!nextUrl) {
+        throw new Error("Payment was verified but could not be saved.");
+      }
+
+      setProcessing(false);
+      setStep("success");
+      goTo(nextUrl);
+    } catch (error) {
+      console.error("[Lenco] payment completion failed", error);
+      setProcessing(false);
+      setStep("failed");
+      setPaymentError(
+        error instanceof Error
+          ? error.message
+          : "Payment verification failed. Please contact support.",
+      );
+      toast({
+        title: "Payment verification failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Please contact support with your payment reference.",
+        variant: "destructive",
+      });
+    }
+  }
+
   async function initiatePayment() {
     if (processing) return;
 
@@ -386,39 +526,114 @@ export default function Payment() {
       return;
     }
 
+    if (!LENCO_PUBLIC_KEY) {
+      const message =
+        "Lenco public key is not configured. Please contact support.";
+      console.error("[Lenco] missing VITE_LENCO_PUBLIC_KEY");
+      toast({ title: "Payment unavailable", description: message, variant: "destructive" });
+      setPaymentError(message);
+      setStep("failed");
+      return;
+    }
+
+    if (!lencoReady || !window.LencoPay?.getPaid) {
+      const message =
+        "The Lenco payment widget did not load. Please refresh and try again.";
+      console.error("[Lenco] getPaid is unavailable", {
+        scriptSrc: LENCO_WIDGET_SRC,
+        lencoReady,
+      });
+      toast({ title: "Payment unavailable", description: message, variant: "destructive" });
+      setPaymentError(message);
+      setStep("failed");
+      return;
+    }
+
+    if (!user.email) {
+      const message = "A customer email is required to start payment.";
+      toast({ title: "Payment unavailable", description: message, variant: "destructive" });
+      setPaymentError(message);
+      setStep("failed");
+      return;
+    }
+
     setStep("processing");
     setPaymentError(null);
     setProcessing(true);
 
-    const reference = `${paymentType}-${crypto.randomUUID()}`;
+    const safePaymentType = paymentType.replace(/[^a-zA-Z0-9_.-]/g, "-");
+    const reference = `zedbute-${safePaymentType}-${crypto.randomUUID()}`;
+    const [firstName, ...lastNameParts] = (profile?.full_name || "").trim().split(/\s+/);
+
+    console.info("[Lenco] calling LencoPay.getPaid", {
+      reference,
+      email: user.email,
+      amount: paymentAmount,
+      currency: "ZMW",
+      channels: ["mobile-money", "card"],
+      phone: phoneNumber,
+    });
 
     try {
-      const { data, error } = await supabase.functions.invoke('mtn-momo-payment', {
-        body: {
-          amount: paymentAmount,
-          payer: phoneNumber,
-          provider: 'MTN_MOMO_ZMB',
-          payer_email: user?.email || '',
-          payer_message: reference,
+      window.LencoPay.getPaid({
+        key: LENCO_PUBLIC_KEY,
+        reference,
+        email: user.email,
+        amount: paymentAmount,
+        currency: "ZMW",
+        channels: ["mobile-money", "card"],
+        label: `${paymentLabel} - ZedBute`,
+        customer: {
+          firstName: firstName || undefined,
+          lastName: lastNameParts.join(" ") || undefined,
+          phone: phoneNumber.replace(/\s+/g, ""),
+        },
+        onSuccess: async (response) => {
+          if (paymentHandled.current) return;
+          paymentHandled.current = true;
+
+          const lencoReference = getLencoReference(response);
+          console.info("[Lenco] onSuccess fired", {
+            response,
+            reference: lencoReference,
+          });
+
+          if (!lencoReference) {
+            setProcessing(false);
+            setStep("failed");
+            setPaymentError("Lenco did not return a payment reference.");
+            return;
+          }
+
+          await finishLencoPayment(lencoReference, "verified");
+        },
+        onClose: () => {
+          if (paymentHandled.current) return;
+          paymentHandled.current = true;
+          console.info("[Lenco] onClose fired", { reference });
+          setProcessing(false);
+          setStep("failed");
+          setPaymentError("The Lenco payment window was closed before completion.");
+        },
+        onConfirmationPending: async () => {
+          if (paymentHandled.current) return;
+          paymentHandled.current = true;
+          console.info("[Lenco] onConfirmationPending fired", { reference });
+          await finishLencoPayment(reference, "pending");
         },
       });
-
-      if (error) {
-        throw error;
-      }
-
-      const redirectUrl = (data as any)?.redirectUrl || (data as any)?.raw?.redirect_url;
-      if (!redirectUrl) {
-        throw new Error('No redirect URL returned from payment provider');
-      }
-
-      window.location.href = redirectUrl;
     } catch (err: any) {
-      console.error('Payment initiation failed', err);
-      toast({ title: 'Payment Error', description: err?.message || 'Failed to initiate payment', variant: 'destructive' });
+      console.error("[Lenco] getPaid threw an error", err);
+      toast({
+        title: "Payment Error",
+        description: err?.message || "Failed to open the Lenco payment widget.",
+        variant: "destructive",
+      });
       setProcessing(false);
-      setStep('failed');
-      setPaymentError(err?.message || 'Failed to initiate payment');
+      setStep("failed");
+      setPaymentError(
+        err?.message || "Failed to open the Lenco payment widget.",
+      );
     }
   }
 
@@ -674,9 +889,9 @@ export default function Payment() {
                 </span>
               </div>
                 <p className="text-xs text-gray-600">
-                Powered by{" "}
+                  Powered by{" "}
                   <span className="text-gray-500 font-medium">
-                  Pesapal
+                    Lenco
                 </span>
                 · Trusted by 10,000+ businesses
               </p>
