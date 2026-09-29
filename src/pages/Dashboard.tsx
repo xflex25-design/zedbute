@@ -715,7 +715,7 @@ return (
                             onClick={() => setPromotingReleaseId(r.id)}
                             className="rounded-lg bg-gradient-primary text-primary-foreground text-xs"
                           >
-                             Promote — K20 ($0.80 USD)
+                             Prpoolomote — K50 ($2.55 USD)
                           </Button>
                         ) : (
                           <span className="text-xs text-muted-foreground">Pay to promote</span>
