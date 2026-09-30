@@ -79,7 +79,13 @@ export default function Payment() {
     paymentMethodLabels[paymentType] || "Single Upload";
 
   const defaultAmount = defaultAmounts[paymentType] || 50;
-  const paymentAmount = amountParam ? parseInt(amountParam, 10) : defaultAmount;
+  const parsedAmount = amountParam ? Number(amountParam) : defaultAmount;
+  const paymentAmount =
+    paymentType === "release"
+      ? defaultAmount
+      : Number.isFinite(parsedAmount) && parsedAmount > 0
+        ? parsedAmount
+        : defaultAmount;
   const paymentAmountUsd = paymentAmount / ZMK_TO_USD_RATE;
 
   const [user, setUser] = useState<User | null>(null);
@@ -335,8 +341,6 @@ export default function Payment() {
         paymentType === "boomplay-claim" ||
         paymentType === "spotify-claim"
       ) {
-        await savePayment(transactionId, status);
-
         const claimId = searchParams.get("claimId");
         if (claimId && user) {
           const isSpotify = paymentType === "spotify-claim";
