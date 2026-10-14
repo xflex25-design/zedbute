@@ -1,19 +1,6 @@
+json
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
   "redirects": [
-    { "source": "/dashboard", "destination": "/dashboard", "permanent": false },
-    { "source": "/dashboard/:path*", "destination": "/dashboard/:path*", "permanent": false },
-    { "source": "/payment", "destination": "/payment", "permanent": false },
-    { "source": "/payment/:path*", "destination": "/payment/:path*", "permanent": false },
-    { "source": "/upload-release", "destination": "/upload-release", "permanent": false },
-    { "source": "/upload-release/:path*", "destination": "/upload-release/:path*", "permanent": false },
-    { "source": "/verify", "destination": "/verify", "permanent": false },
-    { "source": "/spotify-claim", "destination": "/spotify-claim", "permanent": false },
-    { "source": "/boomplay-claim", "destination": "/boomplay-claim", "permanent": false },
-    { "source": "/playlists", "destination": "/playlists", "permanent": false },
-    { "source": "/settings", "destination": "/settings", "permanent": false },
     {
       "source": "/:path*",
       "destination": "https://www.zedbute.com/:path*",
@@ -21,6 +8,17 @@
       "has": [
         { "type": "host", "value": "zedbute.vercel.app" }
       ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://www.zedbute.com/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "zedbute.com" }
+      ]
     }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
