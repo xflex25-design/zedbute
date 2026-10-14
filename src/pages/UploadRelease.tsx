@@ -374,7 +374,11 @@ const UploadRelease = () => {
     }
 
     const hasExistingCover = !!existingRelease?.cover_art_url;
-    const hasExistingAudio = !!existingRelease?.audio_url;
+    // EP/album audio lives in release_tracks, not music_releases.audio_url —
+    // don't block metadata/cover edits on those releases.
+    const hasExistingAudio =
+      !!existingRelease?.audio_url ||
+      (isEditMode && !!existingRelease && existingRelease.release_type !== "single");
 
     if (!formData.coverArt && !hasExistingCover) {
       toast({
@@ -577,12 +581,14 @@ const UploadRelease = () => {
                 ? "Update your release details before saving changes."
                 : "Submit your music for distribution to Boomplay and Spotify. Processing takes up to 2 weeks."}
             </CardDescription>
-            <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-sm text-amber-600 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Your release will be saved as <strong>unpaid</strong>. Pay <strong>K50</strong> via Mobile Money.</span>
-              </p>
-            </div>
+            {!isEditMode && (
+              <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <p className="text-sm text-amber-600 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>Your release will be saved as <strong>unpaid</strong>. Pay <strong>K50</strong> via Mobile Money.</span>
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <FormProgress
@@ -592,8 +598,8 @@ const UploadRelease = () => {
                 { label: "Release Type", completed: !!formData.releaseType },
                 { label: "Genre", completed: !!formData.genre },
                 { label: "Release Date", completed: !!formData.releaseDate },
-                { label: "Cover Art", completed: !!formData.coverArt },
-                { label: "Audio File", completed: !!formData.audioFile },
+                { label: "Cover Art", completed: !!formData.coverArt || !!existingRelease?.cover_art_url },
+                { label: "Audio File", completed: !!formData.audioFile || !!existingRelease?.audio_url || (isEditMode && !!existingRelease && existingRelease.release_type !== "single") },
                 { label: "Rights Confirmed", completed: formData.rightsConfirmed },
               ]}
             />
@@ -674,6 +680,7 @@ const UploadRelease = () => {
                 <RadioGroup
                   value={formData.releaseType}
                   onValueChange={(value) => setFormData({ ...formData, releaseType: value })}
+                  disabled={isEditMode}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="single" id="single" />
