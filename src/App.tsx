@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider}  from 'react-helmet-async';
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CookieConsent } from "@/components/CookieConsent";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -33,6 +34,9 @@ import AdminPayouts from "./pages/AdminPayouts";
 import AdminPromotions from "./pages/AdminPromotions";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Terms from "./pages/Terms";
+import RefundPolicy from "./pages/RefundPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,8 +78,12 @@ const App = () => (
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <CookieConsent />
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>

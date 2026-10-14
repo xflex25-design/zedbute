@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Music2, ArrowLeft, Eye, EyeOff } from "lucide-react";
@@ -38,6 +39,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
   const [recoverEmail, setRecoverEmail] = useState("");
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetStep, setResetStep] = useState<ResetStep>("idle");
@@ -70,6 +72,14 @@ const Auth = () => {
           navigate("/dashboard");
         }
       } else {
+        if (!agreeToTerms) {
+          toast({
+            title: "Terms required",
+            description: "Please agree to the Terms of Service and Privacy Policy to create an account.",
+            variant: "destructive",
+          });
+          return;
+        }
         signupSchema.parse({ fullName, email: signupEmail, password, confirmPassword });
 
         const { error, needsConfirmation } = await signUp(signupEmail, password, fullName);
@@ -200,7 +210,7 @@ const Auth = () => {
                 onClick={handleGoogleLogin}
                 disabled={anyLoading}
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -244,22 +254,38 @@ const Auth = () => {
                   <div className="relative">
                     <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password}
                       onChange={(e) => setPassword(e.target.value)} required minLength={6} maxLength={100} />
-                    <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)}>
+                    <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}>
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
                 {!isLogin && (
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <div className="relative">
-                      <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100} />
-                      <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="relative">
+                        <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="••••••••" value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} maxLength={100} />
+                        <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                    <div className="flex items-start gap-2">
+                      <Checkbox
+                        id="agreeToTerms"
+                        data-testid="signup-terms-checkbox"
+                        checked={agreeToTerms}
+                        onCheckedChange={(checked) => setAgreeToTerms(checked === true)}
+                      />
+                      <Label htmlFor="agreeToTerms" className="text-sm text-muted-foreground font-normal leading-snug cursor-pointer">
+                        I agree to the{" "}
+                        <a href="/terms" target="_blank" className="text-primary hover:underline">Terms of Service</a>
+                        {" "}and{" "}
+                        <a href="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</a>
+                      </Label>
+                    </div>
+                  </>
                 )}
                 <Button type="submit" className="w-full" variant="hero" disabled={anyLoading}>
                   {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
