@@ -53,6 +53,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // After an OAuth redirect, strip the #access_token fragment from the URL
+  // using replaceState so no navigation/redirect is triggered.
+  useEffect(() => {
+    if (!session) return;
+    if (window.location.hash.includes("access_token")) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+  }, [session]);
+
   useEffect(() => {
     if (!user || backfilledName.current) return;
     const meta = user.user_metadata ?? {};

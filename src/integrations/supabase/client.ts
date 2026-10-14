@@ -13,5 +13,8 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, 
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // Read the OAuth session from the URL hash (#access_token=...) first,
+    // before any route guard runs.
+    detectSessionInUrl: true,
   }
 });

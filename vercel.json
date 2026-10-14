@@ -1,7 +1,5 @@
-
 {
-"redirects": [
-
+  "redirects": [
     {
       "source": "/:path*",
       "destination": "https://www.zedbute.com/:path*",
@@ -19,8 +17,7 @@
       ]
     }
   ],
-"rewrites": [
-
+  "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
