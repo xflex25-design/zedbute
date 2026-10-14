@@ -1,6 +1,7 @@
-json
+
 {
-  "redirects": [
+"redirects": [
+
     {
       "source": "/:path*",
       "destination": "https://www.zedbute.com/:path*",
@@ -18,7 +19,8 @@ json
       ]
     }
   ],
-  "rewrites": [
+"rewrites": [
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
