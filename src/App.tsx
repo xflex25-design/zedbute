@@ -7,6 +7,7 @@ import { HelmetProvider}  from 'react-helmet-async';
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CookieConsent } from "@/components/CookieConsent";
+import { PwaExperience } from "@/components/PwaExperience";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -84,6 +85,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <CookieConsent />
+              <PwaExperience />
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>
