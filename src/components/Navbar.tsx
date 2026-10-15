@@ -88,7 +88,10 @@ export const Navbar = () => {
                 <Link to="/playlists" className={linkClass(location.pathname === "/playlists")}>My Playlists</Link>
                 <Link to="/settings" className={linkClass(location.pathname === "/settings")}>Settings</Link>
                 {isAdmin && (
-                  <Link to="/admin/payouts" className={linkClass(location.pathname === "/admin/payouts")}>Manage Payouts</Link>
+                  <>
+                    <Link to="/admin/payouts" className={linkClass(location.pathname === "/admin/payouts")}>Manage Payouts</Link>
+                    <Link to="/admin/premium" className={linkClass(location.pathname === "/admin/premium")}>Premium Subs</Link>
+                  </>
                 )}
               </>
             )}
@@ -145,7 +148,10 @@ export const Navbar = () => {
               <Link to="/playlists" className={mobileLinkClass(location.pathname === "/playlists")} onClick={closeMobile}>My Playlists</Link>
               <Link to="/settings" className={mobileLinkClass(location.pathname === "/settings")} onClick={closeMobile}>Settings</Link>
               {isAdmin && (
-                <Link to="/admin/payouts" className={mobileLinkClass(location.pathname === "/admin/payouts")} onClick={closeMobile}>Manage Payouts</Link>
+                <>
+                  <Link to="/admin/payouts" className={mobileLinkClass(location.pathname === "/admin/payouts")} onClick={closeMobile}>Manage Payouts</Link>
+                  <Link to="/admin/premium" className={mobileLinkClass(location.pathname === "/admin/premium")} onClick={closeMobile}>Premium Subs</Link>
+                </>
               )}
             </>
           )}

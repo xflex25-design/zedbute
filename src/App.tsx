@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CookieConsent } from "@/components/CookieConsent";
 import { PwaExperience } from "@/components/PwaExperience";
 import Premium from "./pages/Premium";
+import AdminPremium from "./pages/AdminPremium";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -72,6 +73,7 @@ const App = () => (
                 <Route path="/upload-album" element={<UploadAlbum />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/premium" element={<Premium />} />
+                <Route path="/admin/premium" element={<AdminPremium />} />
                 <Route path="/release-success" element={<ReleaseSuccess />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/settings" element={<Settings />} />
