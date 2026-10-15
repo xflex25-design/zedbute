@@ -104,7 +104,7 @@ export const Navbar = () => {
             ) : (
               <div className="flex gap-3">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>Login</Button>
-                <Button variant="hero" size="sm" onClick={() => navigate('/auth')}>Get Started</Button>
+                <Button variant="hero" size="sm" className="rounded-full px-5" onClick={() => navigate('/auth')}>Get Started</Button>
               </div>
             )}
           </div>
@@ -167,7 +167,7 @@ export const Navbar = () => {
             ) : (
               <div className="flex flex-col gap-2">
                 <Button variant="ghost" size="sm" onClick={() => { navigate("/auth"); closeMobile(); }} className="w-full h-11">Login</Button>
-                <Button variant="hero" size="sm" onClick={() => { navigate("/auth"); closeMobile(); }} className="w-full h-11">Get Started</Button>
+                <Button variant="hero" size="sm" onClick={() => { navigate("/auth"); closeMobile(); }} className="w-full h-11 rounded-full">Get Started</Button>
               </div>
             )}
           </div>
