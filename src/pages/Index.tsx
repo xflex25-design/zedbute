@@ -108,11 +108,17 @@ const Index = () => {
         <section
           className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
         >
-          <img
-            src="/artist-recording.jpg"
-            alt="Independent artist recording music at home"
+          <video
             className="absolute inset-0 h-full w-full object-cover"
-          />
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/artist-recording.jpg"
+            aria-hidden="true"
+          >
+            <source src="/hero-video.mp4" type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/65 to-primary/50" />
           <div className="container mx-auto text-center relative z-10 animate-fade-in">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight mb-6 text-white drop-shadow-lg text-balance">
