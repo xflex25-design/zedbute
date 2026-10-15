@@ -1,13 +1,8 @@
-const CACHE_NAME = "zedbute-v1";
+const CACHE_NAME = "zedbute-v2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/favicon.svg",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/icon-192.svg",
-  "/icon-512.svg",
   "/robots.txt",
   "/sitemap.xml",
   "/placeholder.svg",

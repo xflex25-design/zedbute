@@ -69,9 +69,9 @@ const Index = () => {
         >
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)]" />
           <div className="container mx-auto text-center relative z-10 animate-fade-in">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white drop-shadow-lg text-balance">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight mb-6 text-white drop-shadow-lg text-balance">
               Distribute Your Music
-              <span className="block bg-gradient-primary bg-clip-text text-transparent drop-shadow-none">
+              <span className="block text-amber-300 drop-shadow-lg">
                 To The World
               </span>
             </h1>
@@ -190,6 +190,46 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Brand Promise — bold statement, CD Baby style */}
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-muted/30">
+          <div className="container mx-auto max-w-4xl text-center">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight mb-6 text-balance">
+              Made for independent artists.
+            </h2>
+            <p className="text-xl sm:text-2xl lg:text-3xl leading-relaxed text-muted-foreground text-balance">
+              &ldquo;Your music, your masters, your money. Keep 100% ownership and 100% of your royalties &mdash; always.&rdquo;
+            </p>
+            <p className="mt-6 text-sm uppercase tracking-widest text-primary font-semibold">The ZedBute Promise</p>
+          </div>
+        </section>
+
+        {/* Artist Resources */}
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-background">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-4 text-balance">Artist Resources</h2>
+              <p className="text-lg text-muted-foreground">Guides and tools to release and promote your music</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-primary">The ZedBute Blog</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">Practical tips on releasing and promoting music as an independent artist in Zambia and beyond.</p>
+                <a href="/blog" data-testid="resources-blog-link" className="inline-block text-primary font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity">Visit the blog</a>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-primary">Artist Verification</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">Claim and verify your artist profiles to build credibility on streaming platforms.</p>
+                <a href="/verify" data-testid="resources-verify-link" className="inline-block text-primary font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity">Get verified</a>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-xl font-bold text-primary">Simple Pricing</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">One-time fees per release in Kwacha with USD shown &mdash; no subscriptions, no hidden costs.</p>
+                <a href="/pricing" data-testid="resources-pricing-link" className="inline-block text-primary font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity">See pricing</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section
           className="py-20 sm:py-24 lg:py-32 px-4 bg-gradient-to-br from-primary via-red-600 to-secondary relative overflow-hidden"
@@ -230,7 +270,7 @@ const Index = () => {
                 </p>
               </div>
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">Quick Links</h4>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Quick Links</h4>
                 <div className="flex flex-col gap-2">
                   <a href="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">Pricing</a>
                   <a href="/auth" className="text-muted-foreground hover:text-primary transition-colors text-sm">Get Started</a>
@@ -239,7 +279,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">Legal</h4>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Legal</h4>
                 <div className="flex flex-col gap-2">
                   <a href="/privacy" data-testid="footer-privacy-link" className="text-muted-foreground hover:text-primary transition-colors text-sm">Privacy &amp; Cookie Policy</a>
                   <a href="/terms" data-testid="footer-terms-link" className="text-muted-foreground hover:text-primary transition-colors text-sm">Terms of Service</a>
@@ -247,7 +287,7 @@ const Index = () => {
                 </div>
               </div>
               <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-foreground">Connect With Us</h4>
+                <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Connect With Us</h4>
                 <div className="flex gap-4">
                   <a href="https://www.facebook.com/61585895670071/posts/122116059987196522/?app=fbl" target="_blank" rel="noopener noreferrer" aria-label="ZedBute on Facebook" className="w-10 h-10 rounded-full bg-[#1877F2]/10 flex items-center justify-center hover:bg-[#1877F2] hover:text-white transition-all duration-300 text-[#1877F2]"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
                   <a href="https://www.tiktok.com/@zedbute?_r=1&_t=ZS-94OnQPySvxJ" target="_blank" rel="noopener noreferrer" aria-label="ZedBute on TikTok" className="w-10 h-10 rounded-full bg-[#ff0050]/10 flex items-center justify-center hover:bg-[#ff0050] hover:text-white transition-all duration-300 text-[#ff0050]"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
