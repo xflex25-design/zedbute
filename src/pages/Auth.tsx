@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Music2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
 
@@ -176,7 +176,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
       <Card className="w-full max-w-md shadow-card animate-fade-in">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4"><Music2 className="h-12 w-12 text-primary" /></div>
+          <div className="flex justify-center mb-4"><img src="/logo.png" alt="ZedBute logo" className="h-14 w-14 rounded-xl" /></div>
           <CardTitle className="text-2xl">
             {resetStep === "enter_email" ? "Reset Password" : isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
