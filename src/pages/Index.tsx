@@ -1,14 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from 'react-helmet-async';
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ListMusic, Globe, Shield, TrendingUp, Wallet, Banknote } from "lucide-react";
+import { ListMusic, Globe, Shield, TrendingUp, Wallet, Banknote, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSEO } from "@/hooks/useSEO";
+import { useToast } from "@/hooks/use-toast";
 import { PlatformLogos } from "@/components/PlatformLogos";
+import emailjs from "@emailjs/browser";
+
+const EMAILJS = {
+  publicKey: "y6dBkyYNeiQ5-ONrT",
+  serviceId: "service_m5ipkn6",
+  templateId: "template_h6m0hkf",
+};
 
 const faqs = [
   { q: "How do I distribute my music with ZedBute?", a: "Sign up, upload your track and cover art, fill in your release metadata, choose a plan, and pay securely with mobile money or card. We deliver your music to Spotify, Apple Music, TikTok and 150+ platforms." },
@@ -22,6 +33,36 @@ const faqs = [
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [sendingContact, setSendingContact] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName.trim() || !contactEmail.trim() || !contactMessage.trim()) {
+      toast({ title: "Missing fields", description: "Please complete all fields.", variant: "destructive" });
+      return;
+    }
+    setSendingContact(true);
+    try {
+      await emailjs.init(EMAILJS.publicKey);
+      await emailjs.send(EMAILJS.serviceId, EMAILJS.templateId, {
+        from_name: contactName,
+        from_email: contactEmail,
+        message: contactMessage,
+      });
+      toast({ title: "Message sent", description: "We will respond within 24 hours." });
+      setContactName("");
+      setContactEmail("");
+      setContactMessage("");
+    } catch (error: any) {
+      toast({ title: "Send failed", description: error?.text || error?.message || "Try again later.", variant: "destructive" });
+    } finally {
+      setSendingContact(false);
+    }
+  };
 
   useSEO({
     title: "ZedBute | Music Distribution for Zambian & Independent Artists",
@@ -65,9 +106,14 @@ const Index = () => {
 
         {/* Hero Section */}
         <section
-          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden bg-gradient-to-br from-primary via-secondary to-red-800"
+          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.08)_0%,transparent_70%)]" />
+          <img
+            src="/artist-recording.jpg"
+            alt="Independent artist recording music at home"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/65 to-primary/50" />
           <div className="container mx-auto text-center relative z-10 animate-fade-in">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight mb-6 text-white drop-shadow-lg text-balance">
               Distribute Your Music
@@ -191,12 +237,19 @@ const Index = () => {
         </section>
 
         {/* Brand Promise — bold statement, CD Baby style */}
-        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-muted/30">
-          <div className="container mx-auto max-w-4xl text-center">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight mb-6 text-balance">
+        <section className="relative py-16 sm:py-20 lg:py-24 px-4 overflow-hidden">
+          <img
+            src="/artist-keys.jpg"
+            alt="Artist producing music on a keyboard in the studio"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/75" />
+          <div className="container mx-auto max-w-4xl text-center relative z-10">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight mb-6 text-balance text-white">
               Made for independent artists.
             </h2>
-            <p className="text-xl sm:text-2xl lg:text-3xl leading-relaxed text-muted-foreground text-balance">
+            <p className="text-xl sm:text-2xl lg:text-3xl leading-relaxed text-white/85 text-balance">
               &ldquo;Your music, your masters, your money. Keep 100% ownership and 100% of your royalties &mdash; always.&rdquo;
             </p>
             <p className="mt-6 text-sm uppercase tracking-widest text-primary font-semibold">The ZedBute Promise</p>
@@ -225,6 +278,80 @@ const Index = () => {
                 <h3 className="text-xl font-bold text-primary">Simple Pricing</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">One-time fees per release in Kwacha with USD shown &mdash; no subscriptions, no hidden costs.</p>
                 <a href="/pricing" data-testid="resources-pricing-link" className="inline-block text-primary font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity">See pricing</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact — send us an email */}
+        <section className="py-16 sm:py-20 lg:py-24 px-4 bg-muted/30">
+          <div className="container mx-auto max-w-5xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+              <div className="rounded-2xl overflow-hidden shadow-glow order-2 lg:order-1">
+                <img
+                  src="/artist-studio.jpg"
+                  alt="Smiling artist playing guitar in a professional recording studio"
+                  loading="lazy"
+                  className="h-full w-full object-cover aspect-[4/3]"
+                />
+              </div>
+              <div className="order-1 lg:order-2">
+                <h2 className="text-3xl sm:text-4xl font-extrabold uppercase tracking-tight mb-3 text-balance">
+                  Talk to us
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Questions about distribution, verification or Premium? Send us an email straight from here &mdash; we reply within 24 hours.
+                </p>
+                <form onSubmit={handleContactSubmit} className="space-y-4" data-testid="home-contact-form">
+                  <div className="space-y-2">
+                    <Label htmlFor="home-contact-name">Name</Label>
+                    <Input
+                      id="home-contact-name"
+                      data-testid="home-contact-name"
+                      placeholder="Your name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      maxLength={100}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="home-contact-email">Email</Label>
+                    <Input
+                      id="home-contact-email"
+                      data-testid="home-contact-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      maxLength={255}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="home-contact-message">Message</Label>
+                    <Textarea
+                      id="home-contact-message"
+                      data-testid="home-contact-message"
+                      placeholder="How can we help?"
+                      value={contactMessage}
+                      onChange={(e) => setContactMessage(e.target.value)}
+                      maxLength={2000}
+                      rows={4}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    className="w-full sm:w-auto"
+                    data-testid="home-contact-submit"
+                    disabled={sendingContact}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {sendingContact ? "Sending..." : "Send Email"}
+                  </Button>
+                </form>
               </div>
             </div>
           </div>

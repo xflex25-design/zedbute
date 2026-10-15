@@ -34,9 +34,9 @@ const PLANS = [
 
 const FEATURES = [
   "Full access to music.zedbute.com",
-  "Stream and enjoy premium music content",
-  "New content added regularly",
-  "Works on any device",
+  "Unlimited uploads for your whole subscription period",
+  "See your analytics — streams, listeners and performance",
+  "Choose which platforms you distribute to",
 ];
 
 type Subscription = {
