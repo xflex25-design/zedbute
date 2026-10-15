@@ -42,7 +42,11 @@ type Release = {
   cover_art_url: string | null;
   status: string | null;
   genre: string | null;
+  updated_at: string | null;
 };
+
+const formatUpdated = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 const statusVariant = (status: string | null) => {
   switch (status) {
@@ -116,7 +120,7 @@ const Dashboard = () => {
           .maybeSingle(),
         supabase
           .from("music_releases")
-          .select("id, title, artist_name, release_type, release_date, cover_art_url, status, genre")
+          .select("id, title, artist_name, release_type, release_date, cover_art_url, status, genre, updated_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false }),
       ]);
@@ -526,6 +530,11 @@ return (
                               <TableCell>
                                 <p className="font-medium">{r.title}</p>
                                 <p className="text-xs text-muted-foreground">{r.artist_name}</p>
+                                {r.updated_at && (
+                                  <p className="text-[11px] text-muted-foreground/70" data-testid={`release-updated-${r.id}`}>
+                                    Last updated {formatUpdated(r.updated_at)}
+                                  </p>
+                                )}
                               </TableCell>
                               <TableCell>
                                 <Badge variant="outline" className="capitalize">
@@ -627,6 +636,12 @@ return (
                               <p className="text-muted-foreground">Genre</p>
                               <p className="font-medium">{r.genre ?? "—"}</p>
                             </div>
+                            {r.updated_at && (
+                              <div>
+                                <p className="text-muted-foreground">Last Updated</p>
+                                <p className="font-medium" data-testid={`release-updated-${r.id}`}>{formatUpdated(r.updated_at)}</p>
+                              </div>
+                            )}
                           </div>
                           <div className="flex gap-2">
                             <Button

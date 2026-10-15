@@ -510,6 +510,7 @@ const UploadRelease = () => {
         rights_confirmed: formData.rightsConfirmed,
         status: isEditMode ? existingRelease?.status || "unpaid" : "unpaid",
         upload_progress: 0,
+        ...(isEditMode ? { updated_at: new Date().toISOString() } : {}),
       };
 
       let result:
