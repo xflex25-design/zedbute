@@ -1,4 +1,4 @@
-import { Music2, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
@@ -66,7 +66,7 @@ export const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0" onClick={closeMobile}>
-            <Music2 className="h-8 w-8 text-primary shrink-0" />
+            <img src="/logo.png" alt="ZedBute logo" className="h-9 w-9 rounded-lg shrink-0" />
             <span className="text-xl font-bold whitespace-nowrap">
               <span className="text-green-500">zed</span>
               <span className="text-red-500">B</span>

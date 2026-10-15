@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Music, ListMusic, Globe, Shield, TrendingUp, Wallet, Banknote } from "lucide-react";
+import { ListMusic, Globe, Shield, TrendingUp, Wallet, Banknote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSEO } from "@/hooks/useSEO";
@@ -258,7 +258,7 @@ const Index = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Music className="h-8 w-8 text-primary" />
+                  <img src="/logo.png" alt="ZedBute logo" className="h-9 w-9 rounded-lg" />
                   <span className="text-2xl font-bold">
                     <span className="text-green-500">zed</span>
                     <span className="text-red-500">B</span>
