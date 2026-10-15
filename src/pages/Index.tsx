@@ -273,6 +273,7 @@ const Index = () => {
                 <h4 className="text-sm font-bold uppercase tracking-widest text-foreground">Quick Links</h4>
                 <div className="flex flex-col gap-2">
                   <a href="/pricing" className="text-muted-foreground hover:text-primary transition-colors text-sm">Pricing</a>
+                  <a href="/premium" className="text-muted-foreground hover:text-primary transition-colors text-sm">Premium</a>
                   <a href="/auth" className="text-muted-foreground hover:text-primary transition-colors text-sm">Get Started</a>
                   <a href="/verify" className="text-muted-foreground hover:text-primary transition-colors text-sm">Artist Verification</a>
                   <a href="/contact" className="text-muted-foreground hover:text-primary transition-colors text-sm">Contact</a>

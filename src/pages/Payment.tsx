@@ -43,6 +43,7 @@ const paymentMethodLabels: Record<string, string> = {
   ep: "EP Upload",
   album: "Album Upload",
   release: "Single Upload",
+  premium: "Premium Subscription",
 };
 
 const defaultAmounts: Record<string, number> = {
@@ -53,6 +54,7 @@ const defaultAmounts: Record<string, number> = {
   album: 500,
   release: 50,
   verification: 260,
+  premium: 170,
 };
 
 const ZMK_TO_USD_RATE = 25;
@@ -269,6 +271,29 @@ export default function Payment() {
           description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
         });
         return returnUrl || "/dashboard";
+      }
+
+      if (paymentType === "premium") {
+        if (user) {
+          const plan = searchParams.get("plan") === "yearly" ? "yearly" : "monthly";
+          const { error: premiumError } = await (supabase as any)
+            .from("premium_subscriptions")
+            .insert({
+              user_id: user.id,
+              plan,
+              amount: paymentAmount,
+              payment_status: status,
+              status: "pending_approval",
+              transaction_id: transactionId,
+              phone_number: phoneNumber,
+            });
+          if (premiumError) throw premiumError;
+        }
+        toast({
+          title: status === "verified" ? "Payment Received!" : "Payment Submitted",
+          description: "Our team will approve your Premium access within 24 hours.",
+        });
+        return "/premium?subscribed=1";
       }
 
       await savePayment(transactionId, status);

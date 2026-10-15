@@ -93,6 +93,7 @@ export const Navbar = () => {
               </>
             )}
             <Link to="/pricing" className={linkClass(location.pathname === "/pricing")}>Pricing</Link>
+            <Link to="/premium" className={linkClass(location.pathname === "/premium")}>Premium</Link>
             <Link to="/blog" className={linkClass(location.pathname === "/blog")}>Blog</Link>
             <ThemeToggle />
             {user ? (
@@ -149,6 +150,7 @@ export const Navbar = () => {
             </>
           )}
           <Link to="/pricing" className={mobileLinkClass(location.pathname === "/pricing")} onClick={closeMobile}>Pricing</Link>
+          <Link to="/premium" className={mobileLinkClass(location.pathname === "/premium")} onClick={closeMobile}>Premium</Link>
           <Link to="/blog" className={mobileLinkClass(location.pathname === "/blog")} onClick={closeMobile}>Blog</Link>
           <div className="pt-2 space-y-2">
             <div className="px-4">
