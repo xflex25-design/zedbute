@@ -75,6 +75,7 @@ const UploadRelease = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingReleaseId, setEditingReleaseId] = useState<string | null>(null);
   const [existingRelease, setExistingRelease] = useState<any>(null);
+  const [editTracks, setEditTracks] = useState<{ id: string; track_number: number; title: string }[]>([]);
   const [isLoadingRelease, setIsLoadingRelease] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -287,6 +288,18 @@ const UploadRelease = () => {
     });
     setSelectedLanguages(Array.isArray(data.language) ? data.language : []);
     setImagePreview(data.cover_art_url || null);
+
+    if (data.release_type && data.release_type !== "single") {
+      const { data: trackRows } = await supabase
+        .from("release_tracks")
+        .select("id, track_number, title")
+        .eq("release_id", releaseId)
+        .order("track_number");
+      setEditTracks(trackRows ?? []);
+    } else {
+      setEditTracks([]);
+    }
+
     setIsLoadingRelease(false);
   };
 
@@ -520,6 +533,16 @@ const UploadRelease = () => {
       }
 
       if (result.error) throw result.error;
+
+      if (isEditMode && editTracks.length > 0) {
+        const trackResults = await Promise.all(
+          editTracks.map((t) =>
+            supabase.from("release_tracks").update({ title: t.title }).eq("id", t.id)
+          )
+        );
+        const trackError = trackResults.find((r) => r.error)?.error;
+        if (trackError) throw trackError;
+      }
 
       setUploadProgress(100);
 
@@ -893,6 +916,35 @@ const UploadRelease = () => {
                   />
                 </div>
               </div>
+
+              {/* Track Titles (edit mode, EP/album) */}
+              {isEditMode && editTracks.length > 0 && (
+                <div className="space-y-3" data-testid="edit-tracks-section">
+                  <Label>Track Titles</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Fix typos in individual track names. Audio files stay unchanged.
+                  </p>
+                  <div className="space-y-2">
+                    {editTracks.map((track, index) => (
+                      <div key={track.id} className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground w-6 shrink-0 text-right">
+                          {track.track_number}.
+                        </span>
+                        <Input
+                          value={track.title}
+                          data-testid={`edit-track-title-${track.track_number}`}
+                          maxLength={200}
+                          onChange={(e) =>
+                            setEditTracks((prev) =>
+                              prev.map((t, i) => (i === index ? { ...t, title: e.target.value } : t))
+                            )
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Rights Confirmation */}
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4 bg-muted/50">
