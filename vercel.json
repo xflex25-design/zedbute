@@ -1,0 +1,23 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "destination": "https://www.zedbute.com/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "zedbute.vercel.app" }
+      ]
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://www.zedbute.com/:path*",
+      "permanent": true,
+      "has": [
+        { "type": "host", "value": "zedbute.com" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
