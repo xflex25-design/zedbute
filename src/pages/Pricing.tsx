@@ -13,7 +13,7 @@ const plans = [
   {
     icon: Music,
     name: "Single",
-    price: 50,
+    price: 70,
     tagline: "One track",
     features: [
       "1 track per release",
@@ -200,7 +200,7 @@ const Pricing = () => {
         {/* Comparison line below 3 cards */}
         <div className="mt-8 text-center">
           <p className="text-xs sm:text-sm text-muted-foreground">
-            DistroKid charges $22.99/year EVERY year. ZedBute: K50 once. Forever.
+            DistroKid charges $22.99/year EVERY year. ZedBute: K70 once. Forever.
           </p>
         </div>
 

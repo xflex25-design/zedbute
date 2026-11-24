@@ -31,7 +31,16 @@ import {
   Wallet,
   Bell,
   Check,
+  Radio,
+  BarChart3,
+  FileEdit,
+  Trash2,
 } from "lucide-react";
+import { DistributionEngineModal } from "@/components/once/DistributionEngineModal";
+import { ArtistAnalyticsSection } from "@/components/once/ArtistAnalyticsSection";
+import { ReleaseSubmissionTracker } from "@/components/once/ReleaseSubmissionTracker";
+import { onceApi } from "@/services/onceApi";
+import type { OnceDistributionReleaseRecord } from "../../../server/once/types";
 
 type Release = {
   id: string;
@@ -49,16 +58,24 @@ const formatUpdated = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 const statusVariant = (status: string | null) => {
-  switch (status) {
+  switch ((status || "").toLowerCase()) {
     case "live":
     case "distributed":
-      return "bg-green-500/15 text-green-600 border-green-500/30";
+    case "delivered":
+      return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
+    case "approved":
+    case "under_review":
+    case "in_review":
+      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
     case "processing":
+    case "queued":
       return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
     case "unpaid":
     case "pending":
-      return "bg-gray-500/15 text-gray-500 border-gray-500/30";
+    case "pending_submission":
+      return "bg-amber-500/15 text-amber-600 border-amber-500/30";
     case "rejected":
+    case "failed":
       return "bg-red-500/15 text-red-600 border-red-500/30";
     default:
       return "bg-muted text-muted-foreground border-border";
@@ -66,13 +83,22 @@ const statusVariant = (status: string | null) => {
 };
 
 const statusLabel = (status: string | null) => {
-  switch (status) {
+  switch ((status || "").toLowerCase()) {
     case "live": return "Live";
     case "distributed": return "Distributed";
+    case "delivered": return "Delivered";
+    case "approved": return "Approved";
+    case "under_review":
+    case "in_review":
+      return "In Review";
     case "processing": return "Processing";
+    case "queued": return "Queued";
     case "unpaid": return "Unpaid";
-    case "pending": return "Pending";
+    case "pending":
+    case "pending_submission":
+      return "Pending";
     case "rejected": return "Rejected";
+    case "failed": return "Failed";
     default: return status ?? "Unknown";
   }
 };
@@ -108,6 +134,47 @@ const Dashboard = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [engineModalOpen, setEngineModalOpen] = useState(false);
+  const [activeEngineRelease, setActiveEngineRelease] = useState<OnceDistributionReleaseRecord | null>(null);
+  const [onceReleasesMap, setOnceReleasesMap] = useState<Record<string, OnceDistributionReleaseRecord>>({});
+  const [onceReleasesList, setOnceReleasesList] = useState<OnceDistributionReleaseRecord[]>([]);
+  const [drafts, setDrafts] = useState<OnceDistributionReleaseRecord[]>([]);
+  const [selectedAnalyticsReleaseId, setSelectedAnalyticsReleaseId] = useState<string | null>(null);
+  const [syncingStatuses, setSyncingStatuses] = useState(false);
+  const [lastStatusSyncAt, setLastStatusSyncAt] = useState<string | null>(null);
+
+  const openReleaseAnalytics = (onceReleaseId: string) => {
+    setSelectedAnalyticsReleaseId(onceReleaseId);
+    const el = document.getElementById("artist-analytics");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const openDistributionModal = (r: Release) => {
+    const match = onceReleasesMap[r.id] || {
+      id: r.id,
+      release_id: r.id,
+      user_id: user?.id || "",
+      title: r.title,
+      primary_artist: r.artist_name,
+      release_type: r.release_type || "single",
+      cover_art_url: r.cover_art_url || undefined,
+      metadata: {},
+      distribution_store_ids: [1, 9, 13, 319, 17, 14, 309],
+      store_statuses: [],
+      artist_profiles: [],
+      status: r.status || "draft",
+      is_ai_detected: false,
+      acr_matched: false,
+      credit_cost: 1,
+      credits_debited: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    setActiveEngineRelease(match);
+    setEngineModalOpen(true);
+  };
 
   const fetchUserData = async (userId: string) => {
     const [{ data: profileData }, { data: verificationData }, { data: releasesData }] =
@@ -139,6 +206,76 @@ const Dashboard = () => {
     ]);
 
     setNotifications(notifData ?? []);
+
+    try {
+      const [list, draftList] = await Promise.all([
+        onceApi.listReleases(userId).catch(() => [] as OnceDistributionReleaseRecord[]),
+        onceApi.listDrafts().catch(() => [] as OnceDistributionReleaseRecord[]),
+      ]);
+      const map: Record<string, OnceDistributionReleaseRecord> = {};
+      for (const r of list || []) {
+        if (r.release_id) map[r.release_id] = r;
+        map[r.id] = r;
+      }
+      setOnceReleasesList(list || []);
+      setOnceReleasesMap(map);
+      setDrafts(draftList || []);
+      setLastStatusSyncAt(new Date().toISOString());
+    } catch {
+      // ignore background engine sync failures
+    }
+  };
+
+  const refreshSubmissionStatuses = async (syncLiveOnce = false) => {
+    if (!user) return;
+    setSyncingStatuses(true);
+    try {
+      if (syncLiveOnce) {
+        const activeOnce = onceReleasesList.filter(
+          (r) =>
+            r.once_release_id &&
+            ["pending", "queued", "processing", "under_review", "in_review", "approved"].includes(
+              (r.status || "").toLowerCase()
+            )
+        );
+        await Promise.all(
+          activeOnce.slice(0, 6).map((r) =>
+            onceApi.getReleaseStatus(r.once_release_id!).catch(() => null)
+          )
+        );
+      }
+      await fetchUserData(user.id);
+    } finally {
+      setSyncingStatuses(false);
+    }
+  };
+
+  const syncSingleOnceRelease = async (onceReleaseId: string) => {
+    if (!user) return;
+    try {
+      const live = await onceApi.getReleaseStatus(onceReleaseId);
+      toast({
+        title: "Status synced",
+        description: `Current status: ${statusLabel(live.aggregateStatus)}`,
+      });
+      await fetchUserData(user.id);
+    } catch (err: any) {
+      toast({
+        title: "Sync unavailable",
+        description: err?.message || "Could not reach ONCE status API right now.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteDraft = async (draftId: string, title: string) => {
+    try {
+      await onceApi.deleteDraft(draftId);
+      setDrafts((prev) => prev.filter((d) => d.id !== draftId));
+      toast({ title: "Draft removed", description: `"${title}" draft was deleted.` });
+    } catch (err: any) {
+      toast({ title: "Could not delete draft", description: err.message, variant: "destructive" });
+    }
   };
 
   const fetchPromotions = async (userId: string) => {
@@ -219,6 +356,54 @@ const Dashboard = () => {
     setLoading(true);
     fetchUserData(user.id).finally(() => setLoading(false));
     fetchPromotions(user.id);
+
+    // Real-time Postgres updates when webhooks or admin reviews change release status
+    const channel = supabase
+      .channel(`dashboard-release-progress-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "music_releases",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          void fetchUserData(user.id);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "once_distribution_releases",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          void fetchUserData(user.id);
+        }
+      )
+      .subscribe();
+
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void fetchUserData(user.id);
+      }
+    }, 20000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void fetchUserData(user.id);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      void supabase.removeChannel(channel);
+    };
   }, [user, authLoading, navigate]);
 
   const filteredReleases = useMemo(() => {
@@ -260,7 +445,7 @@ return (
 
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-2xl">
+      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-5xl">
 
         {/* Welcome header */}
         <div className="mb-6 mt-4">
@@ -366,6 +551,80 @@ return (
           </div>
         </Card>
 
+        {/* Unfinished Upload Drafts */}
+        {drafts.length > 0 && (
+          <Card className="mb-4 bg-card border border-primary/25 rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <div className="flex items-center gap-2">
+                  <FileEdit className="h-5 w-5 text-primary" />
+                  <h2 className="text-base font-semibold">Unfinished Drafts</h2>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {drafts.length} {drafts.length === 1 ? "draft" : "drafts"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Pick up right where you left off in the 5-step upload wizard.
+              </p>
+              <div className="space-y-2.5">
+                {drafts.map((d) => (
+                  <div
+                    key={d.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border bg-background p-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      {d.cover_art_url ? (
+                        <img
+                          src={d.cover_art_url}
+                          alt={d.title}
+                          className="w-10 h-10 rounded object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                          <Music className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {d.title || "Untitled Draft"}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {d.primary_artist || "Artist pending"} · Step {d.current_step || 1} of 5 ·{" "}
+                          <span className="capitalize">{d.status.replace(/_/g, " ")}</span>
+                        </p>
+                        {d.submission_error && (
+                          <p className="text-[11px] text-destructive truncate mt-0.5">
+                            {d.submission_error}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        onClick={() => navigate(`/upload-release?draftId=${encodeURIComponent(d.id)}`)}
+                        className="rounded-lg bg-gradient-primary text-primary-foreground text-xs h-8"
+                      >
+                        Resume Draft
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        aria-label={`Delete draft ${d.title}`}
+                        onClick={() => handleDeleteDraft(d.id, d.title || "Untitled Draft")}
+                        className="h-8 px-2 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {notifications.length > 0 && (
           <Card className="mb-4 bg-card border border-border rounded-lg">
             <div className="p-5">
@@ -426,6 +685,21 @@ return (
             </Button>
           </div>
         </Card>
+
+        <ReleaseSubmissionTracker
+          musicReleases={releases}
+          onceReleases={onceReleasesList}
+          syncing={syncingStatuses}
+          lastSyncedAt={lastStatusSyncAt}
+          onRefreshAll={() => refreshSubmissionStatuses(true)}
+          onSyncSingle={syncSingleOnceRelease}
+          onOpenDetails={(engineRec) => {
+            setActiveEngineRelease(engineRec);
+            setEngineModalOpen(true);
+          }}
+          onPayNow={(releaseId) => navigate(`/payment?type=release&releaseId=${releaseId}`)}
+          onResumeDraft={(draftId) => navigate(`/upload-release?draftId=${encodeURIComponent(draftId)}`)}
+        />
 
         <Card className="bg-card border border-border rounded-lg">
           <div className="p-5">
@@ -564,6 +838,32 @@ return (
                                   <Button
                                     size="sm"
                                     variant="outline"
+                                    className="h-6 px-2 text-xs gap-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDistributionModal(r);
+                                    }}
+                                  >
+                                    <Radio className="h-3 w-3 text-primary" />
+                                    Engine
+                                  </Button>
+                                  {onceReleasesMap[r.id]?.once_release_id && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 px-2 text-xs gap-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openReleaseAnalytics(onceReleasesMap[r.id].once_release_id!);
+                                      }}
+                                    >
+                                      <BarChart3 className="h-3 w-3 text-primary" />
+                                      Analytics
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-6 px-2 text-xs"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -643,7 +943,33 @@ return (
                               </div>
                             )}
                           </div>
-                          <div className="flex gap-2">
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 gap-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDistributionModal(r);
+                              }}
+                            >
+                              <Radio className="h-3.5 w-3.5 text-primary" />
+                              Engine
+                            </Button>
+                            {onceReleasesMap[r.id]?.once_release_id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 gap-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openReleaseAnalytics(onceReleasesMap[r.id].once_release_id!);
+                                }}
+                              >
+                                <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                                Analytics
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -677,7 +1003,7 @@ return (
                               }}
                             >
                               <Smartphone className="h-4 w-4 mr-2" />
-                               Complete Payment — K50 Mobile
+                              Complete Payment — Mobile Money
                             </Button>
                           )}
                         </div>
@@ -769,8 +1095,22 @@ return (
           </Card>
         )}
 
+        {/* ONCE Streaming Performance Analytics */}
+        <div id="artist-analytics" className="mt-6 scroll-mt-20">
+          <ArtistAnalyticsSection externalReleaseId={selectedAnalyticsReleaseId} />
+        </div>
+
       </div>
     </div>
+
+    <DistributionEngineModal
+      open={engineModalOpen}
+      onOpenChange={setEngineModalOpen}
+      release={activeEngineRelease}
+      onUpdate={() => {
+        if (user) fetchUserData(user.id);
+      }}
+    />
   </>
   );
 };

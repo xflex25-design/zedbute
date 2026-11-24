@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "ZedBute",
+  "description": "Distribute your music to Spotify, Apple Music, Boomplay, TikTok, and 150+ platforms worldwide. Keep 100% of your streaming royalties with ZedBute.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

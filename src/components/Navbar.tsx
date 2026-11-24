@@ -80,6 +80,7 @@ export const Navbar = () => {
             {user && (
               <>
                 <Link to="/dashboard" className={linkClass(location.pathname === "/dashboard")}>Dashboard</Link>
+                <Link to="/dashboard/analytics" className={linkClass(location.pathname === "/dashboard/analytics")}>Analytics</Link>
                 <Link to="/dashboard/royalties" className={linkClass(location.pathname === "/dashboard/royalties")}>Royalties</Link>
                 <Link to="/upload-release" className={linkClass(location.pathname === "/upload-release")}>Upload Release</Link>
                 <Link to="/verify" className={linkClass(location.pathname === "/verify")}>Get Verified</Link>
@@ -140,6 +141,7 @@ export const Navbar = () => {
           {user && (
             <>
               <Link to="/dashboard" className={mobileLinkClass(location.pathname === "/dashboard")} onClick={closeMobile}>Dashboard</Link>
+              <Link to="/dashboard/analytics" className={mobileLinkClass(location.pathname === "/dashboard/analytics")} onClick={closeMobile}>Analytics</Link>
               <Link to="/dashboard/royalties" className={mobileLinkClass(location.pathname === "/dashboard/royalties")} onClick={closeMobile}>Royalties</Link>
               <Link to="/upload-release" className={mobileLinkClass(location.pathname === "/upload-release")} onClick={closeMobile}>Upload Release</Link>
               <Link to="/verify" className={mobileLinkClass(location.pathname === "/verify")} onClick={closeMobile}>Get Verified</Link>

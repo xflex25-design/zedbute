@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldAlert, CheckCircle2, Disc } from "lucide-react";
+import { Loader2, ShieldAlert, CheckCircle2, Disc, Radio } from "lucide-react";
 
 const EMAILJS = {
   publicKey: "y6dBkyYNeiQ5-ONrT",
@@ -159,6 +159,9 @@ const Admin = () => {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h1 className="text-3xl font-bold">Admin — Releases</h1>
           <div className="flex flex-wrap gap-2">
+            <Button variant="default" onClick={() => navigate("/admin/distribution-engine")} className="gap-1.5">
+              <Radio className="h-4 w-4" /> ONCE Distribution Engine
+            </Button>
             <Button variant="outline" onClick={() => navigate("/admin/spotify-claims")}>
               Spotify Claims
             </Button>

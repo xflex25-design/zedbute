@@ -2,8 +2,31 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const DEFAULT_SUPABASE_URL = "https://focothurmwepjqbyrtnn.supabase.co";
+
+function resolveClientSupabaseUrl(raw?: string): string {
+  if (!raw || typeof raw !== "string") return DEFAULT_SUPABASE_URL;
+  let candidate = raw.trim().replace(/^["']+|["']+$/g, "").trim();
+  if (/^[a-z0-9-]+\.supabase\.co$/i.test(candidate)) {
+    candidate = `https://${candidate}`;
+  }
+  if (!/^https?:\/\//i.test(candidate)) {
+    return DEFAULT_SUPABASE_URL;
+  }
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+      ? `${parsed.origin}${parsed.pathname.replace(/\/+$/, "")}`
+      : DEFAULT_SUPABASE_URL;
+  } catch {
+    return DEFAULT_SUPABASE_URL;
+  }
+}
+
+const SUPABASE_URL = resolveClientSupabaseUrl(import.meta.env.VITE_SUPABASE_URL);
+const SUPABASE_ANON_KEY =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim().replace(/^["']+|["']+$/g, "") ||
+  "placeholder-anon-key";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";

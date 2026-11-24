@@ -52,7 +52,7 @@ const defaultAmounts: Record<string, number> = {
   promotion: 20,
   ep: 200,
   album: 500,
-  release: 50,
+  release: 70,
   verification: 260,
   premium: 170,
 };

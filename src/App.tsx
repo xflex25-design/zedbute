@@ -16,6 +16,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Verify from "./pages/Verify";
 import Admin from "./pages/Admin";
+import AdminDistributionEngine from "./pages/AdminDistributionEngine";
 import SpotifyClaim from "./pages/SpotifyClaim";
 import BoomplayClaim from "./pages/BoomplayClaim";
 import AdminSpotifyClaims from "./pages/AdminSpotifyClaims";
@@ -33,6 +34,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Royalties from "./pages/Royalties";
 import DashboardRoyalties from "./pages/DashboardRoyalties";
+import Analytics from "./pages/Analytics";
 import AdminPayouts from "./pages/AdminPayouts";
 import AdminPromotions from "./pages/AdminPromotions";
 import Settings from "./pages/Settings";
@@ -60,6 +62,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/verify" element={<Verify />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/distribution-engine" element={<AdminDistributionEngine />} />
                 <Route path="/admin/spotify-claims" element={<AdminSpotifyClaims />} />
                 <Route path="/playlists" element={<MyPlaylists />} />
                 <Route path="/submit-to-playlist" element={<PlaylistSubmit />} />
@@ -78,6 +81,7 @@ const App = () => (
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/dashboard/royalties" element={<DashboardRoyalties />} />
+                <Route path="/dashboard/analytics" element={<Analytics />} />
                 <Route path="/admin/payouts" element={<AdminPayouts />} />
                 <Route path="/royalties" element={<Royalties />} />
                 <Route path="/blog" element={<Blog />} />
