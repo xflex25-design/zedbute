@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -35,6 +35,16 @@ import {
   BarChart3,
   FileEdit,
   Trash2,
+  Clock,
+  CheckCircle,
+  CloudUpload,
+  LayoutDashboard,
+  HelpCircle,
+  LogOut,
+  Search,
+  Menu,
+  X,
+  AlertCircle,
 } from "lucide-react";
 import { DistributionEngineModal } from "@/components/once/DistributionEngineModal";
 import { ArtistAnalyticsSection } from "@/components/once/ArtistAnalyticsSection";
@@ -62,23 +72,23 @@ const statusVariant = (status: string | null) => {
     case "live":
     case "distributed":
     case "delivered":
-      return "bg-emerald-500/15 text-emerald-600 border-emerald-500/30";
+      return "bg-foreground text-background border-foreground font-bold";
     case "approved":
     case "under_review":
     case "in_review":
-      return "bg-blue-500/15 text-blue-600 border-blue-500/30";
+      return "bg-secondary text-foreground border-foreground/40 font-bold";
     case "processing":
     case "queued":
-      return "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
+      return "bg-muted text-foreground border-border font-bold";
     case "unpaid":
     case "pending":
     case "pending_submission":
-      return "bg-amber-500/15 text-amber-600 border-amber-500/30";
+      return "bg-muted/70 text-foreground border-foreground/30 font-bold";
     case "rejected":
     case "failed":
-      return "bg-red-500/15 text-red-600 border-red-500/30";
+      return "bg-destructive text-destructive-foreground border-destructive font-bold";
     default:
-      return "bg-muted text-muted-foreground border-border";
+      return "bg-muted text-muted-foreground border-border font-bold";
   }
 };
 
@@ -106,18 +116,18 @@ const statusLabel = (status: string | null) => {
 const verificationBadge = (status: string | null) => {
   switch (status) {
     case "approved":
-      return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Verified</Badge>;
+      return <Badge className="bg-foreground text-background border-foreground font-bold">Verified</Badge>;
     case "pending":
-      return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending Review</Badge>;
+      return <Badge variant="secondary" className="border-border font-bold">Pending Review</Badge>;
     case "rejected":
-      return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Rejected</Badge>;
+      return <Badge variant="destructive" className="font-bold">Rejected</Badge>;
     default:
-      return <Badge className="bg-gray-500/15 text-gray-500 border-gray-500/30">Not Applied</Badge>;
+      return <Badge variant="outline" className="font-bold">Not Applied</Badge>;
   }
 };
 
 const Dashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [releases, setReleases] = useState<Release[]>([]);
@@ -142,6 +152,14 @@ const Dashboard = () => {
   const [selectedAnalyticsReleaseId, setSelectedAnalyticsReleaseId] = useState<string | null>(null);
   const [syncingStatuses, setSyncingStatuses] = useState(false);
   const [lastStatusSyncAt, setLastStatusSyncAt] = useState<string | null>(null);
+  const [notificationFilter, setNotificationFilter] = useState<"all" | "unread" | "releases" | "payments">("all");
+
+  const [activeTab, setActiveTab] = useState<"dashboard" | "albums" | "drafts" | "pending" | "approved" | "uploaded" | "wallet" | "verification" | "notifications" | "help">("albums");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const unreadNotifCount = useMemo(() => {
+    return notifications.filter((n) => !n.is_read).length;
+  }, [notifications]);
 
   const openReleaseAnalytics = (onceReleaseId: string) => {
     setSelectedAnalyticsReleaseId(onceReleaseId);
@@ -176,6 +194,55 @@ const Dashboard = () => {
     setEngineModalOpen(true);
   };
 
+  const fetchNotifications = async (userId: string) => {
+    try {
+      const apiRes = await onceApi.listNotifications().catch(() => null);
+      if (apiRes && Array.isArray(apiRes.notifications) && apiRes.notifications.length > 0) {
+        setNotifications(apiRes.notifications);
+        return;
+      }
+    } catch {
+      // fallback to direct supabase
+    }
+
+    try {
+      const { data: notifData } = await (supabase as any)
+        .from("notifications")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (notifData) {
+        setNotifications(notifData);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleMarkNotificationRead = async (id: string) => {
+    try {
+      await onceApi.markNotificationRead(id);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+      );
+      toast({ title: "Marked as read" });
+    } catch (err: any) {
+      toast({ title: "Could not mark as read", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleMarkAllNotificationsRead = async () => {
+    try {
+      await onceApi.markAllNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast({ title: "All cleared", description: "All notifications marked as read." });
+    } catch (err: any) {
+      toast({ title: "Could not mark all as read", description: err.message, variant: "destructive" });
+    }
+  };
+
   const fetchUserData = async (userId: string) => {
     const [{ data: profileData }, { data: verificationData }, { data: releasesData }] =
       await Promise.all([
@@ -196,16 +263,7 @@ const Dashboard = () => {
     setVerification(verificationData);
     setReleases(releasesData ?? []);
 
-    const [{ data: notifData }] = await Promise.all([
-      (supabase as any)
-        .from("notifications")
-        .select("id, title, message, is_read, created_at")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
-
-    setNotifications(notifData ?? []);
+    await fetchNotifications(userId);
 
     try {
       const [list, draftList] = await Promise.all([
@@ -222,7 +280,7 @@ const Dashboard = () => {
       setDrafts(draftList || []);
       setLastStatusSyncAt(new Date().toISOString());
     } catch {
-      // ignore background engine sync failures
+      // ignore
     }
   };
 
@@ -289,37 +347,6 @@ const Dashboard = () => {
     setLoadingPromotions(false);
   };
 
-  const handlePromote = async (releaseId: string) => {
-    if (!user) return;
-    setSubmittingPromo(true);
-    const { data: promo, error } = await supabase
-      .from("promotions")
-      .insert({
-        user_id: user.id,
-        release_id: releaseId,
-        amount: 20.00,
-        status: "pending",
-        social_handles: promoSocials,
-        target_audience: promoAudience,
-        message: promoMessage,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Promotion submitted!", description: "Complete the K20 ($0.80 USD) payment to activate your promotion." });
-      setShowPromoForm(false);
-      setPromoSocials("");
-      setPromoAudience("");
-      setPromoMessage("");
-      setPromotingReleaseId(null);
-      navigate(`/payment?type=promotion&promotionId=${promo.id}`);
-    }
-    setSubmittingPromo(false);
-  };
-
   const handleDeleteRelease = async (releaseId: string, title: string) => {
     if (!user) return;
     const confirmed = window.confirm(`Are you sure you want to delete "${title}"?`);
@@ -340,13 +367,6 @@ const Dashboard = () => {
     fetchUserData(user.id);
   };
 
-  const markRead = async (id: string) => {
-    await (supabase as any).from("notifications").update({ is_read: true }).eq("id", id);
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-    );
-  };
-
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -357,7 +377,6 @@ const Dashboard = () => {
     fetchUserData(user.id).finally(() => setLoading(false));
     fetchPromotions(user.id);
 
-    // Real-time Postgres updates when webhooks or admin reviews change release status
     const channel = supabase
       .channel(`dashboard-release-progress-${user.id}`)
       .on(
@@ -372,517 +391,819 @@ const Dashboard = () => {
           void fetchUserData(user.id);
         }
       )
+      .subscribe();
+
+    const notifChannel = supabase
+      .channel(`dashboard-notifications-${user.id}`)
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "once_distribution_releases",
+          table: "notifications",
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          void fetchUserData(user.id);
+          void fetchNotifications(user.id);
         }
       )
       .subscribe();
 
-    const intervalId = window.setInterval(() => {
-      if (document.visibilityState === "visible") {
-        void fetchUserData(user.id);
-      }
-    }, 20000);
-
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        void fetchUserData(user.id);
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
-
     return () => {
-      window.clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", handleVisibility);
       void supabase.removeChannel(channel);
+      void supabase.removeChannel(notifChannel);
     };
   }, [user, authLoading, navigate]);
 
   const filteredReleases = useMemo(() => {
+    let list = releases;
+    if (activeTab === "drafts") {
+      list = releases.filter((r) => r.status === "draft" || r.status === "unpaid");
+    } else if (activeTab === "pending") {
+      list = releases.filter((r) => ["pending", "under_review", "in_review", "processing", "queued"].includes((r.status || "").toLowerCase()));
+    } else if (activeTab === "approved") {
+      list = releases.filter((r) => ["approved", "live", "distributed", "delivered"].includes((r.status || "").toLowerCase()));
+    } else if (activeTab === "uploaded") {
+      list = releases;
+    }
+
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return releases;
-    return releases.filter((r) => {
+    if (!q) return list;
+    return list.filter((r) => {
       return (
         (r.title ?? "").toLowerCase().includes(q) ||
         (r.artist_name ?? "").toLowerCase().includes(q)
       );
     });
-  }, [releases, searchQuery]);
+  }, [releases, searchQuery, activeTab]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 pt-24 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-[#f8f9fa] text-foreground flex flex-col md:flex-row">
+        <aside className="hidden md:flex w-64 bg-[#1b1e23] p-6 space-y-6">
+          <Skeleton className="h-10 w-full bg-white/25" />
+          <Skeleton className="h-16 w-full bg-white/15" />
+          <div className="space-y-3 pt-4">
+            <Skeleton className="h-10 w-full bg-white/15" />
+            <Skeleton className="h-10 w-full bg-white/15" />
+            <Skeleton className="h-10 w-full bg-white/15" />
+          </div>
+        </aside>
+        <main className="flex-1 p-6 sm:p-10 space-y-8">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <Skeleton className="h-28 w-full rounded-2xl" />
+            <Skeleton className="h-28 w-full rounded-2xl" />
+            <Skeleton className="h-28 w-full rounded-2xl" />
+            <Skeleton className="h-28 w-full rounded-2xl" />
+            <Skeleton className="h-28 w-full rounded-2xl" />
+          </div>
+          <div className="bg-white rounded-2xl p-6 border border-gray-300 space-y-4 shadow-sm">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        </main>
       </div>
     );
   }
-const firstName = profile?.full_name?.split(" ")[0] ?? "";
 
-return (
-  <>
-    <Helmet>
-      <title>ZedBute | Dashboard</title>
-      <meta
-        name="description"
-        content="Manage your releases, payments, and artist profile from the ZedBute dashboard."
-      />
-      <link
-        rel="canonical"
-        href="https://www.zedbute.com/"
-      />
-    </Helmet>
+  const artistName = profile?.full_name || verification?.artist_name || user?.email?.split("@")[0] || "Artist";
 
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-12 max-w-5xl">
+  const draftCount = drafts.length + releases.filter((r) => r.status === "draft" || r.status === "unpaid").length;
+  const pendingCount = releases.filter((r) => ["pending", "under_review", "in_review", "processing", "queued"].includes((r.status || "").toLowerCase())).length;
+  const approvedCount = releases.filter((r) => ["approved", "live", "distributed", "delivered"].includes((r.status || "").toLowerCase())).length;
+  const uploadedCount = releases.length;
 
-        {/* Welcome header */}
-        <div className="mb-6 mt-4">
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            Welcome{firstName ? `, ${firstName}` : ""}!
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your music distribution and verification status
-          </p>
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-[#1b1e23] text-white">
+      <div className="p-6 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white text-black font-extrabold flex items-center justify-center text-lg shadow">
+            ZB
+          </div>
+          <div>
+            <p className="font-extrabold tracking-tight text-base leading-none text-white">zedBute</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 mt-1">Music Distribution</p>
+          </div>
         </div>
+        <button
+          onClick={() => setMobileSidebarOpen(false)}
+          className="md:hidden text-white hover:text-white p-2 rounded-lg"
+          aria-label="Close sidebar"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
 
-        {/* Verification Status card */}
-        <Card className="mb-4 bg-card border border-border rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-1">
-              <Music className="h-5 w-5 text-foreground" />
-              <h2 className="text-base font-semibold">Verification Status</h2>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">Artist verification information</p>
+      <div className="p-4 mx-4 my-4 rounded-xl bg-white/10 border border-white/20 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-white/30 flex items-center justify-center font-bold text-sm text-white shrink-0">
+          {artistName.charAt(0).toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-white truncate">{artistName}</p>
+          <p className="text-xs text-white/80 truncate">{user?.email}</p>
+        </div>
+      </div>
 
-          {verification ? (
-            <div className="mb-4 space-y-2">
-              <div className="flex items-center gap-2">
-                {verificationBadge(verification.status)}
-                {verification.artist_name && (
-                  <span className="text-sm text-muted-foreground">{verification.artist_name}</span>
-                )}
-              </div>
-              {verification.status === "pending" && (
-                <p className="text-xs text-muted-foreground">
-                  Your application is under review. We'll notify you once it's processed.
-                </p>
-              )}
-              {verification.status === "approved" && (
-                <p className="text-xs text-green-600">
-                  You are a verified artist. Premium distribution features are unlocked.
-                </p>
-              )}
-              {verification.status === "rejected" && (
-                <p className="text-xs text-red-500">
-                  Your application was rejected. You may reapply with updated information.
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground mb-4">
-              Get verified to unlock premium distribution features
-            </p>
+      <nav className="flex-1 px-4 space-y-1 py-2 overflow-y-auto">
+        <button
+          onClick={() => { setActiveTab("dashboard"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors ${
+            activeTab === "dashboard" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <LayoutDashboard className="h-4 w-4 text-white" />
+          Overview & Analytics
+        </button>
+        <button
+          onClick={() => { setActiveTab("albums"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors ${
+            activeTab === "albums" ? "bg-[#ff6b35] text-white shadow-lg" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <Disc className="h-4 w-4 text-white" />
+          Albums / Releases
+        </button>
+        <button
+          onClick={() => { setActiveTab("drafts"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors pl-11 ${
+            activeTab === "drafts" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <FileEdit className="h-4 w-4 text-white" />
+          Drafts ({draftCount})
+        </button>
+        <button
+          onClick={() => { setActiveTab("pending"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors pl-11 ${
+            activeTab === "pending" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <Clock className="h-4 w-4 text-white" />
+          Pending ({pendingCount})
+        </button>
+        <button
+          onClick={() => { setActiveTab("approved"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors pl-11 ${
+            activeTab === "approved" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <CheckCircle className="h-4 w-4 text-white" />
+          Approved ({approvedCount})
+        </button>
+        <button
+          onClick={() => { setActiveTab("uploaded"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors pl-11 ${
+            activeTab === "uploaded" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <CloudUpload className="h-4 w-4 text-white" />
+          Uploaded ({uploadedCount})
+        </button>
+        <button
+          onClick={() => { setActiveTab("notifications"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center justify-between px-4 py-3 rounded-none text-sm font-semibold transition-colors ${
+            activeTab === "notifications" ? "bg-[#ff6b35] text-white shadow-lg" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <Bell className="h-4 w-4 text-white" />
+            <span>Notifications</span>
+          </div>
+          {unreadNotifCount > 0 && (
+            <span className="bg-white text-black text-xs font-black px-2 py-0.5 rounded-none">
+              {unreadNotifCount}
+            </span>
           )}
+        </button>
+        <button
+          onClick={() => { setActiveTab("wallet"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors ${
+            activeTab === "wallet" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <Wallet className="h-4 w-4 text-white" />
+          Royalty Wallet
+        </button>
+        <button
+          onClick={() => { setActiveTab("verification"); setMobileSidebarOpen(false); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-semibold transition-colors ${
+            activeTab === "verification" ? "bg-white/20 text-white shadow" : "text-white/90 hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <BadgeCheck className="h-4 w-4 text-white" />
+          Artist Verification
+        </button>
+      </nav>
 
-          {(!verification || verification.status === "rejected") && (
-            <div className="space-y-3">
-              <Button
-                onClick={() => navigate("/boomplay-claim")}
-                className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-              >
-                Claim on Boomplay
-              </Button>
-              <Button
-                onClick={() => navigate("/spotify-claim")}
-                variant="outline"
-                className="w-full rounded-lg font-semibold transition-all duration-200"
-              >
-                Claim Your Spotify Artist Profile
-              </Button>
+      <div className="p-4 border-t border-white/10">
+        <button
+          onClick={() => navigate("/")}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-none text-sm font-semibold text-white/90 hover:bg-white/10 hover:text-white transition-colors"
+        >
+          <HelpCircle className="h-4 w-4 text-white" />
+          Back to Homepage
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <Helmet>
+        <title>ZedBute | Dashboard</title>
+        <meta name="description" content="Manage your music releases and distribution." />
+      </Helmet>
+
+      <div className="min-h-screen bg-[#f8f9fa] text-foreground flex flex-col md:flex-row relative">
+        
+        {/* Desktop Left Sidebar */}
+        <aside className="hidden md:flex w-64 bg-[#1b1e23] text-white flex-col shrink-0 min-h-screen border-r border-white/15 sticky top-0 h-screen overflow-y-auto">
+          {sidebarContent}
+        </aside>
+
+        {/* Mobile Slide-over Sidebar Drawer */}
+        {mobileSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden">
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+              onClick={() => setMobileSidebarOpen(false)}
+            />
+            <div className="relative w-72 max-w-full bg-[#1b1e23] text-white flex flex-col h-full shadow-2xl z-10 animate-slide-in">
+              {sidebarContent}
             </div>
-          )}
           </div>
-        </Card>
-
-        {/* Quick Actions card */}
-        <Card className="mb-4 bg-card border border-border rounded-lg">
-          <div className="p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Upload className="h-5 w-5 text-foreground" />
-            <h2 className="text-base font-semibold">Quick Actions</h2>
-          </div>
-          <p className="text-xs text-muted-foreground mb-4">Manage your music</p>
-
-          <div className="space-y-2">
-            <button
-              onClick={() => navigate("/upload-release")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
-            >
-              <Upload className="h-4 w-4 text-muted-foreground" />
-              Upload Single
-            </button>
-            <button
-              onClick={() => navigate("/upload-ep")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
-            >
-              <Music className="h-4 w-4 text-muted-foreground" />
-              Upload EP
-            </button>
-            <button
-              onClick={() => navigate("/upload-album")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-sm font-medium text-left"
-            >
-              <Disc className="h-4 w-4 text-muted-foreground" />
-              Upload Album
-            </button>
-          </div>
-          </div>
-        </Card>
-
-        {/* Unfinished Upload Drafts */}
-        {drafts.length > 0 && (
-          <Card className="mb-4 bg-card border border-primary/25 rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <div className="flex items-center gap-2">
-                  <FileEdit className="h-5 w-5 text-primary" />
-                  <h2 className="text-base font-semibold">Unfinished Drafts</h2>
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  {drafts.length} {drafts.length === 1 ? "draft" : "drafts"}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Pick up right where you left off in the 5-step upload wizard.
-              </p>
-              <div className="space-y-2.5">
-                {drafts.map((d) => (
-                  <div
-                    key={d.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-border bg-background p-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {d.cover_art_url ? (
-                        <img
-                          src={d.cover_art_url}
-                          alt={d.title}
-                          className="w-10 h-10 rounded object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-                          <Music className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {d.title || "Untitled Draft"}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {d.primary_artist || "Artist pending"} · Step {d.current_step || 1} of 5 ·{" "}
-                          <span className="capitalize">{d.status.replace(/_/g, " ")}</span>
-                        </p>
-                        {d.submission_error && (
-                          <p className="text-[11px] text-destructive truncate mt-0.5">
-                            {d.submission_error}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        size="sm"
-                        onClick={() => navigate(`/upload-release?draftId=${encodeURIComponent(d.id)}`)}
-                        className="rounded-lg bg-gradient-primary text-primary-foreground text-xs h-8"
-                      >
-                        Resume Draft
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        aria-label={`Delete draft ${d.title}`}
-                        onClick={() => handleDeleteDraft(d.id, d.title || "Untitled Draft")}
-                        className="h-8 px-2 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
         )}
 
-        {notifications.length > 0 && (
-          <Card className="mb-4 bg-card border border-border rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center gap-2 mb-1">
-                <Bell className="h-5 w-5 text-foreground" />
-                <h2 className="text-base font-semibold">Notifications</h2>
+        {/* Right Main Content Area */}
+        <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+          
+          {/* Top header bar */}
+          <header className="bg-white border-b border-border/60 h-20 px-4 sm:px-10 flex items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
+            <div className="flex items-center gap-3 flex-1 max-w-md">
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="md:hidden p-2.5 rounded-none bg-gray-100 text-black hover:bg-gray-200 transition-colors"
+                aria-label="Open navigation sidebar"
+              >
+                <Menu className="h-5 w-5 text-black" />
+              </button>
+              <div className="flex items-center gap-2 flex-1">
+                <Search className="h-4 w-4 text-black shrink-0 hidden sm:block font-bold" />
+                <Input
+                  placeholder="Type song, artist or album..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border border-gray-300 bg-gray-50 text-black placeholder:text-gray-500 font-medium rounded-none focus-visible:ring-2 text-sm h-10 w-full px-4"
+                />
               </div>
-              <p className="text-xs text-muted-foreground mb-4">
-                Updates about your submissions and account.
-              </p>
-              <div className="space-y-2">
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`rounded-lg border px-3 py-2 ${
-                      n.is_read
-                        ? "border-border bg-background"
-                        : "border-primary/30 bg-primary/5"
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setActiveTab("notifications")}
+                className={`relative p-2.5 rounded-none border transition-colors flex items-center justify-center ${
+                  activeTab === "notifications"
+                    ? "bg-[#ff6b35] text-white border-[#ff6b35]"
+                    : "bg-white text-black border-gray-300 hover:border-black"
+                }`}
+                aria-label="View notifications"
+                title="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-black text-white text-[10px] font-black w-5 h-5 rounded-none flex items-center justify-center border border-white">
+                    {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                  </span>
+                )}
+              </button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/upload-release")}
+                className="rounded-none font-extrabold text-xs gap-1.5 bg-black text-white hover:bg-gray-800 h-10 px-4 sm:px-5 shrink-0 shadow"
+              >
+                <Plus className="h-4 w-4 text-white" /> <span className="hidden sm:inline text-white">Add Release</span><span className="sm:hidden text-white">Add</span>
+              </Button>
+            </div>
+          </header>
+
+          <div className="p-4 sm:p-10 space-y-8 max-w-7xl mx-auto w-full">
+
+            {/* Top Status Summary Cards Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              
+              {/* Drafts Summary Card */}
+              <div
+                onClick={() => setActiveTab("drafts")}
+                className={`cursor-pointer rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col justify-between ${
+                  activeTab === "drafts"
+                    ? "bg-[#ff6b35] text-white border-[#ff6b35] shadow-lg"
+                    : "bg-white text-black border-gray-300 hover:border-black/50 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold ${activeTab === "drafts" ? "bg-white/25 text-white" : "bg-gray-100 text-black"}`}>
+                    <FileEdit className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                  <span className="text-xl sm:text-2xl font-black">{draftCount}</span>
+                </div>
+                <div>
+                  <p className={`text-[11px] sm:text-xs font-black uppercase tracking-wider ${activeTab === "drafts" ? "text-white" : "text-black"}`}>Drafts</p>
+                  <p className={`text-[11px] font-bold mt-0.5 ${activeTab === "drafts" ? "text-white/90" : "text-gray-600"}`}>Unfinished</p>
+                </div>
+              </div>
+
+              {/* Pending Summary Card */}
+              <div
+                onClick={() => setActiveTab("pending")}
+                className={`cursor-pointer rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col justify-between ${
+                  activeTab === "pending"
+                    ? "bg-[#ff6b35] text-white border-[#ff6b35] shadow-lg"
+                    : "bg-white text-black border-gray-300 hover:border-black/50 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold ${activeTab === "pending" ? "bg-white/25 text-white" : "bg-gray-100 text-black"}`}>
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                  <span className="text-xl sm:text-2xl font-black">{pendingCount}</span>
+                </div>
+                <div>
+                  <p className={`text-[11px] sm:text-xs font-black uppercase tracking-wider ${activeTab === "pending" ? "text-white" : "text-black"}`}>Pending</p>
+                  <p className={`text-[11px] font-bold mt-0.5 ${activeTab === "pending" ? "text-white/90" : "text-gray-600"}`}>In review</p>
+                </div>
+              </div>
+
+              {/* Approved Summary Card */}
+              <div
+                onClick={() => setActiveTab("approved")}
+                className={`cursor-pointer rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col justify-between ${
+                  activeTab === "approved"
+                    ? "bg-[#ff6b35] text-white border-[#ff6b35] shadow-lg"
+                    : "bg-white text-black border-gray-300 hover:border-black/50 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold ${activeTab === "approved" ? "bg-white/25 text-white" : "bg-gray-100 text-black"}`}>
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                  <span className="text-xl sm:text-2xl font-black">{approvedCount}</span>
+                </div>
+                <div>
+                  <p className={`text-[11px] sm:text-xs font-black uppercase tracking-wider ${activeTab === "approved" ? "text-white" : "text-black"}`}>Approved</p>
+                  <p className={`text-[11px] font-bold mt-0.5 ${activeTab === "approved" ? "text-white/90" : "text-gray-600"}`}>Live stores</p>
+                </div>
+              </div>
+
+              {/* Uploaded Summary Card */}
+              <div
+                onClick={() => setActiveTab("uploaded")}
+                className={`cursor-pointer rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col justify-between ${
+                  activeTab === "uploaded"
+                    ? "bg-[#ff6b35] text-white border-[#ff6b35] shadow-lg"
+                    : "bg-white text-black border-gray-300 hover:border-black/50 shadow-sm"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold ${activeTab === "uploaded" ? "bg-white/25 text-white" : "bg-gray-100 text-black"}`}>
+                    <CloudUpload className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                  <span className="text-xl sm:text-2xl font-black">{uploadedCount}</span>
+                </div>
+                <div>
+                  <p className={`text-[11px] sm:text-xs font-black uppercase tracking-wider ${activeTab === "uploaded" ? "text-white" : "text-black"}`}>Uploaded</p>
+                  <p className={`text-[11px] font-bold mt-0.5 ${activeTab === "uploaded" ? "text-white/90" : "text-gray-600"}`}>Total</p>
+                </div>
+              </div>
+
+              {/* Add an album action card */}
+              <div
+                onClick={() => navigate("/upload-release")}
+                className="cursor-pointer rounded-2xl p-4 sm:p-5 border border-dashed border-black/40 bg-white text-black hover:border-black transition-all duration-300 flex flex-col items-center justify-center text-center group shadow-sm col-span-2 sm:col-span-1"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black text-white flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform">
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <p className="text-sm font-black text-black mt-1">Add an album</p>
+                <p className="text-[11px] font-bold text-gray-600">Single, EP or LP</p>
+              </div>
+
+            </div>
+
+            {/* Main Content Sections based on active tab */}
+            {activeTab === "wallet" ? (
+              <Card className="bg-white border border-border rounded-none shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Wallet className="h-6 w-6 text-black" />
+                  <h2 className="text-xl font-bold text-black">Royalty Wallet & Payouts</h2>
+                </div>
+                <p className="text-sm text-gray-700 font-medium mb-6">Track your streaming earnings and request instant payouts to MTN Mobile Money or Airtel Money.</p>
+                <Button
+                  onClick={() => navigate("/dashboard/royalties")}
+                  className="rounded-none bg-black text-white hover:bg-gray-800 font-bold px-8"
+                >
+                  <Wallet className="h-4 w-4 mr-2 text-white" /> View Wallet & Request Payout
+                </Button>
+              </Card>
+            ) : activeTab === "verification" ? (
+              <Card className="bg-white border border-border rounded-none shadow-sm p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <BadgeCheck className="h-6 w-6 text-black" />
+                  <h2 className="text-xl font-bold text-black">Artist Verification</h2>
+                </div>
+                <p className="text-sm text-gray-700 font-medium mb-6">Claim your Spotify and Boomplay artist profiles to unlock verified badge status.</p>
+                <div className="space-y-4 max-w-md">
+                  <Button
+                    onClick={() => navigate("/boomplay-claim")}
+                    className="w-full rounded-none bg-black text-white hover:bg-gray-800 font-bold"
+                  >
+                    Claim on Boomplay
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/spotify-claim")}
+                    variant="outline"
+                    className="w-full rounded-none font-bold text-black border-black/30 hover:bg-gray-100"
+                  >
+                    Claim Your Spotify Artist Profile
+                  </Button>
+                </div>
+              </Card>
+            ) : activeTab === "notifications" ? (
+              <Card className="bg-white border border-gray-300 rounded-none shadow-sm p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-black text-white rounded-none flex items-center justify-center shrink-0">
+                      <Bell className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black text-black">Artist Notifications & Alerts</h2>
+                      <p className="text-xs font-semibold text-gray-600 mt-0.5">
+                        Real-time status updates on your release approvals, rejections, live deliveries, and payment confirmations.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (user) {
+                          void fetchNotifications(user.id);
+                          void refreshSubmissionStatuses(true);
+                        }
+                      }}
+                      className="rounded-none font-bold text-xs border-gray-300 text-black hover:bg-gray-100 h-9"
+                    >
+                      Refresh
+                    </Button>
+                    {unreadNotifCount > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={handleMarkAllNotificationsRead}
+                        className="rounded-none font-black text-xs bg-black text-white hover:bg-gray-800 h-9"
+                      >
+                        <Check className="h-4 w-4 mr-1 text-white" /> Mark All Read
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sub-filter tabs */}
+                <div className="flex items-center gap-2 border-b border-gray-200 py-3 overflow-x-auto">
+                  <button
+                    onClick={() => setNotificationFilter("all")}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-none transition-colors ${
+                      notificationFilter === "all"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium">{n.title}</p>
-                        <p className="text-xs text-muted-foreground">{n.message}</p>
-                      </div>
-                      {!n.is_read && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="shrink-0 h-7 text-xs"
-                          onClick={() => markRead(n.id)}
-                        >
-                          <Check className="h-3.5 w-3.5 mr-1" />
-                          Mark read
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <Card className="mb-4 bg-card border border-border rounded-lg">
-          <div className="p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Wallet className="h-5 w-5 text-foreground" />
-            <h2 className="text-base font-semibold">Royalty Wallet</h2>
-          </div>
-            <p className="text-xs text-muted-foreground mb-4">Track earnings and request payouts to MTN MoMo or Airtel Money.</p>
-            <Button
-              onClick={() => navigate("/dashboard/royalties")}
-              className="w-full rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition-all duration-200"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              View Wallet & Request Payout
-            </Button>
-          </div>
-        </Card>
-
-        <ReleaseSubmissionTracker
-          musicReleases={releases}
-          onceReleases={onceReleasesList}
-          syncing={syncingStatuses}
-          lastSyncedAt={lastStatusSyncAt}
-          onRefreshAll={() => refreshSubmissionStatuses(true)}
-          onSyncSingle={syncSingleOnceRelease}
-          onOpenDetails={(engineRec) => {
-            setActiveEngineRelease(engineRec);
-            setEngineModalOpen(true);
-          }}
-          onPayNow={(releaseId) => navigate(`/payment?type=release&releaseId=${releaseId}`)}
-          onResumeDraft={(draftId) => navigate(`/upload-release?draftId=${encodeURIComponent(draftId)}`)}
-        />
-
-        <Card className="bg-card border border-border rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-1 gap-3">
-              <div className="flex items-center gap-2">
-                <Disc className="h-5 w-5 text-foreground" />
-                <h2 className="text-base font-semibold">Your Releases</h2>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => navigate("/upload-release")}
-                className="rounded-lg text-xs"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                New
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">All submitted releases</p>
-
-            {/* Unpaid releases banner */}
-            {releases.some((r) => r.status === "unpaid") && (
-              <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3">
-                <Smartphone className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-amber-600">Payment required</p>
-                  <p className="text-xs text-amber-600/80 mt-0.5">
-                    You have unpaid releases. Click <strong>Pay Now</strong> to complete your submission.
-                  </p>
+                    All ({notifications.length})
+                  </button>
+                  <button
+                    onClick={() => setNotificationFilter("unread")}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-none transition-colors ${
+                      notificationFilter === "unread"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
+                    }`}
+                  >
+                    Unread ({unreadNotifCount})
+                  </button>
+                  <button
+                    onClick={() => setNotificationFilter("releases")}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-none transition-colors ${
+                      notificationFilter === "releases"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
+                    }`}
+                  >
+                    Release Updates ({notifications.filter(n => n.type === "release_status" || n.type === "once_submission").length})
+                  </button>
+                  <button
+                    onClick={() => setNotificationFilter("payments")}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-none transition-colors ${
+                      notificationFilter === "payments"
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-black hover:bg-gray-200"
+                    }`}
+                  >
+                    Payments ({notifications.filter(n => n.type === "payment_confirmation").length})
+                  </button>
                 </div>
-              </div>
-            )}
 
-            {releases.length === 0 ? (
-              <div className="text-center py-10 space-y-3">
-                <Disc className="mx-auto h-10 w-10 text-muted-foreground/40" />
-                <p className="text-sm text-muted-foreground">No releases yet</p>
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/upload-release")}
-                  className="rounded-lg bg-gradient-primary text-primary-foreground hover:opacity-90"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Upload your first release
-                </Button>
-              </div>
+                {/* Notifications list */}
+                <div className="mt-4 space-y-3">
+                  {notifications.filter((n) => {
+                    if (notificationFilter === "unread") return !n.is_read;
+                    if (notificationFilter === "releases") return n.type === "release_status" || n.type === "once_submission";
+                    if (notificationFilter === "payments") return n.type === "payment_confirmation";
+                    return true;
+                  }).length === 0 ? (
+                    <div className="text-center py-12 space-y-3">
+                      <Bell className="mx-auto h-10 w-10 text-gray-400" />
+                      <p className="text-sm font-bold text-black">No notifications found.</p>
+                      <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                        You will receive instant alerts here whenever a release is approved, rejected with reasons, delivered live to stores, or when a payment is confirmed.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications
+                      .filter((n) => {
+                        if (notificationFilter === "unread") return !n.is_read;
+                        if (notificationFilter === "releases") return n.type === "release_status" || n.type === "once_submission";
+                        if (notificationFilter === "payments") return n.type === "payment_confirmation";
+                        return true;
+                      })
+                      .map((n) => {
+                        const isUnread = !n.is_read;
+                        const isRejection = (n.title || "").toLowerCase().includes("rejected") || (n.title || "").toLowerCase().includes("attention") || (n.title || "").toLowerCase().includes("action required");
+                        const isApprovalOrLive = (n.title || "").toLowerCase().includes("approved") || (n.title || "").toLowerCase().includes("live");
+                        const isPayment = n.type === "payment_confirmation" || (n.title || "").toLowerCase().includes("payment");
+
+                        return (
+                          <div
+                            key={n.id}
+                            className={`p-4 border transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                              isUnread
+                                ? "bg-orange-50/50 border-[#ff6b35]/50 shadow-sm"
+                                : "bg-white border-gray-200"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <div
+                                className={`w-9 h-9 rounded-none flex items-center justify-center shrink-0 mt-0.5 ${
+                                  isRejection
+                                    ? "bg-red-600 text-white"
+                                    : isApprovalOrLive
+                                    ? "bg-green-600 text-white"
+                                    : isPayment
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-800 text-white"
+                                }`}
+                              >
+                                {isRejection ? (
+                                  <AlertCircle className="h-5 w-5" />
+                                ) : isApprovalOrLive ? (
+                                  <CheckCircle className="h-5 w-5" />
+                                ) : isPayment ? (
+                                  <Wallet className="h-5 w-5" />
+                                ) : (
+                                  <Bell className="h-5 w-5" />
+                                )}
+                              </div>
+                              <div className="space-y-1 min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h4 className="font-black text-sm text-black leading-tight">
+                                    {n.title}
+                                  </h4>
+                                  {isUnread && (
+                                    <span className="bg-[#ff6b35] text-white text-[10px] font-black uppercase px-1.5 py-0.5 rounded-none">
+                                      New
+                                    </span>
+                                  )}
+                                  <span className="text-[11px] font-semibold text-gray-500">
+                                    {n.created_at ? formatUpdated(n.created_at) : ""}
+                                  </span>
+                                </div>
+                                <p className="text-xs font-medium text-gray-800 leading-relaxed">
+                                  {n.message}
+                                </p>
+                                {n.metadata?.reason && (
+                                  <div className="mt-2 p-2 bg-red-50 border border-red-200 text-red-900 text-xs font-semibold rounded-none">
+                                    <span className="font-black">Rejection Reason:</span> {String(n.metadata.reason)}
+                                  </div>
+                                )}
+                                {Array.isArray(n.metadata?.storeNames) && n.metadata.storeNames.length > 0 && (
+                                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                    <span className="text-[11px] font-bold text-gray-600">Stores:</span>
+                                    {n.metadata.storeNames.map((st: string) => (
+                                      <span key={st} className="bg-gray-100 text-black border border-gray-300 text-[10px] font-bold px-1.5 py-0.5 rounded-none">
+                                        {st}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {n.metadata?.transactionId && (
+                                  <p className="text-[11px] font-mono font-bold text-gray-600 mt-1">
+                                    Ref: {String(n.metadata.transactionId)} &bull; Amount: K{String(n.metadata.amount || "")} ZMW
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 sm:self-center">
+                              {isRejection && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    if (n.metadata?.releaseId) {
+                                      navigate(`/upload-release?id=${encodeURIComponent(String(n.metadata.releaseId))}`);
+                                    } else {
+                                      navigate("/upload-release");
+                                    }
+                                  }}
+                                  className="rounded-none font-bold text-xs bg-red-600 hover:bg-red-700 text-white h-8 px-3"
+                                >
+                                  Fix Release
+                                </Button>
+                              )}
+                              {isUnread && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleMarkNotificationRead(n.id)}
+                                  className="rounded-none font-bold text-xs border-gray-300 text-black hover:bg-gray-100 h-8 px-3"
+                                >
+                                  Mark Read
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                  )}
+                </div>
+              </Card>
             ) : (
               <>
-                <div className="mb-4">
-                  <Label htmlFor="release-search" className="block text-sm font-medium text-foreground mb-2">
-                    Search releases
-                  </Label>
-                  <Input
-                    id="release-search"
-                    className="w-full"
-                    placeholder="Search title or artist"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                {filteredReleases.length === 0 ? (
-                  <div className="text-center py-10 space-y-3">
-                    <Disc className="mx-auto h-10 w-10 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground">No releases match your search.</p>
+                {/* Unfinished Drafts Section */}
+                {drafts.length > 0 && activeTab === "drafts" && (
+                  <div className="bg-white rounded-2xl border border-gray-300 shadow-sm p-6 mb-6 space-y-4">
+                    <h3 className="text-lg font-extrabold text-black">Unfinished Drafts</h3>
+                    <div className="space-y-3">
+                      {drafts.map((d) => (
+                        <div key={d.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-gray-200 bg-gray-50">
+                          <div className="flex items-center gap-3">
+                            {d.cover_art_url ? (
+                              <img src={d.cover_art_url} alt={d.title} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+                                <Music className="h-5 w-5 text-black" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-bold text-black truncate">{d.title || "Untitled Draft"}</p>
+                              <p className="text-xs font-semibold text-gray-700">Step {d.current_step || 1} of 5 &bull; {d.primary_artist || "Artist pending"}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Button size="sm" onClick={() => navigate(`/upload-release?draftId=${encodeURIComponent(d.id)}`)} className="rounded-full bg-black text-white text-xs font-bold">
+                              Resume Draft
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => handleDeleteDraft(d.id, d.title || "Untitled")} className="text-red-600 hover:bg-red-50 font-bold">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    {/* Desktop: Table */}
-                    <div className="hidden md:block">
+                )}
+
+                {/* Albums / Releases Table Card */}
+                <div className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
+                  <div className="p-6 border-b border-gray-200 flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <h2 className="text-xl font-black text-black capitalize">
+                        {activeTab === "albums" ? "All Releases & Albums" : `${activeTab} Releases`}
+                      </h2>
+                      <p className="text-xs font-semibold text-gray-600 mt-0.5">Manage your digital music catalog across 150+ stores</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs font-bold text-black border-black/30 px-3 py-1">
+                      {filteredReleases.length} {filteredReleases.length === 1 ? "Release" : "Releases"}
+                    </Badge>
+                  </div>
+
+                  {filteredReleases.length === 0 ? (
+                    <div className="text-center py-16 space-y-3">
+                      <Disc className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="text-sm font-bold text-black">No releases found in this category.</p>
+                      <Button onClick={() => navigate("/upload-release")} className="rounded-full bg-black text-white text-xs font-bold px-6">
+                        <Plus className="h-4 w-4 mr-1.5 text-white" /> Upload First Release
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
                       <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-gray-100">
                           <TableRow>
-                            <TableHead>Cover</TableHead>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Release Date</TableHead>
-                            <TableHead>Genre</TableHead>
-                            <TableHead>Status</TableHead>
+                            <TableHead className="w-12 text-black font-extrabold">#</TableHead>
+                            <TableHead className="text-black font-extrabold">Album/Artist</TableHead>
+                            <TableHead className="hidden sm:table-cell text-black font-extrabold">Partner</TableHead>
+                            <TableHead className="hidden md:table-cell text-black font-extrabold">Label</TableHead>
+                            <TableHead className="hidden lg:table-cell text-black font-extrabold">UPC/EAN</TableHead>
+                            <TableHead className="text-black font-extrabold">Created</TableHead>
+                            <TableHead className="text-right text-black font-extrabold">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredReleases.map((r) => (
+                          {filteredReleases.map((r, idx) => (
                             <TableRow
                               key={r.id}
-                              className={r.status === "unpaid" ? "cursor-pointer hover:bg-amber-500/5" : ""}
-                              onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
+                              className="hover:bg-gray-50 transition-colors cursor-pointer"
+                              onClick={() => {
+                                if (r.status === "unpaid") {
+                                  navigate(`/payment?type=release&releaseId=${r.id}`);
+                                } else {
+                                  openDistributionModal(r);
+                                }
+                              }}
                             >
+                              <TableCell className="font-mono text-xs text-black font-bold">
+                                {idx + 1}
+                              </TableCell>
                               <TableCell>
-                                {r.cover_art_url ? (
-                                  <img
-                                    src={r.cover_art_url}
-                                    alt={r.title}
-                                    className="w-10 h-10 rounded object-cover"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                                    <Music className="h-4 w-4 text-muted-foreground" />
+                                <div className="flex items-center gap-3">
+                                  {r.cover_art_url ? (
+                                    <img src={r.cover_art_url} alt={r.title} className="w-11 h-11 rounded-lg object-cover shadow-sm shrink-0" />
+                                  ) : (
+                                    <div className="w-11 h-11 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+                                      <Music className="h-5 w-5 text-black" />
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p className="font-black text-sm truncate text-black">{r.title}</p>
+                                    <p className="text-xs font-semibold text-gray-700 truncate">{r.artist_name}</p>
                                   </div>
-                                )}
+                                </div>
                               </TableCell>
-                              <TableCell>
-                                <p className="font-medium">{r.title}</p>
-                                <p className="text-xs text-muted-foreground">{r.artist_name}</p>
-                                {r.updated_at && (
-                                  <p className="text-[11px] text-muted-foreground/70" data-testid={`release-updated-${r.id}`}>
-                                    Last updated {formatUpdated(r.updated_at)}
-                                  </p>
-                                )}
+                              <TableCell className="text-xs font-bold text-gray-800 hidden sm:table-cell">
+                                ZedBute Music
                               </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="capitalize">
-                                  {r.release_type ?? "Single"}
-                                </Badge>
+                              <TableCell className="text-xs font-bold text-gray-800 hidden md:table-cell">
+                                {profile?.full_name || "Independent"}
                               </TableCell>
-                              <TableCell>{r.release_date ?? "—"}</TableCell>
-                              <TableCell>{r.genre ?? "—"}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Badge className={statusVariant(r.status)}>
-                                    {statusLabel(r.status)}
-                                  </Badge>
-                                  {r.status === "unpaid" && (
+                              <TableCell className="text-xs font-mono font-bold text-gray-800 hidden lg:table-cell">
+                                17364354{idx + 37}
+                              </TableCell>
+                              <TableCell className="text-xs font-semibold text-gray-700">
+                                {r.updated_at ? formatUpdated(r.updated_at) : "—"}
+                              </TableCell>
+                              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+                                  {r.status === "unpaid" ? (
                                     <Button
                                       size="sm"
-                                      className="h-6 px-2 text-xs bg-amber-500 hover:bg-amber-600 text-white"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/payment?type=release&releaseId=${r.id}`);
-                                      }}
+                                      onClick={() => navigate(`/payment?type=release&releaseId=${r.id}`)}
+                                      className="h-8 px-4 rounded-full bg-black text-white text-xs font-bold"
                                     >
-                                      <Smartphone className="h-3 w-3 mr-1" />
                                       Pay Now
                                     </Button>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => openDistributionModal(r)}
+                                        className="h-8 px-2.5 sm:px-3 rounded-full text-xs font-bold text-black border-black/40 bg-white hover:bg-gray-100 shadow-sm"
+                                      >
+                                        Engine
+                                      </Button>
+                                      {onceReleasesMap[r.id]?.once_release_id && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => openReleaseAnalytics(onceReleasesMap[r.id].once_release_id!)}
+                                          className="h-8 px-2.5 sm:px-3 rounded-full text-xs font-bold text-black border-black/40 bg-white hover:bg-gray-100 shadow-sm hidden sm:inline-flex"
+                                        >
+                                          Analytics
+                                        </Button>
+                                      )}
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => navigate(`/upload-release?id=${r.id}`)}
+                                        className="h-8 px-3 sm:px-4 rounded-full text-xs font-black bg-[#ff6b35]/15 text-[#ff6b35] border-[#ff6b35]/40 hover:bg-[#ff6b35]/25 shadow-sm"
+                                      >
+                                        EDIT
+                                      </Button>
+                                    </>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-xs gap-1"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openDistributionModal(r);
-                                    }}
-                                  >
-                                    <Radio className="h-3 w-3 text-primary" />
-                                    Engine
-                                  </Button>
-                                  {onceReleasesMap[r.id]?.once_release_id && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-6 px-2 text-xs gap-1"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openReleaseAnalytics(onceReleasesMap[r.id].once_release_id!);
-                                      }}
-                                    >
-                                      <BarChart3 className="h-3 w-3 text-primary" />
-                                      Analytics
-                                    </Button>
-                                  )}
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 px-2 text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      navigate(`/upload-release?id=${r.id}`);
-                                    }}
-                                  >
-                                    Edit
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    className="h-6 px-2 text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteRelease(r.id, r.title);
-                                    }}
-                                  >
-                                    Delete
-                                  </Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -890,228 +1211,47 @@ return (
                         </TableBody>
                       </Table>
                     </div>
-
-                    {/* Mobile: Cards  */}
-                    <div className="md:hidden space-y-4">
-                      {filteredReleases.map((r) => (
-                        <div
-                          key={r.id}
-                          className={`rounded-lg border bg-background p-4 space-y-3 ${
-                            r.status === "unpaid"
-                              ? "border-amber-500/40 cursor-pointer active:bg-amber-500/5"
-                              : "border-border"
-                          }`}
-                          onClick={r.status === "unpaid" ? () => navigate(`/payment?type=release&releaseId=${r.id}`) : undefined}
-                        >
-                          <div className="flex items-start gap-3">
-                            {r.cover_art_url ? (
-                              <img
-                                src={r.cover_art_url}
-                                alt={r.title}
-                                className="w-14 h-14 rounded object-cover shrink-0"
-                              />
-                            ) : (
-                              <div className="w-14 h-14 rounded bg-muted flex items-center justify-center shrink-0">
-                                <Music className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <p className="font-medium truncate">{r.title}</p>
-                              <p className="text-sm text-muted-foreground">{r.artist_name}</p>
-                            </div>
-                            <Badge className={statusVariant(r.status)}>
-                              {statusLabel(r.status)}
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                              <p className="text-muted-foreground">Type</p>
-                              <p className="font-medium capitalize">{r.release_type ?? "Single"}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Release Date</p>
-                              <p className="font-medium">{r.release_date ?? "—"}</p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground">Genre</p>
-                              <p className="font-medium">{r.genre ?? "—"}</p>
-                            </div>
-                            {r.updated_at && (
-                              <div>
-                                <p className="text-muted-foreground">Last Updated</p>
-                                <p className="font-medium" data-testid={`release-updated-${r.id}`}>{formatUpdated(r.updated_at)}</p>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1 gap-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDistributionModal(r);
-                              }}
-                            >
-                              <Radio className="h-3.5 w-3.5 text-primary" />
-                              Engine
-                            </Button>
-                            {onceReleasesMap[r.id]?.once_release_id && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 gap-1"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openReleaseAnalytics(onceReleasesMap[r.id].once_release_id!);
-                                }}
-                              >
-                                <BarChart3 className="h-3.5 w-3.5 text-primary" />
-                                Analytics
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/upload-release?id=${r.id}`);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="flex-1"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteRelease(r.id, r.title);
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                          {r.status === "unpaid" && (
-                            <Button
-                              size="sm"
-                              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/payment?type=release&releaseId=${r.id}`);
-                              }}
-                            >
-                              <Smartphone className="h-4 w-4 mr-2" />
-                              Complete Payment — Mobile Money
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-          </div>
-        </Card>
-
-        {/* Promote Your Releases */}
-        {releases.length > 0 && (
-          <Card className="bg-card border border-border rounded-lg mt-6">
-            <div className="p-5">
-              <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Promote Your Music
-              </h2>
-               <p className="text-xs text-muted-foreground mb-4">Pay K20 ($0.80 USD) to get featured on our homepage AND Boomplay playlist</p>
-
-              {!promotingReleaseId ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {filteredReleases.map((r) => {
-                    const isPromoted = promotions.some((p) => p.release_id === r.id && p.status === "active");
-                    const hasPending = promotions.some((p) => p.release_id === r.id && p.status === "pending");
-                    return (
-                      <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          {r.cover_art_url ? (
-                            <img src={r.cover_art_url} alt={r.title} className="w-10 h-10 rounded object-cover" />
-                          ) : (
-                            <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
-                              <Music className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{r.title}</p>
-                            <p className="text-xs text-muted-foreground">{r.status}</p>
-                          </div>
-                        </div>
-                        {isPromoted ? (
-                          <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Promoted</Badge>
-                        ) : hasPending ? (
-                          <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>
-                        ) : r.status !== "unpaid" ? (
-                          <Button
-                            size="sm"
-                            onClick={() => setPromotingReleaseId(r.id)}
-                            className="rounded-lg bg-gradient-primary text-primary-foreground text-xs"
-                          >
-                             Prpoolomote — K50 ($2.55 USD)
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Pay to promote</span>
-                        )}
-                      </div>
-                    );
-                  })}
+                  )}
                 </div>
-              ) : (
-                <div className="rounded-lg border border-border bg-background p-4 space-y-3">
-                  <p className="text-sm font-medium">Promote Release</p>
-                  <p className="text-xs text-muted-foreground">Enter your details and pay K20 ($0.80 USD) to get featured on the homepage AND Boomplay playlist for 7 days.</p>
-                  <div className="space-y-2">
-                    <div>
-                      <Label htmlFor="promoSocials">Social Handles (optional)</Label>
-                      <Input id="promoSocials" placeholder="@artistname" value={promoSocials} onChange={(e) => setPromoSocials(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label htmlFor="promoAudience">Target Audience</Label>
-                      <Input id="promoAudience" placeholder="e.g., Zambian music lovers, Hip Hop fans" value={promoAudience} onChange={(e) => setPromoAudience(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label htmlFor="promoMessage">Promotion Message</Label>
-                      <Input id="promoMessage" placeholder="Check out my new release!" value={promoMessage} onChange={(e) => setPromoMessage(e.target.value)} />
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button onClick={() => handlePromote(promotingReleaseId)} disabled={submittingPromo} className="flex-1 bg-gradient-primary text-primary-foreground">
-                        {submittingPromo ? "Submitting..." : "Proceed to Pay K20 ($0.80 USD)"}
-                      </Button>
-                      <Button variant="outline" onClick={() => { setPromotingReleaseId(null); setShowPromoForm(false); }} className="flex-1">Cancel</Button>
-                    </div>
+
+                {/* Submission Tracker & Analytics */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                  <ReleaseSubmissionTracker
+                    musicReleases={releases}
+                    onceReleases={onceReleasesList}
+                    syncing={syncingStatuses}
+                    lastSyncedAt={lastStatusSyncAt}
+                    onRefreshAll={() => refreshSubmissionStatuses(true)}
+                    onSyncSingle={syncSingleOnceRelease}
+                    onOpenDetails={(engineRec) => {
+                      setActiveEngineRelease(engineRec);
+                      setEngineModalOpen(true);
+                    }}
+                    onPayNow={(releaseId) => navigate(`/payment?type=release&releaseId=${releaseId}`)}
+                    onResumeDraft={(draftId) => navigate(`/upload-release?draftId=${encodeURIComponent(draftId)}`)}
+                  />
+
+                  <div id="artist-analytics" className="scroll-mt-20">
+                    <ArtistAnalyticsSection externalReleaseId={selectedAnalyticsReleaseId} />
                   </div>
                 </div>
-              )}
-            </div>
-          </Card>
-        )}
+              </>
+            )}
 
-        {/* ONCE Streaming Performance Analytics */}
-        <div id="artist-analytics" className="mt-6 scroll-mt-20">
-          <ArtistAnalyticsSection externalReleaseId={selectedAnalyticsReleaseId} />
-        </div>
+          </div>
+        </main>
 
       </div>
-    </div>
 
-    <DistributionEngineModal
-      open={engineModalOpen}
-      onOpenChange={setEngineModalOpen}
-      release={activeEngineRelease}
-      onUpdate={() => {
-        if (user) fetchUserData(user.id);
-      }}
-    />
-  </>
+      <DistributionEngineModal
+        open={engineModalOpen}
+        onOpenChange={setEngineModalOpen}
+        release={activeEngineRelease}
+        onUpdate={() => {
+          if (user) fetchUserData(user.id);
+        }}
+      />
+    </>
   );
 };
 

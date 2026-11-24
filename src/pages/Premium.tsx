@@ -108,10 +108,10 @@ const Premium = () => {
         {subscription && (
           <div className="max-w-2xl mx-auto mb-8" data-testid="premium-status-card">
             {subscription.status === "pending_approval" ? (
-              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
-                <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="p-4 rounded-lg bg-muted/50 border border-border flex items-start gap-3">
+                <Clock className="h-5 w-5 text-foreground shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-500">
+                  <p className="text-sm font-semibold text-foreground">
                     {subscription.plan === "yearly" ? "Yearly" : "Monthly"} Premium — pending approval
                   </p>
                   <p className="text-sm text-muted-foreground">
@@ -120,10 +120,10 @@ const Premium = () => {
                 </div>
               </div>
             ) : subscription.status === "approved" ? (
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-start gap-3">
-                <ShieldCheck className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+              <div className="p-4 rounded-lg bg-foreground text-background border border-foreground flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-background shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-green-700 dark:text-green-500">
+                  <p className="text-sm font-semibold text-background">
                     {subscription.plan === "yearly" ? "Yearly" : "Monthly"} Premium — active
                     {subscription.expires_at && ` until ${new Date(subscription.expires_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
                   </p>
@@ -132,7 +132,7 @@ const Premium = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     data-testid="premium-open-music-link"
-                    className="text-sm text-primary font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity inline-flex items-center gap-1 mt-1"
+                    className="text-sm text-background font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity inline-flex items-center gap-1 mt-1"
                   >
                     Open music.zedbute.com <ExternalLink className="h-3 w-3" />
                   </a>
@@ -159,7 +159,7 @@ const Premium = () => {
                 <CardDescription>{plan.tagline}</CardDescription>
                 <div className="mt-3 space-y-1">
                   <div className="text-4xl font-bold" data-testid={`premium-${plan.id}-price`}>K{plan.price}</div>
-                  <div className="text-sm text-muted-foreground">{plan.period} · {usd(plan.price)}</div>
+                  <div className="text-sm text-muted-foreground">{plan.period} | {usd(plan.price)}</div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -191,7 +191,7 @@ const Premium = () => {
             </p>
           </div>
           {subscription?.status === "pending_approval" && (
-            <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">Approval in progress</Badge>
+            <Badge variant="outline">Approval in progress</Badge>
           )}
         </div>
       </div>

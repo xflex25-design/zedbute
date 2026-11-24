@@ -31,7 +31,7 @@ const Terms = () => (
       </Section>
 
       <Section title="3. Your music and rights">
-        <ul className="list-disc pl-5 space-y-1">
+        <ul className="list-none space-y-1.5">
           <li>You keep 100% ownership of your music. By uploading a release you grant ZedBute a non-exclusive licence to deliver it to platforms and stores.</li>
           <li>You confirm you own or control all rights to the recordings, compositions, artwork and metadata you submit, and that they do not infringe anyone else's rights.</li>
           <li>We may reject or remove content that infringes rights, is unlawful, or violates platform rules.</li>

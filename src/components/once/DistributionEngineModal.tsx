@@ -56,18 +56,18 @@ export function DistributionEngineModal({
     switch (status?.toLowerCase()) {
       case "live":
       case "distributed":
-        return <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">Live in Stores</Badge>;
+        return <Badge className="bg-foreground text-background hover:bg-foreground/90">Live in Stores</Badge>;
       case "approved":
-        return <Badge className="bg-green-600 text-white hover:bg-green-700">Approved</Badge>;
+        return <Badge className="bg-foreground text-background hover:bg-foreground/90">Approved</Badge>;
       case "delivered":
-        return <Badge className="bg-teal-600 text-white hover:bg-teal-700">Delivered to DSPs</Badge>;
+        return <Badge className="bg-foreground text-background hover:bg-foreground/90">Delivered to DSPs</Badge>;
       case "processing":
       case "queued":
-        return <Badge className="bg-blue-600 text-white hover:bg-blue-700">Processing</Badge>;
+        return <Badge variant="secondary" className="border border-foreground/30">Processing</Badge>;
       case "under_review":
-        return <Badge className="bg-purple-600 text-white hover:bg-purple-700">Under Review</Badge>;
+        return <Badge variant="secondary" className="border border-foreground/30">Under Review</Badge>;
       case "pending_submission":
-        return <Badge className="bg-amber-600 text-white hover:bg-amber-700">Pending Submission</Badge>;
+        return <Badge variant="outline">Pending Submission</Badge>;
       case "failed":
         return <Badge variant="destructive">Submission Failed</Badge>;
       case "rejected":
@@ -288,12 +288,12 @@ export function DistributionEngineModal({
 
         {/* Validation Issues */}
         {Array.isArray(currentRelease.validation_errors) && currentRelease.validation_errors.length > 0 && (
-          <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-xs space-y-1.5">
-            <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-300">
+          <div className="p-3 rounded-lg border border-border bg-muted/50 text-xs space-y-1.5">
+            <div className="flex items-center gap-1.5 font-semibold text-foreground">
               <FileWarning className="h-4 w-4" />
               Metadata Issues Requiring Attention ({currentRelease.validation_errors.length})
             </div>
-            <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+            <ul className="list-none space-y-1 text-muted-foreground">
               {currentRelease.validation_errors.slice(0, 6).map((issue, i) => (
                 <li key={`${issue.code}-${i}`}>{issue.message}</li>
               ))}
@@ -353,7 +353,7 @@ export function DistributionEngineModal({
                 disabled={loading || !currentRelease.audio_url}
                 onClick={handleRunAiDetection}
               >
-                <Sparkles className="h-3 w-3 text-amber-500" />
+                <Sparkles className="h-3 w-3 text-foreground" />
                 AI Check
               </Button>
               <Button
@@ -364,7 +364,7 @@ export function DistributionEngineModal({
                 disabled={loading || !currentRelease.audio_url}
                 onClick={handleRunAcrCheck}
               >
-                <ShieldAlert className="h-3 w-3 text-blue-500" />
+                <ShieldAlert className="h-3 w-3 text-foreground" />
                 ACR Match
               </Button>
             </div>
@@ -375,11 +375,11 @@ export function DistributionEngineModal({
               <div className="flex items-center justify-between font-medium">
                 <span>AI Song Detection:</span>
                 {currentRelease.is_ai_detected ? (
-                  <Badge variant="outline" className="text-amber-500 border-amber-500/40 text-[11px]">
+                  <Badge variant="outline" className="text-foreground border-foreground/40 text-[11px]">
                     AI-Detected ({currentRelease.ai_score ?? 0}%)
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-green-500 border-green-500/40 text-[11px]">
+                  <Badge variant="outline" className="text-foreground border-border text-[11px]">
                     Human-Made Song
                   </Badge>
                 )}
@@ -395,11 +395,11 @@ export function DistributionEngineModal({
               <div className="flex items-center justify-between font-medium">
                 <span>Registry ACR Check:</span>
                 {currentRelease.acr_matched ? (
-                  <Badge variant="outline" className="text-destructive border-destructive/40 text-[11px]">
+                  <Badge variant="destructive" className="text-[11px]">
                     Match Found ({currentRelease.acr_best_match?.queryMatchPercentage ?? 0}%)
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-emerald-500 border-emerald-500/40 text-[11px]">
+                  <Badge variant="outline" className="text-foreground border-border text-[11px]">
                     Clear Registry
                   </Badge>
                 )}
@@ -438,9 +438,9 @@ export function DistributionEngineModal({
                     <p className="font-semibold truncate">{store.storeName}</p>
                     <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                       {store.statusText?.toLowerCase().includes("live") ? (
-                        <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                        <CheckCircle2 className="h-3 w-3 text-foreground shrink-0" />
                       ) : (
-                        <Clock className="h-3 w-3 text-amber-500 shrink-0" />
+                        <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
                       )}
                       <span>{store.statusText || "Pending delivery"}</span>
                     </p>

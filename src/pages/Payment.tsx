@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { onceApi } from "@/services/onceApi";
 
 import type { User } from "@supabase/supabase-js";
 import emailjs from "@emailjs/browser";
@@ -57,12 +58,7 @@ const defaultAmounts: Record<string, number> = {
   premium: 170,
 };
 
-const ZMK_TO_USD_RATE = 25;
-
-const formatZmkWithUsd = (zmk: number) => {
-  const usd = zmk / ZMK_TO_USD_RATE;
-  return `K${zmk.toFixed(2)} ($${usd.toFixed(2)} USD)`;
-};
+const formatZmwPrice = (zmw: number) => `K${zmw.toFixed(2)} ZMW`;
 
 export default function Payment() {
   const navigate = useNavigate();
@@ -88,7 +84,6 @@ export default function Payment() {
       : Number.isFinite(parsedAmount) && parsedAmount > 0
         ? parsedAmount
         : defaultAmount;
-  const paymentAmountUsd = paymentAmount / ZMK_TO_USD_RATE;
 
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -259,6 +254,25 @@ export default function Payment() {
     }
   }
 
+  async function recordAccountingSnapshot(
+    transactionId: string,
+    status: "verified" | "pending",
+    amountZmw = paymentAmount
+  ) {
+    try {
+      await onceApi.recordFinancialTransaction({
+        transaction_id: transactionId,
+        payment_type: paymentType,
+        amount_zmw: amountZmw,
+        release_id: releaseId || null,
+        title: paymentLabel,
+        payment_status: status,
+      });
+    } catch (err) {
+      console.warn("[Financial] Failed to record server ZMW/USD snapshot:", err);
+    }
+  }
+
   async function handlePaymentSuccess(
     transactionId: string,
     status: "verified" | "pending"
@@ -266,6 +280,15 @@ export default function Payment() {
     try {
       if (paymentType === "promotion") {
         await savePromotionPayment(transactionId, status);
+        await recordAccountingSnapshot(transactionId, status, 20);
+        if (user) {
+          await onceApi.createNotification({
+            title: "Promotion Payment Confirmed (K20)",
+            message: `Your payment of K20 for release promotion has been confirmed (Tx: ${transactionId}). Your 7-day featured spotlight is active.`,
+            type: "payment_confirmation",
+            metadata: { transaction_id: transactionId, promotion_id: promotionId, amount: 20 },
+          }).catch(() => {});
+        }
         toast({
           title: status === "verified" ? "Promotion Activated!" : "Promotion Payment Submitted",
           description: status === "verified" ? "Your release will be featured for 7 days." : "Your promotion will be activated once payment is confirmed.",
@@ -288,7 +311,15 @@ export default function Payment() {
               phone_number: phoneNumber,
             });
           if (premiumError) throw premiumError;
+
+          await onceApi.createNotification({
+            title: `Premium Subscription Confirmed (K${paymentAmount})`,
+            message: `Your payment of K${paymentAmount} for ZedBute ${plan} Premium has been confirmed (Tx: ${transactionId}). Features are now being unlocked.`,
+            type: "payment_confirmation",
+            metadata: { transaction_id: transactionId, plan, amount: paymentAmount },
+          }).catch(() => {});
         }
+        await recordAccountingSnapshot(transactionId, status, paymentAmount);
         toast({
           title: status === "verified" ? "Payment Received!" : "Payment Submitted",
           description: "Our team will approve your Premium access within 24 hours.",
@@ -297,9 +328,19 @@ export default function Payment() {
       }
 
       await savePayment(transactionId, status);
+      await recordAccountingSnapshot(transactionId, status, paymentAmount);
 
       if (paymentType === "release" || paymentType === "ep" || paymentType === "album") {
         await updateReleaseStatus();
+      }
+
+      if (user) {
+        await onceApi.createNotification({
+          title: `Payment Confirmed: ${paymentLabel || "Release Submission"}`,
+          message: `Payment of K${paymentAmount} for "${paymentLabel || "your music release"}" was successfully confirmed (Tx: ${transactionId}). Your release is now submitted for distribution review.`,
+          type: "payment_confirmation",
+          metadata: { transaction_id: transactionId, release_id: releaseId, amount: paymentAmount },
+        }).catch(() => {});
       }
 
       sessionStorage.removeItem("pendingReleasePayment");
@@ -711,7 +752,7 @@ export default function Payment() {
                   return (
                     <div key={s} className="flex items-center gap-2">
                       {idx > 0 && (
-                        <div className={`h-px w-6 sm:w-8 ${isPast ? "bg-primary" : "bg-white/10"}`} />
+                        <div className={`h-px w-6 sm:w-8 ${isPast ? "bg-primary" : "bg-border"}`} />
                       )}
                       <div className="flex items-center gap-1.5">
                         <div
@@ -720,12 +761,12 @@ export default function Payment() {
                               ? "bg-primary text-primary-foreground shadow-glow"
                               : isPast
                                 ? "bg-primary/20 text-primary border border-primary/30"
-                                : "bg-white/5 text-gray-500 border border-white/10"
+                                : "bg-muted text-muted-foreground border border-border"
                           }`}
                         >
                           {isPast ? <CheckCircle2 className="h-4 w-4" /> : stepNum}
                         </div>
-                        <span className={`text-xs font-medium hidden sm:inline ${isActive ? "text-white" : "text-gray-500"}`}>
+                        <span className={`text-xs font-medium hidden sm:inline ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                           {s === "details" ? "Details" : s === "method" ? "Method" : "Processing"}
                         </span>
                       </div>
@@ -739,35 +780,35 @@ export default function Payment() {
           <div
             className={`rounded-2xl border shadow-card transition-all duration-500 ${
               isSuccess
-                ? "border-green-500/30 bg-[#0f0f1a]/90 backdrop-blur-md"
+                ? "border-foreground/40 bg-card backdrop-blur-md"
                 : isFailed
-                  ? "border-red-500/30 bg-[#0f0f1a]/90 backdrop-blur-md"
-                  : "border-white/10 bg-[#0f0f1a]/80 backdrop-blur-sm"
+                  ? "border-destructive/50 bg-card backdrop-blur-md"
+                  : "border-border bg-card backdrop-blur-sm"
             }`}
           >
             {isSuccess ? (
               /* SUCCESS STATE */
               <div className="p-8 sm:p-10 text-center space-y-5">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-2 animate-pulse">
-                  <CheckCircle2 className="h-8 w-8 text-green-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-foreground text-background mb-2">
+                  <CheckCircle2 className="h-8 w-8" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Successful!</h2>
-                      <p className="text-gray-400 text-sm sm:text-base">
-                        Your <span className="text-white font-semibold">{paymentLabel}</span> payment of <span className="text-white font-semibold">{formatZmkWithUsd(paymentAmount)}</span> has been confirmed.
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Payment Successful!</h2>
+                      <p className="text-muted-foreground text-sm sm:text-base">
+                        Your <span className="text-foreground font-semibold">{paymentLabel}</span> payment of <span className="text-foreground font-semibold">{formatZmwPrice(paymentAmount)}</span> has been confirmed.
                       </p>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-left space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-gray-300">
-                    <ShieldCheck className="h-4 w-4 text-green-400" />
+                <div className="rounded-xl bg-muted/50 border border-border p-4 text-left space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-foreground">
+                    <ShieldCheck className="h-4 w-4 text-foreground" />
                     <span>Transaction secured with 256-bit encryption</span>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Reference: <span className="text-gray-400 font-mono">{paymentType}-{crypto.randomUUID().slice(0, 8)}</span>
+                  <p className="text-xs text-muted-foreground">
+                    Reference: <span className="text-foreground font-mono">{paymentType}-{crypto.randomUUID().slice(0, 8)}</span>
                   </p>
                 </div>
                 <Button
-                  className="w-full h-12 bg-white text-black hover:bg-gray-100 font-semibold"
+                  className="w-full h-12 font-semibold"
                   onClick={() => goTo(returnUrl || "/dashboard")}
                 >
                   Go to Dashboard
@@ -777,25 +818,25 @@ export default function Payment() {
             ) : isFailed ? (
               /* FAILED STATE */
               <div className="p-8 sm:p-10 text-center space-y-5">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 mb-2">
-                  <XCircle className="h-8 w-8 text-red-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive text-destructive-foreground mb-2">
+                  <XCircle className="h-8 w-8" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Payment Cancelled</h2>
-                  <p className="text-gray-400 text-sm sm:text-base">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Payment Cancelled</h2>
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     {paymentError || "Something went wrong with your payment."}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
-                    className="flex-1 h-12 bg-white text-black hover:bg-gray-100 font-semibold"
+                    className="flex-1 h-12 font-semibold"
                     onClick={retryPayment}
                   >
                     Try Again
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 h-12 border-white/20 text-gray-300 hover:bg-white/10"
+                    className="flex-1 h-12"
                     onClick={() => navigate("/contact")}
                   >
                     Contact Support
@@ -809,22 +850,22 @@ export default function Payment() {
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Processing Payment</h2>
-                  <p className="text-gray-400 text-sm sm:text-base">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Processing Payment</h2>
+                  <p className="text-muted-foreground text-sm sm:text-base">
                     Securing connection and authorizing transaction...
                   </p>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-4 space-y-3">
+                <div className="rounded-xl bg-muted/50 border border-border p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                    <span className="text-sm text-gray-300">Connecting to payment gateway...</span>
+                    <span className="text-sm text-foreground">Connecting to payment gateway...</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full border-2 border-white/10" />
-                    <span className="text-sm text-gray-500">Waiting for confirmation...</span>
+                    <div className="w-5 h-5 rounded-full border-2 border-border" />
+                    <span className="text-sm text-muted-foreground">Waiting for confirmation...</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Please do not close this window. Check your phone for the Mobile Money PIN prompt.
                 </p>
               </div>
@@ -837,34 +878,34 @@ export default function Payment() {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
                       <Lock className="h-6 w-6 text-primary" />
                     </div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
                       {paymentLabel} Payment
                     </h1>
-                    <p className="text-3xl sm:text-4xl font-bold text-white mt-2 tracking-tight">
-                      {formatZmkWithUsd(paymentAmount)}
+                    <p className="text-3xl sm:text-4xl font-bold text-foreground mt-2 tracking-tight">
+                      {formatZmwPrice(paymentAmount)}
                     </p>
                   </div>
 
                   {/* Trust Badges */}
                   <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-yellow-500/15 text-yellow-300 border border-yellow-500/25 rounded-full px-3 py-1.5 font-semibold">
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-muted text-foreground border border-border rounded-full px-3 py-1.5 font-semibold">
                       <Smartphone className="h-3.5 w-3.5" /> MTN MoMo
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs bg-yellow-400/15 text-yellow-200 border border-yellow-400/25 rounded-full px-3 py-1.5 font-semibold">
+                    <span className="inline-flex items-center gap-1.5 text-xs bg-muted text-foreground border border-border rounded-full px-3 py-1.5 font-semibold">
                       <Smartphone className="h-3.5 w-3.5" /> Airtel Money
                     </span>
                   </div>
 
                   {/* Security Notice */}
-                  <div className="flex items-center justify-center gap-2 mb-6 text-xs text-gray-500">
+                  <div className="flex items-center justify-center gap-2 mb-6 text-xs text-muted-foreground">
                     <Lock className="h-3.5 w-3.5" />
                     <span>Secured & Encrypted Local Payments</span>
                   </div>
 
                   {/* Mobile Money Form */}
                   <div className="space-y-2 mb-6">
-                    <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-gray-200">
-                      <Phone className="h-4 w-4 text-gray-400" />
+                    <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
                       Phone Number
                     </Label>
                     <Input
@@ -873,9 +914,9 @@ export default function Payment() {
                       placeholder="097 123 4567"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-600 focus:border-primary/50 focus:ring-primary/20"
+                      className="h-12"
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Enter the number linked to your mobile money account.
                     </p>
                   </div>
@@ -895,7 +936,7 @@ export default function Payment() {
                     ) : (
                       <>
                         <Zap className="mr-2 h-5 w-5" />
-                        Pay {formatZmkWithUsd(paymentAmount)}
+                        Pay {formatZmwPrice(paymentAmount)}
                       </>
                     )}
                   </Button>
@@ -907,22 +948,22 @@ export default function Payment() {
           {/* Bottom Trust Line */}
           {!isSuccess && !isFailed && (
             <div className="mt-6 text-center space-y-2">
-              <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5 text-green-500/60" />
+                  <ShieldCheck className="h-3.5 w-3.5 text-foreground/70" />
                   SSL Encrypted
                 </span>
                 <span className="flex items-center gap-1">
-                  <Lock className="h-3.5 w-3.5 text-primary/60" />
+                  <Lock className="h-3.5 w-3.5 text-foreground/70" />
                   Secure Checkout
                 </span>
               </div>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Powered by{" "}
-                  <span className="text-gray-500 font-medium">
+                  <span className="text-foreground font-medium">
                     Lenco
                 </span>
-                · Trusted by 10,000+ businesses
+                {" "}— Trusted by 10,000+ businesses
               </p>
             </div>
           )}

@@ -37,6 +37,7 @@ import {
   Tooltip,
 } from "recharts";
 import type {
+  FinancialSummary,
   OnceAuditLogRecord,
   OnceDistributionReleaseRecord,
   OnceEngineSettingsRecord,
@@ -69,7 +70,8 @@ export default function AdminDistributionEngine() {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<any>(null);
   const [onceCredits, setOnceCredits] = useState<any>(null);
-  const [financialSummary, setFinancialSummary] = useState<any>(null);
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
+  const [refreshingRate, setRefreshingRate] = useState(false);
   const [settings, setSettings] = useState<OnceEngineSettingsRecord | null>(null);
   const [releases, setReleases] = useState<OnceDistributionReleaseRecord[]>([]);
   const [auditLogs, setAuditLogs] = useState<OnceAuditLogRecord[]>([]);
@@ -169,6 +171,29 @@ export default function AdminDistributionEngine() {
       toast.error(err.message || "Failed to save settings");
     } finally {
       setSavingSettings(false);
+    }
+  };
+
+  const handleRefreshExchangeRate = async () => {
+    setRefreshingRate(true);
+    try {
+      const adminMetrics = await onceApi.getAdminMetrics(true);
+      setMetrics(adminMetrics.metrics);
+      setOnceCredits(adminMetrics.onceCredits);
+      setFinancialSummary(adminMetrics.financialSummary);
+      setWebhooks(adminMetrics.recentWebhooks || []);
+      setWebhookSecretConfigured(Boolean(adminMetrics.webhookSecretConfigured));
+      if (adminMetrics.financialSummary?.rateUnavailable) {
+        toast.warning(adminMetrics.financialSummary.staleReason || "Exchange rate unavailable");
+      } else if (adminMetrics.financialSummary?.isStale) {
+        toast.warning("Freecurrencyapi unavailable; displaying stale cached rate.");
+      } else {
+        toast.success("ZMW/USD exchange rate refreshed from Freecurrencyapi");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to refresh exchange rate");
+    } finally {
+      setRefreshingRate(false);
     }
   };
 
@@ -333,7 +358,7 @@ export default function AdminDistributionEngine() {
                 Zedbute Distribution Engine
               </h1>
               <Badge variant="outline" className="text-primary border-primary/40 font-mono text-xs">
-                ONCE v1 API · Tag: ZEDBUTE
+                ONCE v1 API | Tag: ZEDBUTE
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
@@ -369,14 +394,14 @@ export default function AdminDistributionEngine() {
               <CardTitle className="text-2xl font-bold">{metrics?.totalReleases ?? releases.length}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
-              {metrics?.totalSubmitted ?? 0} submitted · {metrics?.drafts ?? 0} drafts
+              {metrics?.totalSubmitted ?? 0} submitted | {metrics?.drafts ?? 0} drafts
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="p-4 pb-2">
               <CardDescription className="text-xs">Live in Stores</CardDescription>
-              <CardTitle className="text-2xl font-bold text-emerald-500">{metrics?.live ?? 0}</CardTitle>
+              <CardTitle className="text-2xl font-bold text-foreground">{metrics?.live ?? 0}</CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
               {metrics?.approved ?? 0} approved / delivered
@@ -392,14 +417,14 @@ export default function AdminDistributionEngine() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
-              {metrics?.humanSongs ?? 0} Human (1 credit) · {metrics?.aiSongs ?? 0} AI (2 credits)
+              {metrics?.humanSongs ?? 0} Human (1 credit) | {metrics?.aiSongs ?? 0} AI (2 credits)
             </CardContent>
           </Card>
 
           <Card className="shadow-card">
             <CardHeader className="p-4 pb-2">
               <CardDescription className="text-xs">ONCE Account Balance</CardDescription>
-              <CardTitle className="text-2xl font-bold text-blue-500">
+              <CardTitle className="text-2xl font-bold text-foreground">
                 {onceCredits?.credits !== undefined
                   ? `${onceCredits.credits} Credits`
                   : onceCredits?.error
@@ -419,59 +444,218 @@ export default function AdminDistributionEngine() {
 
         {/* Financial & Currency Ledger (ZMW / USD) */}
         {financialSummary && (
-          <Card className="shadow-card border-primary/20 bg-card mb-6">
+          <Card className="shadow-card border-border bg-card mb-6">
             <CardHeader className="pb-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-primary" />
+                    <Coins className="h-4 w-4 text-foreground" />
                     Financial & Currency Ledger (ZMW / USD)
                   </CardTitle>
-                  <CardDescription className="text-xs">
-                    Customer payments in Zambian Kwacha (ZMW) via Lenco, with automated USD conversion, actual ONCE distribution expenses ($1/$2), and net profit.
+                  <CardDescription className="text-xs mt-0.5">
+                    Customer payments remain in Zambian Kwacha (ZMW) via Lenco (K70 single preserved). Each transaction locks its ZMW to USD rate for accounting, ONCE expenses, processing fees, and net profit without mutating ONCE credits.
                   </CardDescription>
                 </div>
-                {financialSummary.lowCreditWarning && (
-                  <Badge variant="destructive" className="gap-1 text-xs animate-pulse">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Low ONCE Credits ({financialSummary.remainingOnceCredits ?? 0} remaining)
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    variant={financialSummary.rateUnavailable || financialSummary.isStale ? "destructive" : "outline"}
+                    className="text-[11px]"
+                  >
+                    {financialSummary.rateUnavailable
+                      ? "Rate Unavailable"
+                      : financialSummary.isStale
+                      ? "Stale Cached Rate"
+                      : financialSummary.exchangeRateSource === "freecurrencyapi_live"
+                      ? "Freecurrencyapi Live"
+                      : "Freecurrencyapi 24h Cache"}
                   </Badge>
-                )}
+                  {financialSummary.lowCreditWarning && (
+                    <Badge variant="destructive" className="gap-1 text-xs">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Low ONCE Credits ({financialSummary.remainingOnceCredits ?? 0} remaining)
+                    </Badge>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1.5"
+                    onClick={handleRefreshExchangeRate}
+                    disabled={refreshingRate}
+                  >
+                    <RefreshCw className={`h-3 w-3 ${refreshingRate ? "animate-spin" : ""}`} />
+                    Refresh Rate
+                  </Button>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              {(financialSummary.rateUnavailable || financialSummary.isStale) && (
+                <div className="rounded-lg border border-foreground/40 bg-muted/40 p-3 flex items-start gap-2.5 text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-foreground" />
+                  <div className="space-y-0.5">
+                    <p className="font-semibold text-foreground">
+                      {financialSummary.rateUnavailable
+                        ? "Exchange Rate Unavailable — USD Conversions Not Assumed"
+                        : "Stale Exchange Rate Warning — Using Last Cached Rate"}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {financialSummary.staleReason ||
+                        "Freecurrencyapi could not be reached. Historical transactions retain their saved rates."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
                 <div className="p-3 rounded-lg border border-border/70 bg-background space-y-1">
-                  <p className="text-muted-foreground">Total Revenue</p>
-                  <p className="text-base font-bold text-foreground">K{financialSummary.totalRevenueZmw?.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">ZMW customer payments</p>
+                  <p className="text-muted-foreground">Total Revenue (ZMW)</p>
+                  <p className="text-base font-bold text-foreground">
+                    K{financialSummary.totalRevenueZmw?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {financialSummary.transactionsCount} recorded transaction(s)
+                  </p>
                 </div>
                 <div className="p-3 rounded-lg border border-border/70 bg-background space-y-1">
-                  <p className="text-muted-foreground">Estimated USD</p>
-                  <p className="text-base font-bold text-foreground">${financialSummary.estimatedUsdEquivalent?.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">At 1 USD = K{financialSummary.exchangeRateUsed} ({financialSummary.exchangeRateDate})</p>
+                  <p className="text-muted-foreground">Revenue (USD Equiv.)</p>
+                  <p className="text-base font-bold text-foreground">
+                    {financialSummary.estimatedUsdEquivalent !== null
+                      ? `$${financialSummary.estimatedUsdEquivalent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : "Unavailable"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {financialSummary.zmwToUsdRate !== null && financialSummary.exchangeRateUsed !== null
+                      ? `1 ZMW = $${financialSummary.zmwToUsdRate.toFixed(4)} (1 USD = K${financialSummary.exchangeRateUsed.toFixed(2)})`
+                      : "No exchange rate cached"}
+                  </p>
                 </div>
                 <div className="p-3 rounded-lg border border-border/70 bg-background space-y-1">
-                  <p className="text-muted-foreground">ONCE Expenses</p>
-                  <p className="text-base font-bold text-primary">${financialSummary.actualOnceExpensesUsd?.toLocaleString()} USD</p>
-                  <p className="text-[10px] text-muted-foreground">$1 human / $2 AI song</p>
+                  <p className="text-muted-foreground">ONCE Expenses (USD)</p>
+                  <p className="text-base font-bold text-foreground">
+                    ${financialSummary.actualOnceExpensesUsd?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {financialSummary.actualOnceExpensesZmw !== null
+                      ? `K${financialSummary.actualOnceExpensesZmw.toFixed(2)} ZMW equiv.`
+                      : "$1 human / $2 AI song"}
+                  </p>
                 </div>
                 <div className="p-3 rounded-lg border border-border/70 bg-background space-y-1">
-                  <p className="text-muted-foreground">Lenco Gateway Fees</p>
-                  <p className="text-base font-bold text-amber-500">K{financialSummary.lencoFeesZmw?.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground">~2.5% (${financialSummary.lencoFeesUsd} USD)</p>
+                  <p className="text-muted-foreground">Processing Fees</p>
+                  <p className="text-base font-bold text-foreground">
+                    K{financialSummary.lencoFeesZmw?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {financialSummary.lencoFeesUsd !== null
+                      ? `Lenco ~2.5% ($${financialSummary.lencoFeesUsd.toFixed(2)} USD)`
+                      : "Lenco ~2.5% (USD unavailable)"}
+                  </p>
                 </div>
-                <div className="p-3 rounded-lg border border-emerald-500/40 bg-emerald-500/5 space-y-1">
+                <div className="p-3 rounded-lg border border-foreground/30 bg-muted/40 space-y-1">
                   <p className="text-muted-foreground font-medium">Net Profit (ZMW)</p>
-                  <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">K{financialSummary.netProfitZmw?.toLocaleString()}</p>
-                  <p className="text-[10px] text-emerald-600/80">After ONCE & Lenco fees</p>
+                  <p className="text-base font-bold text-foreground">
+                    {financialSummary.netProfitZmw !== null
+                      ? `K${financialSummary.netProfitZmw.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : "Unavailable"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">After ONCE & Lenco fees</p>
                 </div>
-                <div className="p-3 rounded-lg border border-emerald-500/40 bg-emerald-500/5 space-y-1">
+                <div className="p-3 rounded-lg border border-foreground/30 bg-muted/40 space-y-1">
                   <p className="text-muted-foreground font-medium">Net Profit (USD)</p>
-                  <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">${financialSummary.netProfitUsd?.toLocaleString()}</p>
-                  <p className="text-[10px] text-emerald-600/80">Converted equivalent</p>
+                  <p className="text-base font-bold text-foreground">
+                    {financialSummary.netProfitUsd !== null
+                      ? `$${financialSummary.netProfitUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                      : "Unavailable"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {financialSummary.exchangeRateDate
+                      ? `Rate date: ${financialSummary.exchangeRateDate}`
+                      : "Awaiting live/cached rate"}
+                  </p>
                 </div>
               </div>
+
+              {Array.isArray(financialSummary.recentTransactions) &&
+                financialSummary.recentTransactions.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                      <span className="font-semibold uppercase tracking-wider text-foreground">
+                        Historical Transaction Rate Ledger
+                      </span>
+                      <span>
+                        Each row preserves the exact ZMW to USD rate captured at transaction time
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto max-h-64 overflow-y-auto rounded-lg border border-border/70">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-muted/40 border-b border-border/70 text-muted-foreground uppercase tracking-wider sticky top-0">
+                          <tr>
+                            <th className="py-2 px-2.5">Date</th>
+                            <th className="py-2 px-2.5">Item / Type</th>
+                            <th className="py-2 px-2.5">Amount (ZMW)</th>
+                            <th className="py-2 px-2.5">Locked Rate</th>
+                            <th className="py-2 px-2.5">Revenue (USD)</th>
+                            <th className="py-2 px-2.5">Fees / ONCE</th>
+                            <th className="py-2 px-2.5 text-right">Net Profit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/40">
+                          {financialSummary.recentTransactions.map((tx) => (
+                            <tr key={tx.id} className="hover:bg-muted/20">
+                              <td className="py-2 px-2.5 whitespace-nowrap text-muted-foreground">
+                                {new Date(tx.created_at).toLocaleDateString()}
+                              </td>
+                              <td className="py-2 px-2.5">
+                                <div className="font-medium text-foreground truncate max-w-[160px]">
+                                  {tx.title || tx.payment_type}
+                                </div>
+                                <div className="text-[10px] text-muted-foreground capitalize">
+                                  {tx.payment_gateway} | {tx.payment_type}
+                                </div>
+                              </td>
+                              <td className="py-2 px-2.5 font-medium text-foreground">
+                                K{tx.amount_zmw.toFixed(2)}
+                              </td>
+                              <td className="py-2 px-2.5 font-mono text-[10px]">
+                                {tx.zmw_to_usd_rate !== null ? (
+                                  <div className="space-y-0.5">
+                                    <div>1 ZMW = ${tx.zmw_to_usd_rate.toFixed(4)}</div>
+                                    {tx.exchange_rate_is_stale && (
+                                      <Badge variant="outline" className="text-[9px] h-4 px-1">
+                                        Stale
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">Unavailable</span>
+                                )}
+                              </td>
+                              <td className="py-2 px-2.5 font-medium">
+                                {tx.amount_usd !== null ? `$${tx.amount_usd.toFixed(2)}` : "N/A"}
+                              </td>
+                              <td className="py-2 px-2.5 text-muted-foreground">
+                                Fee: K{tx.processing_fee_zmw.toFixed(2)} | ONCE: ${tx.once_expense_usd.toFixed(2)}
+                              </td>
+                              <td className="py-2 px-2.5 text-right font-medium text-foreground">
+                                {tx.net_profit_zmw !== null && tx.net_profit_usd !== null ? (
+                                  <div>
+                                    <div>K{tx.net_profit_zmw.toFixed(2)}</div>
+                                    <div className="text-[10px] text-muted-foreground">
+                                      ${tx.net_profit_usd.toFixed(2)} USD
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">Unavailable</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
             </CardContent>
           </Card>
         )}
@@ -505,14 +689,14 @@ export default function AdminDistributionEngine() {
                         <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.0}/>
                       </linearGradient>
                       <linearGradient id="colorUsd" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
+                        <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.35}/>
+                        <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                     <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis yAxisId="left" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => `K${v}`} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" fontSize={11} tickFormatter={(v) => `$${v}`} />
+                    <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--foreground))" fontSize={11} tickFormatter={(v) => `$${v}`} />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",
@@ -521,6 +705,7 @@ export default function AdminDistributionEngine() {
                         fontSize: "12px",
                       }}
                       formatter={(value: any, name: string) => {
+                        if (value === null || value === undefined) return ["Unavailable", name];
                         if (name === "revenueZmw") return [`K${Number(value).toLocaleString()} ZMW`, "Monthly Revenue"];
                         if (name === "netProfitUsd") return [`$${Number(value).toLocaleString()} USD`, "Converted Net Profit"];
                         if (name === "estimatedUsd") return [`$${Number(value).toLocaleString()} USD`, "Estimated Revenue (USD)"];
@@ -543,8 +728,9 @@ export default function AdminDistributionEngine() {
                       type="monotone"
                       dataKey="netProfitUsd"
                       name="netProfitUsd"
-                      stroke="#10b981"
+                      stroke="hsl(var(--muted-foreground))"
                       strokeWidth={2}
+                      strokeDasharray="4 4"
                       fillOpacity={1}
                       fill="url(#colorUsd)"
                     />
@@ -799,7 +985,7 @@ export default function AdminDistributionEngine() {
                               </p>
                             )}
                             {!rel.submission_error && (rel.validation_errors?.length || 0) > 0 && (
-                              <p className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                                 <FileWarning className="h-3 w-3 shrink-0" />
                                 {rel.validation_errors!.length} validation issue(s)
                               </p>
@@ -807,11 +993,11 @@ export default function AdminDistributionEngine() {
                           </td>
                           <td className="py-3 px-3">
                             {rel.is_ai_detected ? (
-                              <span className="text-amber-500 font-medium flex items-center gap-1">
+                              <span className="text-foreground font-medium flex items-center gap-1">
                                 <Sparkles className="h-3 w-3" /> AI ({rel.ai_score ?? 0}%)
                               </span>
                             ) : (
-                              <span className="text-emerald-500 font-medium">Human</span>
+                              <span className="text-muted-foreground font-medium">Human</span>
                             )}
                           </td>
                           <td className="py-3 px-3">
@@ -1025,12 +1211,12 @@ export default function AdminDistributionEngine() {
                   )}
 
                   {Array.isArray(reviewTarget.validation_errors) && reviewTarget.validation_errors.length > 0 && (
-                    <div className="p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 space-y-1">
-                      <div className="font-semibold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                    <div className="p-3 rounded-lg border border-border bg-muted/50 space-y-1">
+                      <div className="font-semibold text-foreground flex items-center gap-1.5">
                         <FileWarning className="h-4 w-4" />
                         Validation Issues ({reviewTarget.validation_errors.length})
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                      <ul className="list-none space-y-1 text-muted-foreground">
                         {reviewTarget.validation_errors.map((issue, idx) => (
                           <li key={`${issue.code}-${idx}`}>{issue.message}</li>
                         ))}
@@ -1117,7 +1303,7 @@ export default function AdminDistributionEngine() {
                       onClick={() => handleReviewAction(reviewTarget.id, "approve_manual")}
                       className="gap-1.5"
                     >
-                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                      <Check className="h-3.5 w-3.5 text-foreground" />
                       Approve Release
                     </Button>
 

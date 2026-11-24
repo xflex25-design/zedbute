@@ -10,7 +10,7 @@ const ReleaseSuccess = () => {
 <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-sm sm:max-w-md text-center animate-fade-in">
         <CardContent className="pt-12 pb-10 space-y-4">
-          <CheckCircle2 className="mx-auto h-16 w-16 text-green-500" />
+          <CheckCircle2 className="mx-auto h-16 w-16 text-foreground" />
           <h1 className="text-2xl font-bold">Payment Successful!</h1>
           <p className="text-base text-muted-foreground">
             Your music release is now <strong>in review</strong> and will be

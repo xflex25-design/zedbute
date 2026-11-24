@@ -127,18 +127,18 @@ const AdminPromotions = () => {
                        <TableCell className="text-sm font-medium">K{p.amount.toFixed(2)}</TableCell>
                        <TableCell className="hidden sm:table-cell">
                          {p.promotion_payments?.length > 0 ? (
-                           <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Paid</Badge>
+                           <Badge className="bg-foreground text-background border-foreground">Paid</Badge>
                          ) : (
                            <Badge variant="outline">No payment</Badge>
                          )}
                        </TableCell>
                        <TableCell>
                          <Badge className={
-                           p.status === "active" ? "bg-green-500/15 text-green-600 border-green-500/30" :
-                             p.status === "paid" ? "bg-blue-500/15 text-blue-600 border-blue-500/30" :
-                               p.status === "pending" ? "bg-yellow-500/15 text-yellow-600 border-yellow-500/30" :
-                                 p.status === "rejected" ? "bg-red-500/15 text-red-600 border-red-500/30" :
-                                   "bg-gray-500/15 text-gray-600 border-gray-500/30"
+                           p.status === "active" ? "bg-foreground text-background border-foreground" :
+                             p.status === "paid" ? "bg-secondary text-foreground border-foreground/40" :
+                               p.status === "pending" ? "bg-muted text-foreground border-border" :
+                                 p.status === "rejected" ? "bg-destructive text-destructive-foreground border-destructive" :
+                                   "bg-muted text-muted-foreground border-border"
                          }>{p.status}</Badge>
                        </TableCell>
                        <TableCell className="hidden sm:table-cell text-sm">{new Date(p.created_at).toLocaleDateString()}</TableCell>
@@ -146,7 +146,7 @@ const AdminPromotions = () => {
                          <div className="flex flex-col xs:flex-row gap-1 xs:gap-2">
                            {p.status === "pending" && (
                              <>
-                               <Button size="sm" onClick={() => updateStatus(p.id, "active")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs bg-green-500 hover:bg-green-600 text-white">
+                               <Button size="sm" onClick={() => updateStatus(p.id, "active")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs">
                                  <CheckCircle className="h-2.5 w-2.5 xs:h-3 xs:w-3 mr-0.5 xs:mr-1" /> Approve
                                </Button>
                                <Button size="sm" variant="outline" onClick={() => updateStatus(p.id, "rejected")} className="h-7 xs:h-8 px-1.5 xs:px-2 text-[10px] xs:text-xs">

@@ -17,6 +17,8 @@ import type {
   AudioFileInspection,
   CoverArtInspection,
   AnalyticsDatePreset,
+  FinancialSummary,
+  ZedbuteFinancialTransactionRecord,
   ZedbuteArtistAnalyticsPayload,
   ZedbuteReleaseAnalyticsPayload,
   ZedbuteAdminAnalyticsPayload,
@@ -407,14 +409,31 @@ export const onceApi = {
   },
 
   // Admin Controls & Audit Logs
-  async getAdminMetrics() {
+  async getAdminMetrics(refreshRate = false) {
+    const qs = refreshRate ? "?refreshRate=1" : "";
     return fetchAuthJson<{
       metrics: any;
       onceCredits: any;
+      financialSummary: FinancialSummary;
       settings: OnceEngineSettingsRecord;
       recentWebhooks: any[];
       webhookSecretConfigured: boolean;
-    }>(`${API_BASE}/admin/metrics`);
+    }>(`${API_BASE}/admin/metrics${qs}`);
+  },
+
+  async recordFinancialTransaction(params: {
+    transaction_id: string;
+    payment_type: string;
+    amount_zmw: number;
+    release_id?: string | null;
+    title?: string;
+    payment_status?: "verified" | "pending" | "recorded";
+    processing_fee_zmw?: number;
+  }): Promise<{ success: boolean; transaction: ZedbuteFinancialTransactionRecord }> {
+    return fetchAuthJson(`${API_BASE}/financial/transactions`, {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
   },
 
   async getAdminReleases(): Promise<OnceDistributionReleaseRecord[]> {
@@ -526,5 +545,33 @@ export const onceApi = {
     return fetchAuthJson<ZedbuteAdminAnalyticsPayload>(
       `${API_BASE}/analytics/admin/summary${qs ? `?${qs}` : ""}`
     );
+  },
+
+  async listNotifications(): Promise<{ notifications: any[] }> {
+    return fetchAuthJson<{ notifications: any[] }>(`${API_BASE}/notifications`);
+  },
+
+  async markNotificationRead(id: string): Promise<{ success: boolean }> {
+    return fetchAuthJson<{ success: boolean }>(`${API_BASE}/notifications/${encodeURIComponent(id)}/read`, {
+      method: "POST",
+    });
+  },
+
+  async markAllNotificationsRead(): Promise<{ success: boolean }> {
+    return fetchAuthJson<{ success: boolean }>(`${API_BASE}/notifications/read-all`, {
+      method: "POST",
+    });
+  },
+
+  async createNotification(params: {
+    title: string;
+    message: string;
+    type?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<{ success: boolean; notification: any }> {
+    return fetchAuthJson<{ success: boolean; notification: any }>(`${API_BASE}/notifications`, {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
   },
 };

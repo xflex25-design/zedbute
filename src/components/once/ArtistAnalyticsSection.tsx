@@ -258,7 +258,7 @@ export function ArtistAnalyticsSection({
             ) : summaryData ? (
               <>
                 {summaryData.notice && (
-                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                  <div className="rounded-lg border border-border bg-muted/40 p-3.5 text-xs text-foreground flex items-start gap-2">
                     <Radio className="h-4 w-4 shrink-0 mt-0.5" />
                     <p>{summaryData.notice}</p>
                   </div>
@@ -447,7 +447,7 @@ export function ArtistAnalyticsSection({
                 ) : releaseData ? (
                   <>
                     {releaseData.notice && (
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                      <div className="rounded-lg border border-border bg-muted/40 p-3.5 text-xs text-foreground flex items-start gap-2">
                         <Radio className="h-4 w-4 shrink-0 mt-0.5" />
                         <p>{releaseData.notice}</p>
                       </div>

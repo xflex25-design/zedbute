@@ -202,6 +202,7 @@ function normalizeDbRelease(row: Record<string, unknown>): OnceDistributionRelea
     acr_best_match: row.acr_best_match as OnceDistributionReleaseRecord["acr_best_match"],
     credit_cost: typeof row.credit_cost === "number" ? row.credit_cost : 1,
     credits_debited: typeof row.credits_debited === "number" ? row.credits_debited : 0,
+    exchange_rate_snapshot: ((row.metadata as Record<string, unknown>)?.exchangeRateSnapshot as OnceDistributionReleaseRecord["exchange_rate_snapshot"]) || null,
     submission_error: row.submission_error ? String(row.submission_error) : undefined,
     submitted_at: row.submitted_at ? String(row.submitted_at) : undefined,
     approved_at: row.approved_at ? String(row.approved_at) : undefined,

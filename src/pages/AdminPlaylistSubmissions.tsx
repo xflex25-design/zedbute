@@ -39,10 +39,10 @@ interface Submission {
 }
 
 const reviewBadge: Record<ReviewStatus, string> = {
-  pending_review: "bg-amber-500 hover:bg-amber-500 text-white",
-  approved: "bg-green-600 hover:bg-green-600 text-white",
-  rejected: "bg-red-600 hover:bg-red-600 text-white",
-  changes_requested: "bg-blue-600 hover:bg-blue-600 text-white",
+  pending_review: "bg-secondary text-foreground border border-border",
+  approved: "bg-foreground text-background border border-foreground",
+  rejected: "bg-destructive text-destructive-foreground border border-destructive",
+  changes_requested: "bg-muted text-foreground border border-foreground/30",
 };
 
 const AdminPlaylistSubmissions = () => {
@@ -225,7 +225,7 @@ const AdminPlaylistSubmissions = () => {
                 </div>
                 <CardDescription className="text-xs sm:text-sm">
                   <span className="block sm:inline">{s.playlist_name}</span>
-                  <span className="hidden sm:inline"> · </span>
+                  <span className="hidden sm:inline"> | </span>
                   <span className="block sm:inline">{s.artist_email || "no email"}</span>
                 </CardDescription>
               </CardHeader>
@@ -263,7 +263,6 @@ const AdminPlaylistSubmissions = () => {
                   <Button
                     onClick={() => review(s.id, "approved")}
                     disabled={acting === s.id}
-                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
                     {acting === s.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -294,7 +293,7 @@ const AdminPlaylistSubmissions = () => {
 
           {subs.length === 0 && (
             <div className="text-center py-12">
-              <CheckCircle2 className="mx-auto h-12 w-12 text-gray-600 mb-3" />
+              <CheckCircle2 className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
               <p className="text-muted-foreground">No paid submissions awaiting review.</p>
             </div>
           )}

@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { onceApi } from "@/services/onceApi";
 import type { DistributionStore } from "../../../server/once/types";
-import { Music, CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react";
 
 interface StoreSelectorProps {
   selectedStoreIds: number[] | null;
@@ -111,31 +111,30 @@ export function StoreSelector({ selectedStoreIds, onChange, languageCode }: Stor
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Music className="h-4 w-4 text-primary" />
-          <Label className="text-sm font-semibold">Streaming Stores & Platforms</Label>
+          <Label className="text-sm font-medium">Streaming Stores & Platforms</Label>
           {loading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           ) : (
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs font-normal">
               {activeIds.length} / {stores.length} selected
             </Badge>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
-          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={selectDefaults}>
-            ONCE Recommended
+        <div className="flex flex-wrap items-center gap-1 text-xs">
+          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2.5" onClick={selectDefaults}>
+            Recommended
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={selectAllAvailable}>
-            All Standard Stores
+          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2.5" onClick={selectAllAvailable}>
+            All Standard
           </Button>
-          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2" onClick={selectPopular}>
-            Popular Only
+          <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-2.5" onClick={selectPopular}>
+            Popular
           </Button>
         </div>
       </div>
 
       {ugcBlockedByLanguage && (
-        <div className="p-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2">
+        <div className="p-3 rounded-lg border border-border bg-muted/50 text-xs text-foreground flex items-start gap-2">
           <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
           <span>
             YouTube Content ID and Facebook Rights Manager are unavailable for releases in this language/region per ONCE distribution policy. Standard streaming stores (including YouTube Music) remain active.
@@ -144,12 +143,12 @@ export function StoreSelector({ selectedStoreIds, onChange, languageCode }: Stor
       )}
 
       {activeIds.length === 0 && (
-        <div className="p-2.5 rounded-lg border border-destructive/40 bg-destructive/10 text-xs text-destructive">
+        <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-xs text-destructive">
           Select at least one streaming store before submitting.
         </div>
       )}
 
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-3 rounded-lg border border-border/70 bg-card/40">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-3 rounded-lg border border-border bg-muted/20">
         {stores.map((store) => {
           const isSelected = activeIds.includes(store.storeId);
           const isUgcBlocked = ugcBlockedByLanguage && UGC_IDS.has(store.storeId);
@@ -158,12 +157,12 @@ export function StoreSelector({ selectedStoreIds, onChange, languageCode }: Stor
             <label
               key={store.storeId}
               htmlFor={checkboxId}
-              className={`flex items-center space-x-2 p-2.5 rounded-md border text-xs text-left transition-colors select-none ${
+              className={`flex items-center space-x-2 px-3 py-2.5 rounded-md border text-xs text-left transition-colors select-none ${
                 isUgcBlocked
-                  ? "opacity-45 cursor-not-allowed bg-muted/20 border-border/30 text-muted-foreground"
+                  ? "opacity-45 cursor-not-allowed bg-muted/20 border-border/40 text-muted-foreground"
                   : isSelected
-                    ? "cursor-pointer bg-primary/10 border-primary/40 text-foreground"
-                    : "cursor-pointer bg-background/40 border-border/50 text-muted-foreground hover:bg-muted/40"
+                    ? "cursor-pointer bg-primary/10 border-primary/50 text-foreground"
+                    : "cursor-pointer bg-background border-border text-muted-foreground hover:bg-muted/40"
               }`}
             >
               <Checkbox
@@ -178,7 +177,7 @@ export function StoreSelector({ selectedStoreIds, onChange, languageCode }: Stor
                 <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
               )}
               {store.partnerOnly && !store.featured && (
-                <span className="text-[9px] uppercase tracking-wide px-1 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
+                <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0">
                   Partner
                 </span>
               )}

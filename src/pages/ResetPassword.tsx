@@ -114,7 +114,7 @@ const ResetPassword = () => {
           {status === "done" && (
             <>
               <CardTitle className="text-2xl flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-6 w-6 text-green-500" />
+                <CheckCircle2 className="h-6 w-6 text-foreground" />
                 Password Updated
               </CardTitle>
               <CardDescription>Redirecting you to login...</CardDescription>
@@ -146,7 +146,7 @@ const ResetPassword = () => {
                 <Input
                   id="new-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Enter new password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -159,7 +159,7 @@ const ResetPassword = () => {
                 <Input
                   id="confirm-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required

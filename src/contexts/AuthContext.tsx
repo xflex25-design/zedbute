@@ -22,6 +22,31 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function formatAuthError(error: { message?: string; name?: string } | unknown): string {
+  const rawMessage =
+    error && typeof error === "object" && "message" in error && typeof error.message === "string"
+      ? error.message
+      : error instanceof Error
+      ? error.message
+      : "Authentication request failed. Please try again.";
+  const rawName =
+    error && typeof error === "object" && "name" in error && typeof error.name === "string"
+      ? error.name
+      : "";
+  const lower = rawMessage.toLowerCase();
+
+  if (lower.includes("email not confirmed")) {
+    return "Please confirm your email address before logging in. Check your inbox for the confirmation link.";
+  }
+  if (lower.includes("invalid login credentials")) {
+    return "Invalid email or password. If you signed up with Google, click \"Continue with Google\" or use \"Forgot password?\" to set a password.";
+  }
+  if (rawName === "AuthRetryableFetchError" || lower.includes("failed to fetch") || lower.includes("networkerror")) {
+    return "Unable to reach the authentication service. Please check your connection or reload the page and try again.";
+  }
+  return rawMessage;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -31,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (envIssues.current.length > 0) {
-      console.error(
+      console.warn(
         `Missing Supabase env vars: ${envIssues.current.join(", ")}. ` +
         "Create a .env file in the project root. See .env.example for reference."
       );
@@ -39,11 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+      })
+      .catch(() => {
+        setSession(null);
+        setUser(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -78,49 +111,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn: AuthContextValue["signIn"] = useCallback(async (email, password) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
 
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) {
-      // Surface the real Supabase error instead of masking it, so we can see
-      // what's actually failing (e.g. unconfirmed email vs. wrong password).
-      console.error("[signIn] signInWithPassword error:", error);
-      if (error.message.toLowerCase().includes("email not confirmed")) {
-        return "Please confirm your email address before logging in. Check your inbox for the confirmation link.";
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        return formatAuthError(error);
       }
-      return error.message;
+      return null;
+    } catch (err) {
+      return formatAuthError(err);
     }
-    return null;
   }, []);
 
   const signUp: AuthContextValue["signUp"] = useCallback(async (email, password, fullName) => {
     if (envIssues.current.length > 0) return { error: `Missing env vars: ${envIssues.current.join(", ")}`, needsConfirmation: false };
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
-        data: { full_name: fullName },
-      },
-    });
-    if (error) return { error: error.message, needsConfirmation: false };
-    return { error: null, needsConfirmation: !data.session };
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: { full_name: fullName },
+        },
+      });
+      if (error) return { error: formatAuthError(error), needsConfirmation: false };
+      return { error: null, needsConfirmation: !data.session };
+    } catch (err) {
+      return { error: formatAuthError(err), needsConfirmation: false };
+    }
   }, []);
 
   const signOut: AuthContextValue["signOut"] = useCallback(async () => {
-    await supabase.auth.signOut();
+    await supabase.auth.signOut().catch(() => {});
   }, []);
 
   const resetPassword: AuthContextValue["resetPassword"] = useCallback(async (email) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    return error?.message ?? null;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      return error ? formatAuthError(error) : null;
+    } catch (err) {
+      return formatAuthError(err);
+    }
   }, []);
 
   const updatePassword: AuthContextValue["updatePassword"] = useCallback(async (password) => {
     if (envIssues.current.length > 0) return `Missing env vars: ${envIssues.current.join(", ")}`;
-    const { error } = await supabase.auth.updateUser({ password });
-    return error?.message ?? null;
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      return error ? formatAuthError(error) : null;
+    } catch (err) {
+      return formatAuthError(err);
+    }
   }, []);
 
   return (

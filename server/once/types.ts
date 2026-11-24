@@ -285,6 +285,9 @@ export interface OnceDistributionReleaseRecord {
   validation_errors?: ValidationIssue[];
   current_step?: number;
   last_quote?: ReleaseQuoteResponse | null;
+  exchange_rate_snapshot?: ExchangeRateSnapshot | null;
+  amount_zmw?: number;
+  processing_fee_zmw?: number;
   reviewed_by?: string;
   reviewed_at?: string;
   review_notes?: string;
@@ -293,6 +296,97 @@ export interface OnceDistributionReleaseRecord {
   distributed_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface ExchangeRateSnapshot {
+  baseCurrency: "ZMW";
+  targetCurrency: "USD";
+  zmwToUsdRate: number;
+  usdToZmwRate: number;
+  rateDate: string;
+  fetchedAt: string;
+  source: "freecurrencyapi_live" | "freecurrencyapi_cache" | "freecurrencyapi_stale_cache";
+  isStale: boolean;
+  staleReason?: string;
+}
+
+export type ExchangeRateResolution =
+  | ({ available: true } & ExchangeRateSnapshot)
+  | {
+      available: false;
+      baseCurrency: "ZMW";
+      targetCurrency: "USD";
+      zmwToUsdRate: null;
+      usdToZmwRate: null;
+      rateDate: null;
+      fetchedAt: null;
+      source: "unavailable";
+      isStale: false;
+      staleReason: string;
+    };
+
+export interface ZedbuteFinancialTransactionRecord {
+  id: string;
+  transaction_id: string;
+  user_id: string;
+  release_id?: string | null;
+  once_release_id?: string | null;
+  title?: string;
+  payment_type: string;
+  payment_gateway: "lenco" | "zedbute_ledger";
+  payment_status: "verified" | "pending" | "recorded";
+  amount_zmw: number;
+  amount_usd: number | null;
+  zmw_to_usd_rate: number | null;
+  usd_to_zmw_rate: number | null;
+  exchange_rate_date: string | null;
+  exchange_rate_fetched_at: string | null;
+  exchange_rate_source: string;
+  exchange_rate_is_stale: boolean;
+  processing_fee_zmw: number;
+  processing_fee_usd: number | null;
+  once_expense_usd: number;
+  once_expense_zmw: number | null;
+  net_profit_zmw: number | null;
+  net_profit_usd: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MonthlyFinancialTrend {
+  month: string;
+  revenueZmw: number;
+  estimatedUsd: number | null;
+  onceExpensesUsd: number;
+  processingFeesZmw: number;
+  processingFeesUsd: number | null;
+  netProfitZmw: number | null;
+  netProfitUsd: number | null;
+}
+
+export interface FinancialSummary {
+  totalRevenueZmw: number;
+  estimatedUsdEquivalent: number | null;
+  zmwToUsdRate: number | null;
+  exchangeRateUsed: number | null;
+  exchangeRateDate: string | null;
+  exchangeRateFetchedAt: string | null;
+  exchangeRateSource: string;
+  isStale: boolean;
+  rateUnavailable: boolean;
+  staleReason: string | null;
+  actualOnceExpensesUsd: number;
+  actualOnceExpensesZmw: number | null;
+  lencoFeesZmw: number;
+  lencoFeesUsd: number | null;
+  netProfitZmw: number | null;
+  netProfitUsd: number | null;
+  remainingOnceCredits: number | null;
+  lowCreditWarning: boolean;
+  transactionsCount: number;
+  unconvertedTransactionsCount: number;
+  recentTransactions: ZedbuteFinancialTransactionRecord[];
+  monthlyTrends: MonthlyFinancialTrend[];
 }
 
 export interface OnceAuditLogRecord {
@@ -315,6 +409,11 @@ export interface OnceEngineSettingsRecord {
   auto_distribute_default: boolean;
   require_admin_approval: boolean;
   single_upload_price_zmw: number;
+  cached_zmw_to_usd_rate?: number;
+  cached_usd_to_zmw_rate?: number;
+  exchange_rate_date?: string;
+  exchange_rate_source?: string;
+  exchange_rate_updated_at?: string;
   updated_at: string;
 }
 

@@ -1,4 +1,4 @@
-import { AlertCircle, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { AlertCircle, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import type { ValidationReport } from "../../../server/once/types";
 
 interface MetadataValidationBannerProps {
@@ -14,8 +14,8 @@ export function MetadataValidationBanner({
 }: MetadataValidationBannerProps) {
   if (loading) {
     return (
-      <div className="p-4 rounded-xl border border-border bg-muted/30 text-xs text-muted-foreground flex items-center gap-2">
-        <Info className="h-4 w-4 animate-pulse text-primary shrink-0" />
+      <div className="p-4 rounded-lg border border-border bg-muted/30 text-xs text-muted-foreground flex items-center gap-2">
+        <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
         <span>Checking release metadata against official ONCE rules & release schema...</span>
       </div>
     );
@@ -31,7 +31,7 @@ export function MetadataValidationBanner({
     <div
       className={`p-4 rounded-xl border text-xs space-y-3 ${
         allValid
-          ? "border-emerald-500/35 bg-emerald-500/10"
+          ? "border-foreground/30 bg-muted/40"
           : "border-destructive/40 bg-destructive/10"
       }`}
     >
@@ -39,8 +39,8 @@ export function MetadataValidationBanner({
         <div className="flex items-center gap-2 font-semibold text-sm">
           {allValid ? (
             <>
-              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-              <span className="text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="h-4 w-4 text-foreground shrink-0" />
+              <span className="text-foreground">
                 Ready for ONCE Distribution — All Required Rules Passed
               </span>
             </>
@@ -54,7 +54,7 @@ export function MetadataValidationBanner({
           )}
         </div>
         <span className="text-[11px] text-muted-foreground">
-          Rules: {report.rulesSource === "live" ? "Live ONCE API" : "ONCE v1 Spec"} · Schema:{" "}
+          Rules: {report.rulesSource === "live" ? "Live ONCE API" : "ONCE v1 Spec"} | Schema:{" "}
           {report.schemaSource === "live" ? "Live ONCE Schema" : "ONCE OpenAPI v1"}
         </span>
       </div>
@@ -89,7 +89,7 @@ export function MetadataValidationBanner({
 
       {report.warnings.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+          <p className="text-[11px] font-semibold text-foreground flex items-center gap-1">
             <AlertTriangle className="h-3.5 w-3.5" />
             Non-blocking recommendations ({report.warnings.length})
           </p>
@@ -97,7 +97,7 @@ export function MetadataValidationBanner({
             {report.warnings.map((warn, idx) => (
               <li
                 key={`${warn.field}-w-${idx}`}
-                className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-200"
+                className="p-2 rounded-lg bg-muted/50 border border-border text-foreground"
               >
                 {warn.message}
               </li>

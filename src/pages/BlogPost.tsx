@@ -69,7 +69,7 @@ const BlogPost = () => {
             {post.body.map((block, i) => {
               if (block.type === "h2") return <h2 key={i} className="text-xl sm:text-2xl md:text-3xl font-bold mt-6 sm:mt-8 text-foreground">{block.text}</h2>;
               if (block.type === "ul") return (
-                <ul key={i} className="list-disc pl-5 sm:pl-6 space-y-1.5 sm:space-y-2">
+                <ul key={i} className="list-none space-y-1.5 sm:space-y-2">
                   {block.items?.map((it, j) => <li key={j}>{it}</li>)}
                 </ul>
               );

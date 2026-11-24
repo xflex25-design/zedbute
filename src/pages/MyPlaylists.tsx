@@ -18,15 +18,15 @@ interface Playlist {
 }
 
 const PaymentBadges = () => (
-  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
-    <span className="text-xs text-gray-400 font-medium">Pay with:</span>
-    <span className="inline-flex items-center gap-1 text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-full px-2 py-0.5 font-semibold">
+  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/15">
+    <span className="text-xs text-white/70 font-medium">Pay with:</span>
+    <span className="inline-flex items-center gap-1 text-xs bg-white/15 text-white border border-white/25 rounded-full px-2 py-0.5 font-semibold">
       <Smartphone className="h-3 w-3" /> Airtel Money
     </span>
-    <span className="inline-flex items-center gap-1 text-xs bg-yellow-400/20 text-yellow-200 border border-yellow-400/30 rounded-full px-2 py-0.5 font-semibold">
+    <span className="inline-flex items-center gap-1 text-xs bg-white/15 text-white border border-white/25 rounded-full px-2 py-0.5 font-semibold">
       <Smartphone className="h-3 w-3" /> MTN MoMo
     </span>
-    <span className="inline-flex items-center gap-1 text-xs bg-white/10 text-gray-300 border border-white/20 rounded-full px-2 py-0.5 font-medium">
+    <span className="inline-flex items-center gap-1 text-xs bg-white/15 text-white border border-white/25 rounded-full px-2 py-0.5 font-medium">
       <CreditCard className="h-3 w-3" /> Card
     </span>
   </div>
@@ -94,7 +94,7 @@ const MyPlaylists = () => {
         <div className="max-w-5xl mx-auto">
           <div className="mb-8 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold mb-3 flex items-center justify-center gap-2">
-              <ListMusic className="h-8 w-8 text-[#F7931E]" />
+              <ListMusic className="h-8 w-8 text-foreground" />
               Submit to Playlist
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -110,8 +110,7 @@ const MyPlaylists = () => {
               {playlists.map((p) => (
                 <div
                   key={p.id}
-                  className="group relative h-[400px] overflow-hidden rounded-2xl cursor-pointer border border-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-glow hover:border-white/20"
-                  style={{ background: "#0f0f1a" }}
+                  className="group relative h-[400px] overflow-hidden rounded-2xl cursor-pointer border border-border bg-black transition-all duration-300 hover:scale-[1.02] hover:shadow-glow hover:border-foreground/40"
                   onClick={() => navigate(`/submit-to-playlist?playlist=${p.id}`)}
                 >
                   {p.cover_image ? (
@@ -127,12 +126,8 @@ const MyPlaylists = () => {
                     />
                   ) : (
                     <div
-                      className="absolute inset-0"
-                      style={{
-                        zIndex: 0,
-                        background:
-                          "linear-gradient(135deg, hsl(220 25% 12%) 0%, hsl(280 30% 15%) 100%)",
-                      }}
+                      className="absolute inset-0 bg-neutral-900"
+                      style={{ zIndex: 0 }}
                     />
                   )}
                   <div
@@ -158,12 +153,12 @@ const MyPlaylists = () => {
                         </h3>
                       </div>
                       {p.genre && (
-                        <span className="inline-block bg-black/50 text-white/90 border border-white/20 backdrop-blur-md rounded-full px-3 py-0.5 text-xs font-semibold mb-2">
+                        <span className="inline-block bg-black/60 text-white border border-white/25 backdrop-blur-md rounded-full px-3 py-0.5 text-xs font-semibold mb-2">
                           {p.genre}
                         </span>
                       )}
                       {p.description && (
-                        <p className="text-sm text-gray-300 mt-2 line-clamp-2 leading-relaxed">
+                        <p className="text-sm text-white/80 mt-2 line-clamp-2 leading-relaxed">
                           {p.description}
                         </p>
                       )}
@@ -171,13 +166,13 @@ const MyPlaylists = () => {
                         <div>
                           <p className="text-2xl sm:text-3xl font-bold text-white drop-shadow-md">
                             K{p.submission_fee}
-                            <span className="text-sm font-normal text-gray-300 ml-1">
+                            <span className="text-sm font-normal text-white/75 ml-1">
                               fee
                             </span>
                           </p>
                         </div>
                         <Button
-                          className="bg-white text-black hover:bg-gray-100 font-semibold shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
+                          className="font-semibold shadow-lg transition-all duration-200 hover:scale-105 active:scale-95"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/submit-to-playlist?playlist=${p.id}`);

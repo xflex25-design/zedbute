@@ -10,13 +10,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { onceApi } from "@/services/onceApi";
 import { StoreSelector } from "@/components/once/StoreSelector";
 import { MetadataValidationBanner } from "@/components/once/MetadataValidationBanner";
-import { UploadWizardStepper } from "@/components/upload/UploadWizardStepper";
+import {
+  UPLOAD_WIZARD_STEPS,
+  UploadWizardStepper,
+} from "@/components/upload/UploadWizardStepper";
 import { FieldValidationMessage } from "@/components/upload/FieldValidationMessage";
 import { getVisibleFieldIssue, validateWizardFields } from "@/lib/onceFieldValidation";
 import {
@@ -43,24 +47,10 @@ import type {
 } from "../../server/once/types";
 import {
   AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Calendar,
   CheckCircle2,
-  Clock,
-  Coins,
-  Disc,
-  FileAudio,
-  Image as ImageIcon,
-  Info,
   Loader2,
-  Music,
   Plus,
-  Radio,
   RefreshCw,
-  Save,
-  ShieldCheck,
-  Sparkles,
   Trash2,
   Upload,
 } from "lucide-react";
@@ -255,7 +245,6 @@ export default function UploadRelease() {
 
   // Auto-save state
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const hasHydratedRef = useRef(false);
 
@@ -316,7 +305,7 @@ export default function UploadRelease() {
         return `${baseClass} border-destructive focus-visible:ring-destructive`.trim();
       }
       if (issue?.severity === "warning") {
-        return `${baseClass} border-amber-500/70 focus-visible:ring-amber-500`.trim();
+        return `${baseClass} border-foreground/50 focus-visible:ring-foreground`.trim();
       }
       return baseClass;
     },
@@ -729,7 +718,6 @@ export default function UploadRelease() {
         if (res.draft?.id && !localDraftId) setLocalDraftId(res.draft.id);
         if (res.onceDraftId) setOnceDraftId(res.onceDraftId);
         setAutoSaveStatus("saved");
-        setLastSavedAt(new Date().toISOString());
         if (!silent) {
           toast({ title: "Draft saved", description: "You can safely leave and resume anytime." });
         }
@@ -1229,45 +1217,55 @@ export default function UploadRelease() {
 
   if (!authChecked || isLoadingRelease) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const activeStepMeta =
+    UPLOAD_WIZARD_STEPS.find((s) => s.id === currentStep) || UPLOAD_WIZARD_STEPS[0];
+
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="container mx-auto max-w-3xl px-4 pt-20 sm:pt-24 pb-16">
-        {/* Submitted Status View */}
+
+      <main className="container mx-auto max-w-3xl px-4 pt-24 pb-16">
         {submittedResult ? (
-          <Card className="shadow-card border-emerald-500/30">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-                  <CardTitle className="text-xl">Release Submitted to ONCE</CardTitle>
+          <Card className="hover:translate-y-0 hover:shadow-card">
+            <CardContent className="p-6 sm:p-8 space-y-6">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-foreground shrink-0" />
+                    <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+                      Release submitted
+                    </h1>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Your release "{form.title}" is now tracked inside Zedbute.
+                  </p>
                 </div>
-                <Badge className="capitalize bg-primary text-primary-foreground">
+                <Badge variant="secondary" className="capitalize">
                   {submittedResult.status}
                 </Badge>
               </div>
-              <CardDescription>
-                Your release "{form.title}" is now tracked inside the Zedbute Distribution Engine.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-border bg-muted/30">
-                <div>
+
+              <Separator />
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">ONCE Release ID</p>
-                  <p className="font-mono font-semibold text-primary break-all">{submittedResult.onceReleaseId}</p>
+                  <p className="font-mono font-medium text-foreground break-all">
+                    {submittedResult.onceReleaseId}
+                  </p>
                 </div>
-                <div>
+                <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Approval & Store Status</p>
-                  <p className="font-semibold capitalize">{submittedResult.status}</p>
+                  <p className="font-medium capitalize">{submittedResult.status}</p>
                 </div>
                 {submittedResult.upc && (
-                  <div>
+                  <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">UPC Barcode</p>
                     <p className="font-mono">{submittedResult.upc}</p>
                   </div>
@@ -1275,293 +1273,206 @@ export default function UploadRelease() {
               </div>
 
               {submittedResult.liveStatus?.storeStatuses && submittedResult.liveStatus.storeStatuses.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Store Delivery Updates
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {submittedResult.liveStatus.storeStatuses.map((s) => (
-                      <div key={s.storeId} className="p-2.5 rounded-lg border border-border flex items-center justify-between text-xs">
-                        <span className="font-medium">{s.storeName}</span>
-                        <Badge variant="outline" className="text-[11px]">{s.statusText}</Badge>
-                      </div>
-                    ))}
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Store Delivery Updates
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {submittedResult.liveStatus.storeStatuses.map((s) => (
+                        <div
+                          key={s.storeId}
+                          className="px-3 py-2.5 rounded-md border border-border flex items-center justify-between text-xs"
+                        >
+                          <span className="font-medium">{s.storeName}</span>
+                          <span className="text-muted-foreground">{s.statusText}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
-              <div className="flex flex-wrap gap-2 pt-2">
+              <Separator />
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleSyncSubmittedStatus}
                   disabled={syncingStatus}
-                  className="gap-1.5"
                 >
                   <RefreshCw className={`h-4 w-4 ${syncingStatus ? "animate-spin" : ""}`} />
-                  Refresh Approval Status
+                  Refresh status
                 </Button>
                 <Button type="button" onClick={() => navigate("/dashboard")}>
-                  Go to Artist Dashboard
+                  Go to dashboard
                 </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {/* Unfinished Drafts Resume Panel */}
-            {!isEditMode && unfinishedDrafts.length > 0 && (
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="p-4 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <Clock className="h-4 w-4 text-primary" />
-                      <span>Unfinished Drafts ({unfinishedDrafts.length})</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">Pick up right where you left off</span>
-                  </div>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {unfinishedDrafts.slice(0, 4).map((d) => (
-                      <div
-                        key={d.id}
-                        className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-background/80 border border-border text-xs"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">{d.title || "Untitled Draft"}</p>
-                          <p className="text-muted-foreground">
-                            {d.primary_artist} · Step {d.current_step || 1}/5 ·{" "}
-                            <span className="capitalize">{d.status}</span>
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={localDraftId === d.id ? "secondary" : "default"}
-                            className="h-7 text-xs"
-                            onClick={() => hydrateFromDraftRecord(d)}
-                          >
-                            {localDraftId === d.id ? "Active" : "Resume"}
-                          </Button>
-                          {["draft", "pending_submission"].includes(d.status) && (
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                              onClick={async () => {
-                                await onceApi.deleteDraft(d.id).catch(() => {});
-                                setUnfinishedDrafts((prev) => prev.filter((item) => item.id !== d.id));
-                                if (localDraftId === d.id) setLocalDraftId(undefined);
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-balance">
+                {isEditMode ? "Edit your release" : "Distribute your release"}
+              </h1>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                {isEditMode
+                  ? "Update your release details below and save your changes."
+                  : "Complete the details below to submit your release for distribution."}
+              </p>
+            </div>
 
-            <Card className="shadow-card">
-              <CardHeader className="pb-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
-                      <Music className="h-5 w-5 text-primary" />
-                      {isEditMode ? "Edit Music Release" : "Distribute Your Release"}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {isEditMode
-                        ? "Update your release details and save changes."
-                        : "Simple 5-step guided release upload validated against ONCE & global streaming standards."}
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {metadataRules && (
-                      <Badge variant="outline" className="text-[11px] gap-1 font-normal">
-                        <ShieldCheck className="h-3 w-3 text-emerald-500" />
-                        ONCE Rules: {metadataRules.source === "live" ? "Live" : "Synced"}
-                      </Badge>
-                    )}
-                    {!isEditMode && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-xs gap-1.5"
-                        onClick={() => saveDraftNow(false)}
-                      >
-                        <Save className="h-3.5 w-3.5" />
-                        Save Draft
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
+            <Card className="hover:translate-y-0 hover:shadow-card">
+              <CardContent className="p-6 sm:p-8 space-y-8">
                 <UploadWizardStepper
                   currentStep={currentStep}
                   completedSteps={completedSteps}
                   stepErrors={fieldValidation.stepErrors}
                   stepAttempted={stepAttempted}
                   onStepSelect={setCurrentStep}
-                  autoSaveStatus={autoSaveStatus}
-                  lastSavedAt={lastSavedAt}
                 />
 
+                <Separator />
+
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold tracking-tight">
+                    {activeStepMeta.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {activeStepMeta.subtitle}
+                  </p>
+                </div>
+
                 {/* =========================================================
-                    STEP 1: ARTIST INFORMATION & CREDITS
+                    STEP 1: ARTIST DETAILS
                    ========================================================= */}
                 {currentStep === 1 && (
-                  <div className="space-y-5 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label htmlFor="primaryArtistName">Primary Artist Name *</Label>
-                        <Input
-                          id="primaryArtistName"
-                          value={form.primaryArtistName}
-                          onChange={(e) => setForm({ ...form, primaryArtistName: e.target.value })}
-                          onBlur={() => markTouched("primaryArtistName")}
-                          placeholder="Your performing artist, duo, or band name"
-                          maxLength={120}
-                          aria-invalid={getFieldIssue("primaryArtistName", 1)?.severity === "error"}
-                          className={fieldInputClass("primaryArtistName", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("primaryArtistName", 1)} />
-                        <p className="text-[11px] text-muted-foreground">
-                          Use your real performing identity—avoid generic names like "Study Music" or "Chill Beats".
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label htmlFor="featuredArtistsText">Featured Artists (optional)</Label>
-                        <Input
-                          id="featuredArtistsText"
-                          value={form.featuredArtistsText}
-                          onChange={(e) => setForm({ ...form, featuredArtistsText: e.target.value })}
-                          onBlur={() => markTouched("featuredArtistsText")}
-                          placeholder="Comma-separated, e.g. Yo Maps, Chef 187"
-                          aria-invalid={getFieldIssue("featuredArtistsText", 1)?.severity === "error"}
-                          className={fieldInputClass("featuredArtistsText", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("featuredArtistsText", 1)} />
-                        <p className="text-[11px] text-muted-foreground">
-                          Do not add "feat." inside your song title—list featured artists here so stores link them cleanly.
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="songwriter">Songwriter Full Legal Name *</Label>
-                        <Input
-                          id="songwriter"
-                          value={form.defaultSongwriterName}
-                          onChange={(e) => setForm({ ...form, defaultSongwriterName: e.target.value })}
-                          onBlur={() => markTouched("defaultSongwriterName")}
-                          placeholder="First & Last Name (e.g. Chanda Mwamba)"
-                          aria-invalid={getFieldIssue("defaultSongwriterName", 1)?.severity === "error"}
-                          className={fieldInputClass("defaultSongwriterName", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("defaultSongwriterName", 1)} />
-                        <p className="text-[11px] text-muted-foreground">
-                          Required for royalties & publishing—must include first and last name (no initials).
-                        </p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="composer">Composer Full Legal Name *</Label>
-                        <Input
-                          id="composer"
-                          value={form.composerName}
-                          onChange={(e) => setForm({ ...form, composerName: e.target.value })}
-                          onBlur={() => markTouched("composerName")}
-                          placeholder="First & Last Name of music composer"
-                          aria-invalid={getFieldIssue("composerName", 1)?.severity === "error"}
-                          className={fieldInputClass("composerName", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("composerName", 1)} />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="producer">Producer *</Label>
-                        <Input
-                          id="producer"
-                          value={form.producerName}
-                          onChange={(e) => setForm({ ...form, producerName: e.target.value })}
-                          onBlur={() => markTouched("producerName")}
-                          placeholder="Producer name or beatmaker tag"
-                          aria-invalid={getFieldIssue("producerName", 1)?.severity === "error"}
-                          className={fieldInputClass("producerName", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("producerName", 1)} />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="labelName">Record Label (optional)</Label>
-                        <Input
-                          id="labelName"
-                          value={form.labelName}
-                          onChange={(e) => setForm({ ...form, labelName: e.target.value })}
-                          onBlur={() => markTouched("labelName")}
-                          placeholder="Independent or Label Name"
-                          aria-invalid={getFieldIssue("labelName", 1)?.severity === "error"}
-                          className={fieldInputClass("labelName", 1)}
-                        />
-                        <FieldValidationMessage issue={getFieldIssue("labelName", 1)} />
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryArtistName">Primary Artist Name *</Label>
+                      <Input
+                        id="primaryArtistName"
+                        value={form.primaryArtistName}
+                        onChange={(e) => setForm({ ...form, primaryArtistName: e.target.value })}
+                        onBlur={() => markTouched("primaryArtistName")}
+                        placeholder="Artist or band name"
+                        maxLength={120}
+                        aria-invalid={getFieldIssue("primaryArtistName", 1)?.severity === "error"}
+                        className={fieldInputClass("primaryArtistName", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("primaryArtistName", 1)} />
                     </div>
 
-                    {/* Optional Artist Store Links */}
-                    <div className="p-3.5 rounded-xl border border-border/70 bg-muted/20 space-y-3">
-                      <p className="text-xs font-semibold text-foreground">
-                        Existing Artist Profile Links (optional)
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Pin this release to your existing Spotify & Apple Music artist pages instead of creating duplicates.
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="spotifyUrl" className="text-xs">Spotify Artist Profile URL</Label>
-                          <Input
-                            id="spotifyUrl"
-                            value={form.spotifyArtistUrl}
-                            onChange={(e) => setForm({ ...form, spotifyArtistUrl: e.target.value })}
-                            onBlur={() => markTouched("spotifyArtistUrl")}
-                            placeholder="https://open.spotify.com/artist/..."
-                            aria-invalid={getFieldIssue("spotifyArtistUrl", 1)?.severity === "error"}
-                            className={fieldInputClass("spotifyArtistUrl", 1, "h-9 text-xs")}
-                          />
-                          <FieldValidationMessage issue={getFieldIssue("spotifyArtistUrl", 1)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="appleUrl" className="text-xs">Apple Music Artist URL</Label>
-                          <Input
-                            id="appleUrl"
-                            value={form.appleMusicArtistUrl}
-                            onChange={(e) => setForm({ ...form, appleMusicArtistUrl: e.target.value })}
-                            onBlur={() => markTouched("appleMusicArtistUrl")}
-                            placeholder="https://music.apple.com/us/artist/..."
-                            aria-invalid={getFieldIssue("appleMusicArtistUrl", 1)?.severity === "error"}
-                            className={fieldInputClass("appleMusicArtistUrl", 1, "h-9 text-xs")}
-                          />
-                          <FieldValidationMessage issue={getFieldIssue("appleMusicArtistUrl", 1)} />
-                        </div>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="featuredArtistsText">Featured Artists</Label>
+                      <Input
+                        id="featuredArtistsText"
+                        value={form.featuredArtistsText}
+                        onChange={(e) => setForm({ ...form, featuredArtistsText: e.target.value })}
+                        onBlur={() => markTouched("featuredArtistsText")}
+                        placeholder="Yo Maps, Chef 187"
+                        aria-invalid={getFieldIssue("featuredArtistsText", 1)?.severity === "error"}
+                        className={fieldInputClass("featuredArtistsText", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("featuredArtistsText", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="songwriter">Songwriter Full Name *</Label>
+                      <Input
+                        id="songwriter"
+                        value={form.defaultSongwriterName}
+                        onChange={(e) => setForm({ ...form, defaultSongwriterName: e.target.value })}
+                        onBlur={() => markTouched("defaultSongwriterName")}
+                        placeholder="Chanda Mwamba"
+                        aria-invalid={getFieldIssue("defaultSongwriterName", 1)?.severity === "error"}
+                        className={fieldInputClass("defaultSongwriterName", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("defaultSongwriterName", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="composer">Composer Full Name *</Label>
+                      <Input
+                        id="composer"
+                        value={form.composerName}
+                        onChange={(e) => setForm({ ...form, composerName: e.target.value })}
+                        onBlur={() => markTouched("composerName")}
+                        placeholder="Full legal name"
+                        aria-invalid={getFieldIssue("composerName", 1)?.severity === "error"}
+                        className={fieldInputClass("composerName", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("composerName", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="producer">Producer *</Label>
+                      <Input
+                        id="producer"
+                        value={form.producerName}
+                        onChange={(e) => setForm({ ...form, producerName: e.target.value })}
+                        onBlur={() => markTouched("producerName")}
+                        placeholder="Producer name"
+                        aria-invalid={getFieldIssue("producerName", 1)?.severity === "error"}
+                        className={fieldInputClass("producerName", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("producer", 1) || getFieldIssue("producerName", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="labelName">Record Label</Label>
+                      <Input
+                        id="labelName"
+                        value={form.labelName}
+                        onChange={(e) => setForm({ ...form, labelName: e.target.value })}
+                        onBlur={() => markTouched("labelName")}
+                        placeholder="Label or independent"
+                        aria-invalid={getFieldIssue("labelName", 1)?.severity === "error"}
+                        className={fieldInputClass("labelName", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("labelName", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="spotifyUrl">Spotify Artist URL</Label>
+                      <Input
+                        id="spotifyUrl"
+                        value={form.spotifyArtistUrl}
+                        onChange={(e) => setForm({ ...form, spotifyArtistUrl: e.target.value })}
+                        onBlur={() => markTouched("spotifyArtistUrl")}
+                        placeholder="https://open.spotify.com/artist/..."
+                        aria-invalid={getFieldIssue("spotifyArtistUrl", 1)?.severity === "error"}
+                        className={fieldInputClass("spotifyArtistUrl", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("spotifyArtistUrl", 1)} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="appleUrl">Apple Music Artist URL</Label>
+                      <Input
+                        id="appleUrl"
+                        value={form.appleMusicArtistUrl}
+                        onChange={(e) => setForm({ ...form, appleMusicArtistUrl: e.target.value })}
+                        onBlur={() => markTouched("appleMusicArtistUrl")}
+                        placeholder="https://music.apple.com/artist/..."
+                        aria-invalid={getFieldIssue("appleMusicArtistUrl", 1)?.severity === "error"}
+                        className={fieldInputClass("appleMusicArtistUrl", 1, "")}
+                      />
+                      <FieldValidationMessage issue={getFieldIssue("appleMusicArtistUrl", 1)} />
                     </div>
                   </div>
                 )}
 
                 {/* =========================================================
-                    STEP 2: RELEASE INFORMATION, TRACK DETAILS & COPYRIGHT
+                    STEP 2: RELEASE INFORMATION, TRACKLIST & COPYRIGHT
                    ========================================================= */}
                 {currentStep === 2 && (
-                  <div className="space-y-6 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
                         <Label htmlFor="releaseTitle">Release Title *</Label>
                         <Input
                           id="releaseTitle"
@@ -1576,33 +1487,35 @@ export default function UploadRelease() {
                           onBlur={() => markTouched("title")}
                           placeholder="Exact title of your release"
                           aria-invalid={getFieldIssue("title", 2)?.severity === "error"}
-                          className={fieldInputClass("title", 2)}
+                          className={fieldInputClass("title", 2, "")}
                         />
                         <FieldValidationMessage issue={getFieldIssue("title", 2)} />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="titleVersion">Title Version (optional)</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="titleVersion">Title Version</Label>
                         <Input
                           id="titleVersion"
                           value={form.titleVersion}
                           onChange={(e) => setForm({ ...form, titleVersion: e.target.value })}
                           onBlur={() => markTouched("titleVersion")}
-                          placeholder="e.g. Remix, Acoustic, Radio Edit"
+                          placeholder="Remix, Acoustic, Live"
                           aria-invalid={getFieldIssue("titleVersion", 2)?.severity === "error"}
-                          className={fieldInputClass("titleVersion", 2)}
+                          className={fieldInputClass("titleVersion", 2, "")}
                         />
                         <FieldValidationMessage issue={getFieldIssue("titleVersion", 2)} />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <Label>Release Type *</Label>
                         <Select
                           value={form.releaseType}
                           disabled={isEditMode}
                           onValueChange={(v) => handleReleaseTypeChange(v as "single" | "ep" | "album")}
                         >
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="single">Single (1 track)</SelectItem>
                             <SelectItem value="ep">EP (4–6 tracks)</SelectItem>
@@ -1611,7 +1524,7 @@ export default function UploadRelease() {
                         </Select>
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <Label>Primary Language *</Label>
                         <Select
                           value={form.languageCode}
@@ -1620,7 +1533,9 @@ export default function UploadRelease() {
                             markTouched("languageCode");
                           }}
                         >
-                          <SelectTrigger className={fieldInputClass("languageCode", 2)}><SelectValue /></SelectTrigger>
+                          <SelectTrigger className={fieldInputClass("languageCode", 2, "")}>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
                             {ONCE_LANGUAGE_OPTIONS.map((lang) => (
                               <SelectItem key={lang.code} value={lang.code}>
@@ -1632,7 +1547,7 @@ export default function UploadRelease() {
                         <FieldValidationMessage issue={getFieldIssue("languageCode", 2)} />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <Label>Primary Genre *</Label>
                         <Select
                           value={form.genre}
@@ -1641,7 +1556,9 @@ export default function UploadRelease() {
                             markTouched("genre");
                           }}
                         >
-                          <SelectTrigger className={fieldInputClass("genre", 2)}><SelectValue placeholder="Choose genre" /></SelectTrigger>
+                          <SelectTrigger className={fieldInputClass("genre", 2, "")}>
+                            <SelectValue placeholder="Choose genre" />
+                          </SelectTrigger>
                           <SelectContent>
                             {ONCE_GENRE_OPTIONS.map((g) => (
                               <SelectItem key={g} value={g}>{g}</SelectItem>
@@ -1651,13 +1568,15 @@ export default function UploadRelease() {
                         <FieldValidationMessage issue={getFieldIssue("genre", 2)} />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <Label>Secondary Genre (optional)</Label>
+                      <div className="space-y-2">
+                        <Label>Secondary Genre</Label>
                         <Select
                           value={form.subGenre || "__none__"}
                           onValueChange={(v) => setForm({ ...form, subGenre: v === "__none__" ? "" : v })}
                         >
-                          <SelectTrigger><SelectValue placeholder="Optional sub-genre" /></SelectTrigger>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Optional sub-genre" />
+                          </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__none__">None</SelectItem>
                             {ONCE_SUBGENRE_OPTIONS.map((sg) => (
@@ -1667,7 +1586,7 @@ export default function UploadRelease() {
                         </Select>
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <Label htmlFor="releaseDate">Target Release Date *</Label>
                         <Input
                           id="releaseDate"
@@ -1676,12 +1595,12 @@ export default function UploadRelease() {
                           onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
                           onBlur={() => markTouched("releaseDate")}
                           aria-invalid={getFieldIssue("releaseDate", 2)?.severity === "error"}
-                          className={fieldInputClass("releaseDate", 2)}
+                          className={fieldInputClass("releaseDate", 2, "")}
                         />
                         <FieldValidationMessage issue={getFieldIssue("releaseDate", 2)} />
                       </div>
 
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label htmlFor="origReleaseToggle">Previously Released?</Label>
                           <Switch
@@ -1706,65 +1625,72 @@ export default function UploadRelease() {
                               onChange={(e) => setForm({ ...form, originalReleaseDate: e.target.value })}
                               onBlur={() => markTouched("originalReleaseDate")}
                               aria-invalid={getFieldIssue("originalReleaseDate", 2)?.severity === "error"}
-                              className={fieldInputClass("originalReleaseDate", 2)}
+                              className={fieldInputClass("originalReleaseDate", 2, "")}
                             />
                             <FieldValidationMessage issue={getFieldIssue("originalReleaseDate", 2)} />
                           </>
                         ) : (
-                          <p className="text-[11px] text-muted-foreground pt-1">
-                            Enable if this is catalog music returning to stores under an earlier date.
-                          </p>
+                          <div className="h-10 rounded-md border border-dashed border-border px-3 flex items-center text-xs text-muted-foreground">
+                            New release
+                          </div>
                         )}
                       </div>
 
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label htmlFor="releaseDesc">Release Description (optional)</Label>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="releaseDesc">Release Description</Label>
                         <Textarea
                           id="releaseDesc"
                           value={form.description}
                           onChange={(e) => setForm({ ...form, description: e.target.value })}
                           onBlur={() => markTouched("description")}
-                          placeholder="Tell listeners, playlist curators, or reviewers about the inspiration behind this release..."
-                          rows={2}
+                          placeholder="Optional background notes for reviewers or playlist curators"
+                          rows={3}
                           aria-invalid={getFieldIssue("description", 2)?.severity === "error"}
-                          className={fieldInputClass("description", 2)}
+                          className={fieldInputClass("description", 2, "")}
                         />
                         <FieldValidationMessage issue={getFieldIssue("description", 2)} />
                       </div>
                     </div>
 
-                    {/* Track Metadata Cards */}
-                    <div className="space-y-3">
+                    <Separator />
+
+                    {/* Tracklist Section */}
+                    <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label className="text-sm font-semibold">Tracklist & Explicit Content ({tracks.length})</Label>
+                        <h3 className="text-sm font-semibold">Tracklist ({tracks.length})</h3>
                         {form.releaseType !== "single" && !isEditMode && (
                           <Button
                             type="button"
                             size="sm"
                             variant="outline"
-                            className="h-7 text-xs gap-1"
                             onClick={() => setTracks((prev) => [...prev, createEmptyTrack(prev.length + 1)])}
                           >
-                            <Plus className="h-3.5 w-3.5" /> Add Track
+                            <Plus className="h-3.5 w-3.5" />
+                            Add track
                           </Button>
                         )}
                       </div>
                       <FieldValidationMessage issue={getFieldIssue("tracklist", 2)} />
 
-                      <div className="space-y-3">
+                      <div className="space-y-6">
                         {tracks.map((tr, idx) => {
                           const titleKey = `tracks.${idx}.title`;
                           const isrcKey = `tracks.${idx}.isrc`;
                           return (
-                            <div key={tr.id} className="p-3.5 rounded-xl border border-border bg-muted/20 space-y-3">
+                            <div
+                              key={tr.id}
+                              className={idx > 0 ? "pt-6 border-t border-border space-y-4" : "space-y-4"}
+                            >
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-xs font-semibold text-primary">Track {idx + 1}</span>
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  Track {idx + 1}
+                                </span>
                                 {form.releaseType !== "single" && tracks.length > 1 && !isEditMode && (
                                   <Button
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                                    className="h-7 text-xs text-muted-foreground hover:text-destructive"
                                     onClick={() => setTracks((prev) => prev.filter((_, i) => i !== idx))}
                                   >
                                     Remove
@@ -1772,9 +1698,9 @@ export default function UploadRelease() {
                                 )}
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <Label className="text-xs">Track Title *</Label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label>Track Title *</Label>
                                   <Input
                                     value={form.releaseType === "single" && idx === 0 ? form.title : tr.title}
                                     disabled={form.releaseType === "single" && idx === 0}
@@ -1786,13 +1712,13 @@ export default function UploadRelease() {
                                     onBlur={() => markTouched(titleKey)}
                                     placeholder="Track title"
                                     aria-invalid={getFieldIssue(titleKey, 2)?.severity === "error"}
-                                    className={fieldInputClass(titleKey, 2, "h-9 text-xs")}
+                                    className={fieldInputClass(titleKey, 2, "")}
                                   />
                                   <FieldValidationMessage issue={getFieldIssue(titleKey, 2)} />
                                 </div>
 
-                                <div className="space-y-1">
-                                  <Label className="text-xs">Recording Origin *</Label>
+                                <div className="space-y-2">
+                                  <Label>Recording Origin *</Label>
                                   <Select
                                     value={tr.trackType}
                                     onValueChange={(v) =>
@@ -1803,7 +1729,9 @@ export default function UploadRelease() {
                                       )
                                     }
                                   >
-                                    <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="original">Original Recording</SelectItem>
                                       <SelectItem value="cover">Cover Song</SelectItem>
@@ -1812,14 +1740,12 @@ export default function UploadRelease() {
                                   </Select>
                                 </div>
 
-                                <div className="space-y-1">
-                                  <Label className="text-xs">Explicit Content Status *</Label>
-                                  <div className="flex items-center gap-2 pt-1">
+                                <div className="space-y-2">
+                                  <Label>Explicit Content *</Label>
+                                  <div className="grid grid-cols-2 gap-2">
                                     <Button
                                       type="button"
-                                      size="sm"
                                       variant={!tr.explicitFlag ? "default" : "outline"}
-                                      className="h-8 text-xs flex-1"
                                       onClick={() =>
                                         setTracks((prev) =>
                                           prev.map((item, i) => (i === idx ? { ...item, explicitFlag: false } : item))
@@ -1830,9 +1756,7 @@ export default function UploadRelease() {
                                     </Button>
                                     <Button
                                       type="button"
-                                      size="sm"
                                       variant={tr.explicitFlag ? "destructive" : "outline"}
-                                      className="h-8 text-xs flex-1"
                                       onClick={() =>
                                         setTracks((prev) =>
                                           prev.map((item, i) => (i === idx ? { ...item, explicitFlag: true } : item))
@@ -1844,8 +1768,8 @@ export default function UploadRelease() {
                                   </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                  <Label className="text-xs">ISRC (optional — leave blank to auto-assign)</Label>
+                                <div className="space-y-2">
+                                  <Label>ISRC (optional)</Label>
                                   <Input
                                     value={tr.isrc}
                                     onChange={(e) =>
@@ -1854,9 +1778,9 @@ export default function UploadRelease() {
                                       )
                                     }
                                     onBlur={() => markTouched(isrcKey)}
-                                    placeholder="e.g. ZMA012600001"
+                                    placeholder="Auto-assigned if blank"
                                     aria-invalid={getFieldIssue(isrcKey, 2)?.severity === "error"}
-                                    className={fieldInputClass(isrcKey, 2, "h-9 text-xs font-mono")}
+                                    className={fieldInputClass(isrcKey, 2, "font-mono")}
                                   />
                                   <FieldValidationMessage issue={getFieldIssue(isrcKey, 2)} />
                                 </div>
@@ -1867,40 +1791,37 @@ export default function UploadRelease() {
                       </div>
                     </div>
 
-                    {/* Copyright C-line & P-line */}
-                    <div className="p-4 rounded-xl border border-border/80 bg-muted/20 space-y-3">
+                    <Separator />
+
+                    {/* Copyright Section */}
+                    <div className="space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-xs font-semibold">Copyright Ownership (© C-Line & ℗ P-Line) *</p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Required by streaming platforms to show composition (C) and master recording (P) owners.
-                          </p>
-                        </div>
+                        <h3 className="text-sm font-semibold">Copyright Ownership (C-Line & P-Line) *</h3>
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="link"
                           size="sm"
-                          className="h-7 text-xs text-primary"
+                          className="h-auto p-0 text-xs"
                           onClick={copyCopyrightOwnerFromArtist}
                         >
-                          Use Artist / Label Name
+                          Use artist or label name
                         </Button>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <div className="sm:col-span-3 space-y-1">
-                          <Label className="text-xs">C-Line Copyright Owner *</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div className="sm:col-span-3 space-y-2">
+                          <Label>C-Line Copyright Owner *</Label>
                           <Input
                             value={form.clineOwner}
                             onChange={(e) => setForm({ ...form, clineOwner: e.target.value })}
                             onBlur={() => markTouched("clineOwner")}
                             placeholder="Legal owner or label name"
                             aria-invalid={getFieldIssue("clineOwner", 2)?.severity === "error"}
-                            className={fieldInputClass("clineOwner", 2, "h-9 text-xs")}
+                            className={fieldInputClass("clineOwner", 2, "")}
                           />
                           <FieldValidationMessage issue={getFieldIssue("clineOwner", 2)} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">C-Line Year *</Label>
+                        <div className="space-y-2">
+                          <Label>C-Line Year *</Label>
                           <Input
                             value={form.clineYear}
                             onChange={(e) => setForm({ ...form, clineYear: e.target.value })}
@@ -1908,24 +1829,24 @@ export default function UploadRelease() {
                             placeholder="2026"
                             maxLength={4}
                             aria-invalid={getFieldIssue("clineYear", 2)?.severity === "error"}
-                            className={fieldInputClass("clineYear", 2, "h-9 text-xs")}
+                            className={fieldInputClass("clineYear", 2, "")}
                           />
                           <FieldValidationMessage issue={getFieldIssue("clineYear", 2)} />
                         </div>
-                        <div className="sm:col-span-3 space-y-1">
-                          <Label className="text-xs">P-Line Master Owner *</Label>
+                        <div className="sm:col-span-3 space-y-2">
+                          <Label>P-Line Master Owner *</Label>
                           <Input
                             value={form.plineOwner}
                             onChange={(e) => setForm({ ...form, plineOwner: e.target.value })}
                             onBlur={() => markTouched("plineOwner")}
                             placeholder="Master recording owner or label"
                             aria-invalid={getFieldIssue("plineOwner", 2)?.severity === "error"}
-                            className={fieldInputClass("plineOwner", 2, "h-9 text-xs")}
+                            className={fieldInputClass("plineOwner", 2, "")}
                           />
                           <FieldValidationMessage issue={getFieldIssue("plineOwner", 2)} />
                         </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">P-Line Year *</Label>
+                        <div className="space-y-2">
+                          <Label>P-Line Year *</Label>
                           <Input
                             value={form.plineYear}
                             onChange={(e) => setForm({ ...form, plineYear: e.target.value })}
@@ -1933,7 +1854,7 @@ export default function UploadRelease() {
                             placeholder="2026"
                             maxLength={4}
                             aria-invalid={getFieldIssue("plineYear", 2)?.severity === "error"}
-                            className={fieldInputClass("plineYear", 2, "h-9 text-xs")}
+                            className={fieldInputClass("plineYear", 2, "")}
                           />
                           <FieldValidationMessage issue={getFieldIssue("plineYear", 2)} />
                         </div>
@@ -1946,72 +1867,64 @@ export default function UploadRelease() {
                     STEP 3: AUDIO & COVER ART UPLOADS
                    ========================================================= */}
                 {currentStep === 3 && (
-                  <div className="space-y-6 animate-fade-in">
-                    {/* Cover Art Card */}
-                    <div className="space-y-2.5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <Label className="text-sm font-semibold flex items-center gap-2">
-                          <ImageIcon className="h-4 w-4 text-primary" />
-                          Cover Artwork *
-                        </Label>
+                  <div className="space-y-8">
+                    {/* Cover Art */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm font-semibold">Cover Artwork *</Label>
                         {form.coverArtFileUrl && !coverUploading && (
-                          <Badge className="bg-emerald-600 text-white gap-1 text-[11px]">
-                            <CheckCircle2 className="h-3 w-3" /> Verified Upload
-                          </Badge>
+                          <span className="text-xs font-medium text-foreground">
+                            Verified
+                          </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {CLIENT_COVER_SPECS.acceptedFormatsLabel}. No social handles, web links, or streaming logos on the image.
-                      </p>
 
-                      <div className="border-2 border-dashed border-border rounded-xl p-5 text-center bg-muted/15">
+                      <div className="rounded-lg border border-dashed border-border p-6 text-center bg-muted/20">
                         {coverPreview ? (
                           <div className="space-y-3">
                             <img
                               src={coverPreview}
                               alt="Cover art preview"
-                              className="mx-auto w-44 h-44 sm:w-52 sm:h-52 object-cover rounded-lg border border-border shadow-sm"
+                              className="mx-auto w-44 h-44 object-cover rounded-lg border border-border"
                             />
                             {form.coverArtMetadata && (
                               <p className="text-xs text-muted-foreground">
-                                {form.coverArtMetadata.width}×{form.coverArtMetadata.height} px ·{" "}
+                                {form.coverArtMetadata.width}x{form.coverArtMetadata.height} px,{" "}
                                 {(form.coverArtMetadata.fileSizeBytes / 1024 / 1024).toFixed(2)} MB
                               </p>
                             )}
                             {coverUploading && (
                               <div className="max-w-xs mx-auto space-y-1.5">
-                                <Progress value={coverUploadProgress} className="h-2" />
-                                <p className="text-xs text-muted-foreground">Uploading artwork... {coverUploadProgress}%</p>
+                                <Progress value={coverUploadProgress} className="h-1.5" />
+                                <p className="text-xs text-muted-foreground">Uploading {coverUploadProgress}%</p>
                               </div>
                             )}
-                            <div className="flex justify-center gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={coverUploading}
+                              onClick={() => coverInputRef.current?.click()}
+                            >
+                              Replace artwork
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 py-2">
+                            <Upload className="mx-auto h-7 w-7 text-muted-foreground" />
+                            <div>
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                disabled={coverUploading}
-                                onClick={() => coverInputRef.current?.click()}
-                              >
-                                Replace Artwork
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-2 py-4">
-                            <Upload className="mx-auto h-10 w-10 text-muted-foreground" />
-                            <div>
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
                                 disabled={coverValidating || coverUploading}
                                 onClick={() => coverInputRef.current?.click()}
                               >
-                                {coverValidating ? "Checking dimensions..." : "Select Square JPG or PNG"}
+                                {coverValidating ? "Checking image" : "Select square JPG or PNG"}
                               </Button>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">
-                              Max 50 MB · Exact 1:1 square
+                            <p className="text-xs text-muted-foreground">
+                              {CLIENT_COVER_SPECS.acceptedFormatsLabel}, max 50 MB, 1:1 square
                             </p>
                           </div>
                         )}
@@ -2025,7 +1938,7 @@ export default function UploadRelease() {
                       </div>
 
                       {coverError ? (
-                        <div className="p-2.5 rounded-lg border border-destructive/40 bg-destructive/10 text-xs text-destructive flex items-start gap-2">
+                        <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-xs text-destructive flex items-start gap-2">
                           <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                           <span>{coverError}</span>
                         </div>
@@ -2034,81 +1947,77 @@ export default function UploadRelease() {
                       )}
                     </div>
 
-                    {/* Per-Track Audio Upload Cards */}
-                    <div className="space-y-3">
-                      <div>
-                        <Label className="text-sm font-semibold flex items-center gap-2">
-                          <FileAudio className="h-4 w-4 text-primary" />
-                          Master Audio Files *
-                        </Label>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {CLIENT_AUDIO_SPECS.acceptedFormatsLabel}. At least 44.1 kHz, 16-bit+. Large files automatically use chunked uploads.
+                    <Separator />
+
+                    {/* Master Audio Files */}
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <Label className="text-sm font-semibold">Master Audio Files *</Label>
+                        <p className="text-xs text-muted-foreground">
+                          {CLIENT_AUDIO_SPECS.acceptedFormatsLabel} (44.1 kHz, 16-bit+)
                         </p>
                       </div>
 
-                      {tracks.map((tr, idx) => (
-                        <div
-                          key={tr.id}
-                          className="p-4 rounded-xl border border-border bg-card/50 space-y-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="font-medium text-sm">
-                              {idx + 1}. {form.releaseType === "single" && idx === 0 ? form.title || "Single Track" : tr.title || `Track ${idx + 1}`}
+                      <div className="space-y-3">
+                        {tracks.map((tr, idx) => (
+                          <div
+                            key={tr.id}
+                            className="p-4 rounded-lg border border-border bg-background space-y-3"
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="font-medium text-sm">
+                                {idx + 1}. {form.releaseType === "single" && idx === 0 ? form.title || "Single Track" : tr.title || `Track ${idx + 1}`}
+                              </span>
+                              {tr.audioFileUrl && !tr.uploading ? (
+                                <span className="text-xs font-medium text-foreground">
+                                  Audio verified
+                                </span>
+                              ) : tr.uploading ? (
+                                <span className="text-xs font-medium text-primary">
+                                  Uploading {tr.uploadProgress}%
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Awaiting file</span>
+                              )}
                             </div>
-                            {tr.audioFileUrl && !tr.uploading ? (
-                              <Badge className="bg-emerald-600 text-white text-[11px] gap-1">
-                                <CheckCircle2 className="h-3 w-3" /> Audio Verified
-                              </Badge>
-                            ) : tr.uploading ? (
-                              <Badge variant="outline" className="text-primary text-[11px]">
-                                Uploading {tr.uploadProgress}%
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-muted-foreground text-[11px]">
-                                Awaiting File
-                              </Badge>
+
+                            {tr.uploading && (
+                              <Progress value={tr.uploadProgress} className="h-1.5" />
                             )}
-                          </div>
 
-                          {tr.uploading && (
-                            <div className="space-y-1">
-                              <Progress value={tr.uploadProgress} className="h-2" />
-                              <p className="text-[11px] text-muted-foreground">
-                                Streaming audio chunks safely... {tr.uploadProgress}%
-                              </p>
-                            </div>
-                          )}
-
-                          {tr.audioFileUrl && !tr.uploading && (
-                            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-muted/30 text-xs">
-                              <div className="min-w-0">
-                                <p className="font-medium truncate">{tr.audioFileName || "Uploaded Audio"}</p>
+                            {tr.audioFileUrl && !tr.uploading && (
+                              <div className="text-xs text-muted-foreground">
+                                <p className="font-medium text-foreground truncate">
+                                  {tr.audioFileName || "Uploaded Audio"}
+                                </p>
                                 {tr.audioMetadata && (
-                                  <p className="text-[11px] text-muted-foreground">
-                                    {tr.audioMetadata.format}
-                                    {tr.audioMetadata.sampleRateHz
-                                      ? ` · ${(tr.audioMetadata.sampleRateHz / 1000).toFixed(1)} kHz`
-                                      : ""}
-                                    {tr.audioMetadata.bitDepth ? ` · ${tr.audioMetadata.bitDepth}-bit` : ""}
-                                    {tr.audioMetadata.durationSeconds
-                                      ? ` · ${formatDurationMmSs(tr.audioMetadata.durationSeconds)}`
-                                      : ""}
+                                  <p className="mt-0.5">
+                                    {[
+                                      tr.audioMetadata.format,
+                                      tr.audioMetadata.sampleRateHz
+                                        ? `${(tr.audioMetadata.sampleRateHz / 1000).toFixed(1)} kHz`
+                                        : null,
+                                      tr.audioMetadata.bitDepth ? `${tr.audioMetadata.bitDepth}-bit` : null,
+                                      tr.audioMetadata.durationSeconds
+                                        ? formatDurationMmSs(tr.audioMetadata.durationSeconds)
+                                        : null,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(", ")}
                                   </p>
                                 )}
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {tr.uploadError ? (
-                            <div className="p-2.5 rounded-lg border border-destructive/40 bg-destructive/10 text-xs text-destructive flex items-start gap-2">
-                              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                              <span>{tr.uploadError}</span>
-                            </div>
-                          ) : (
-                            <FieldValidationMessage issue={getFieldIssue(`tracks.${idx}.audioFileUrl`, 3)} />
-                          )}
+                            {tr.uploadError ? (
+                              <div className="p-2.5 rounded-md border border-destructive/30 bg-destructive/10 text-xs text-destructive flex items-start gap-2">
+                                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <span>{tr.uploadError}</span>
+                              </div>
+                            ) : (
+                              <FieldValidationMessage issue={getFieldIssue(`tracks.${idx}.audioFileUrl`, 3)} />
+                            )}
 
-                          <div>
                             <label className="inline-flex">
                               <input
                                 type="file"
@@ -2117,23 +2026,25 @@ export default function UploadRelease() {
                                 className="hidden"
                                 disabled={tr.uploading}
                               />
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-background hover:bg-muted text-xs font-medium cursor-pointer">
-                                <Upload className="h-3.5 w-3.5" />
-                                {tr.audioFileUrl ? "Replace Audio File" : "Choose Audio File"}
-                              </span>
+                              <Button type="button" variant="outline" size="sm" asChild>
+                                <span className="cursor-pointer">
+                                  <Upload className="h-3.5 w-3.5" />
+                                  {tr.audioFileUrl ? "Replace audio file" : "Choose audio file"}
+                                </span>
+                              </Button>
                             </label>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* =========================================================
-                    STEP 4: DISTRIBUTION STORES & PIPELINE
+                    STEP 4: DISTRIBUTION STORES & WORKFLOW
                    ========================================================= */}
                 {currentStep === 4 && (
-                  <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-6">
                     <div>
                       <StoreSelector
                         selectedStoreIds={form.distributionStoreIds}
@@ -2146,11 +2057,10 @@ export default function UploadRelease() {
                       <FieldValidationMessage issue={getFieldIssue("distributionStoreIds", 4)} />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="step4ReleaseDate" className="flex items-center gap-1.5">
-                        <Calendar className="h-4 w-4 text-primary" />
-                        Confirm Go-Live Release Date *
-                      </Label>
+                    <Separator />
+
+                    <div className="space-y-2">
+                      <Label htmlFor="step4ReleaseDate">Confirm Go-Live Release Date *</Label>
                       <Input
                         id="step4ReleaseDate"
                         type="date"
@@ -2158,93 +2068,90 @@ export default function UploadRelease() {
                         onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
                         onBlur={() => markTouched("step4ReleaseDate")}
                         aria-invalid={getFieldIssue("step4ReleaseDate", 4)?.severity === "error"}
-                        className={fieldInputClass("step4ReleaseDate", 4)}
+                        className={fieldInputClass("step4ReleaseDate", 4, "")}
                       />
                       <FieldValidationMessage issue={getFieldIssue("step4ReleaseDate", 4)} />
-                      <p className="text-[11px] text-muted-foreground">
-                        Schedule at least 3–14 days ahead so stores can ingest artwork, audio, and editorial metadata on time.
-                      </p>
                     </div>
 
                     {!isEditMode && (
-                      <div className="space-y-2.5">
-                        <Label className="text-sm font-semibold">Distribution Workflow *</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, distributionMode: "once_api" })}
-                            className={`p-4 rounded-xl border text-left space-y-1.5 transition-all ${
-                              form.distributionMode === "once_api"
-                                ? "border-primary bg-primary/10"
-                                : "border-border bg-card/40 hover:bg-muted/40"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-sm flex items-center gap-1.5">
-                                <Radio className="h-4 w-4 text-primary" />
-                                ONCE Automated API
-                              </span>
-                              <Badge variant="outline" className="text-[10px]">Automated</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Direct submission to ONCE (1 credit / human song, 2 credits / AI song). Live store delivery tracking & webhooks.
-                            </p>
-                          </button>
+                      <>
+                        <Separator />
+                        <div className="space-y-3">
+                          <Label className="text-sm font-semibold">Distribution Workflow *</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, distributionMode: "once_api" })}
+                              className={`p-4 rounded-lg border text-left space-y-1.5 transition-colors ${
+                                form.distributionMode === "once_api"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:bg-muted/40"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-sm">ONCE Automated API</span>
+                                <span className="text-xs font-medium text-primary">Automated</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Direct submission to ONCE (1 credit human, 2 credits AI) with live tracking.
+                              </p>
+                            </button>
 
-                          <button
-                            type="button"
-                            onClick={() => setForm({ ...form, distributionMode: "manual_k70" })}
-                            className={`p-4 rounded-xl border text-left space-y-1.5 transition-all ${
-                              form.distributionMode === "manual_k70"
-                                ? "border-primary bg-primary/10"
-                                : "border-border bg-card/40 hover:bg-muted/40"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-semibold text-sm flex items-center gap-1.5">
-                                <Disc className="h-4 w-4 text-amber-500" />
-                                Zedbute Standard (K{manualPriceZmw})
-                              </span>
-                              <Badge variant="secondary" className="text-[10px]">Mobile Money</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Standard Zedbute distribution service (K{manualPriceZmw} single / EP / Album via MTN MoMo or Airtel Money).
-                            </p>
-                          </button>
+                            <button
+                              type="button"
+                              onClick={() => setForm({ ...form, distributionMode: "manual_k70" })}
+                              className={`p-4 rounded-lg border text-left space-y-1.5 transition-colors ${
+                                form.distributionMode === "manual_k70"
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:bg-muted/40"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-sm">Zedbute Standard (K{manualPriceZmw})</span>
+                                <span className="text-xs text-muted-foreground">Mobile Money</span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Pay in Kwacha via MTN MoMo or Airtel Money (K{manualPriceZmw} single / EP / Album).
+                              </p>
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 )}
 
                 {/* =========================================================
-                    STEP 5: VALIDATE, QUOTE & CONFIRM SUBMIT
+                    STEP 5: VALIDATE, QUOTE & SUBMIT
                    ========================================================= */}
                 {currentStep === 5 && (
-                  <div className="space-y-5 animate-fade-in">
-                    {/* Summary Snapshot */}
-                    <div className="p-4 rounded-xl border border-border bg-muted/20 flex items-center gap-4">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 pb-5 border-b border-border">
                       {coverPreview ? (
-                        <img src={coverPreview} alt="Cover" className="w-16 h-16 rounded-lg object-cover border border-border shrink-0" />
+                        <img
+                          src={coverPreview}
+                          alt="Cover"
+                          className="w-16 h-16 rounded-lg object-cover border border-border shrink-0"
+                        />
                       ) : (
-                        <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                          <Music className="h-6 w-6 text-muted-foreground" />
+                        <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 text-xs text-muted-foreground">
+                          Art
                         </div>
                       )}
                       <div className="min-w-0 flex-1 space-y-0.5 text-xs">
-                        <p className="font-bold text-base truncate">{form.title || "Untitled Release"}</p>
+                        <p className="font-semibold text-base truncate">{form.title || "Untitled Release"}</p>
                         <p className="text-muted-foreground truncate">
-                          {form.primaryArtistName || "No artist"} · {form.releaseType.toUpperCase()} · {form.genre}
+                          {form.primaryArtistName || "No artist"} / {form.releaseType.toUpperCase()} / {form.genre}
                         </p>
                         <p className="text-muted-foreground">
-                          {tracks.length} track(s) · {form.distributionStoreIds.length} stores · Go-live: {form.releaseDate}
+                          {tracks.length} track(s), {form.distributionStoreIds.length} stores, release {form.releaseDate}
                         </p>
                       </div>
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="h-8 text-xs gap-1 shrink-0"
+                        className="shrink-0"
                         onClick={runValidationAndQuote}
                         disabled={validatingReport}
                       >
@@ -2253,7 +2160,6 @@ export default function UploadRelease() {
                       </Button>
                     </div>
 
-                    {/* Validation Banner */}
                     <MetadataValidationBanner
                       report={validationReport}
                       loading={validatingReport}
@@ -2264,29 +2170,25 @@ export default function UploadRelease() {
                       }}
                     />
 
-                    {/* Quote & Credits Card (ONCE Mode) or K70 Payment Notice (Manual Mode) */}
                     {!isEditMode && form.distributionMode === "once_api" ? (
-                      <div className="p-4 rounded-xl border border-border bg-card/60 space-y-2.5 text-xs">
+                      <div className="p-4 rounded-lg border border-border bg-muted/20 space-y-2.5 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="font-semibold text-sm flex items-center gap-1.5">
-                            <Coins className="h-4 w-4 text-primary" />
-                            ONCE Release Price Quote & Credit Check
-                          </span>
+                          <span className="font-semibold text-sm">Release Credit Quote</span>
                           {quoteLoading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                         </div>
 
                         {quoteData ? (
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
-                            <div className="p-2.5 rounded-lg bg-muted/30">
+                            <div>
                               <p className="text-muted-foreground">Release Cost</p>
-                              <p className="font-bold text-sm">
+                              <p className="font-semibold text-sm">
                                 {quoteData.cost?.totalCredits ?? tracks.length} Credit(s) ($
                                 {quoteData.cost?.totalUsd ?? tracks.length})
                               </p>
                             </div>
-                            <div className="p-2.5 rounded-lg bg-muted/30">
+                            <div>
                               <p className="text-muted-foreground">Available Balance</p>
-                              <p className="font-bold text-sm">
+                              <p className="font-semibold text-sm">
                                 {quoteData.accountCredits ??
                                   (quoteData.balance as any)?.available ??
                                   quoteData.balance?.currentCredits ??
@@ -2294,11 +2196,11 @@ export default function UploadRelease() {
                                 Credits
                               </p>
                             </div>
-                            <div className="p-2.5 rounded-lg bg-muted/30 col-span-2 sm:col-span-1">
-                              <p className="text-muted-foreground">Credit Status</p>
+                            <div className="col-span-2 sm:col-span-1">
+                              <p className="text-muted-foreground">Status</p>
                               <p
-                                className={`font-bold text-sm ${
-                                  quoteData.balance?.covered ? "text-emerald-500" : "text-destructive"
+                                className={`font-semibold text-sm ${
+                                  quoteData.balance?.covered ? "text-foreground" : "text-destructive"
                                 }`}
                               >
                                 {quoteData.balance?.covered ? "Covered" : "Insufficient Credits"}
@@ -2306,34 +2208,27 @@ export default function UploadRelease() {
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-start gap-2 text-muted-foreground">
-                            <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                            <span>
-                              {quoteNotice ||
-                                "Human songs cost 1 ONCE credit ($1) and AI-detected tracks cost 2 credits ($2). Live credit check runs on connected ONCE partner accounts."}
-                            </span>
-                          </div>
+                          <p className="text-muted-foreground">
+                            {quoteNotice ||
+                              "Human songs cost 1 ONCE credit ($1) and AI-detected tracks cost 2 credits ($2)."}
+                          </p>
                         )}
                       </div>
                     ) : !isEditMode ? (
-                      <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs flex items-start gap-2.5">
-                        <Sparkles className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-semibold text-foreground">
-                            Zedbute Standard Distribution Fee: K
-                            {form.releaseType === "ep" ? 200 : form.releaseType === "album" ? 500 : manualPriceZmw}
-                          </p>
-                          <p className="text-muted-foreground mt-0.5">
-                            After confirming, your release will be saved and you will complete payment securely via MTN MoMo or Airtel Money.
-                          </p>
-                        </div>
+                      <div className="p-4 rounded-lg border border-border bg-muted/20 text-xs space-y-1">
+                        <p className="font-semibold text-foreground">
+                          Zedbute Standard Distribution Fee: K
+                          {form.releaseType === "ep" ? 200 : form.releaseType === "album" ? 500 : manualPriceZmw}
+                        </p>
+                        <p className="text-muted-foreground">
+                          After confirming, your release will be saved and you will complete payment via MTN MoMo or Airtel Money.
+                        </p>
                       </div>
                     ) : null}
 
-                    {/* Rights & Final Confirmation */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 pt-1">
                       <div>
-                        <div className="flex items-start space-x-3 rounded-xl border border-border p-3.5 bg-muted/20">
+                        <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                           <Checkbox
                             id="rightsConfirmed"
                             checked={form.rightsConfirmed}
@@ -2342,12 +2237,11 @@ export default function UploadRelease() {
                               markTouched("rightsConfirmed");
                             }}
                           />
-                          <div className="space-y-0.5">
-                            <Label htmlFor="rightsConfirmed" className="cursor-pointer font-semibold text-xs flex items-center gap-1.5">
-                              <ShieldCheck className="h-4 w-4 text-primary" />
+                          <div className="space-y-1">
+                            <Label htmlFor="rightsConfirmed" className="cursor-pointer font-medium text-sm">
                               I own or control all rights to distribute this release *
                             </Label>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               I confirm all samples, covers, and audio stems are cleared and all contributor credits are accurate.
                             </p>
                           </div>
@@ -2357,7 +2251,7 @@ export default function UploadRelease() {
 
                       {!isEditMode && (
                         <div>
-                          <div className="flex items-start space-x-3 rounded-xl border border-border p-3.5 bg-muted/20">
+                          <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                             <Checkbox
                               id="submissionConfirmed"
                               checked={form.submissionConfirmed}
@@ -2366,11 +2260,11 @@ export default function UploadRelease() {
                                 markTouched("submissionConfirmed");
                               }}
                             />
-                            <div className="space-y-0.5">
-                              <Label htmlFor="submissionConfirmed" className="cursor-pointer font-semibold text-xs">
+                            <div className="space-y-1">
+                              <Label htmlFor="submissionConfirmed" className="cursor-pointer font-medium text-sm">
                                 Confirm release metadata and submit for distribution *
                               </Label>
-                              <p className="text-[11px] text-muted-foreground">
+                              <p className="text-xs text-muted-foreground">
                                 {form.distributionMode === "once_api"
                                   ? "Submitting dispatches this release to ONCE for store delivery."
                                   : "Submitting saves this release and proceeds to Zedbute Mobile Money checkout."}
@@ -2383,65 +2277,101 @@ export default function UploadRelease() {
                     </div>
                   </div>
                 )}
-
-                {/* =========================================================
-                    WIZARD FOOTER NAVIGATION
-                   ========================================================= */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      if (currentStep === 1) navigate("/dashboard");
-                      else {
-                        setCurrentStep((s) => Math.max(1, s - 1));
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }
-                    }}
-                    className="gap-1.5"
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                    {currentStep === 1 ? "Cancel" : "Back"}
-                  </Button>
-
-                  {currentStep < 5 ? (
-                    <Button type="button" onClick={handleNextStep} className="gap-1.5">
-                      Next Step
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={handleFinalSubmit}
-                      disabled={
-                        submitting ||
-                        validatingReport ||
-                        (validationReport !== null && !validationReport.valid) ||
-                        !form.rightsConfirmed ||
-                        (!isEditMode && !form.submissionConfirmed)
-                      }
-                      className="gap-1.5"
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          {isEditMode ? "Saving Changes..." : "Submitting Release..."}
-                        </>
-                      ) : isEditMode ? (
-                        "Save Changes"
-                      ) : form.distributionMode === "once_api" ? (
-                        "Submit Release to ONCE"
-                      ) : (
-                        `Save & Continue to K${form.releaseType === "ep" ? 200 : form.releaseType === "album" ? 500 : manualPriceZmw} Payment`
-                      )}
-                    </Button>
-                  )}
-                </div>
               </CardContent>
             </Card>
+
+            {/* Bottom Step Navigation */}
+            <div className="flex items-center justify-between gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (currentStep === 1) navigate("/dashboard");
+                  else {
+                    setCurrentStep((s) => Math.max(1, s - 1));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
+              >
+                {currentStep === 1 ? "Cancel" : "Previous step"}
+              </Button>
+
+              {currentStep < 5 ? (
+                <Button type="button" onClick={handleNextStep}>
+                  Next step
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  onClick={handleFinalSubmit}
+                  disabled={
+                    submitting ||
+                    validatingReport ||
+                    (validationReport !== null && !validationReport.valid) ||
+                    !form.rightsConfirmed ||
+                    (!isEditMode && !form.submissionConfirmed)
+                  }
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {isEditMode ? "Saving..." : "Submitting..."}
+                    </>
+                  ) : isEditMode ? (
+                    "Save changes"
+                  ) : form.distributionMode === "once_api" ? (
+                    "Submit release"
+                  ) : (
+                    `Continue to K${form.releaseType === "ep" ? 200 : form.releaseType === "album" ? 500 : manualPriceZmw} payment`
+                  )}
+                </Button>
+              )}
+            </div>
+
+            {!isEditMode && unfinishedDrafts.length > 0 && (
+              <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span>Saved drafts:</span>
+                  {unfinishedDrafts.slice(0, 3).map((d) => (
+                    <span key={d.id} className="inline-flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => hydrateFromDraftRecord(d)}
+                        className={`underline-offset-4 hover:underline ${
+                          localDraftId === d.id ? "text-primary font-medium" : "text-foreground"
+                        }`}
+                      >
+                        {d.title || "Untitled Draft"}
+                      </button>
+                      {["draft", "pending_submission"].includes(d.status) && (
+                        <button
+                          type="button"
+                          aria-label={`Delete draft ${d.title || "Untitled"}`}
+                          onClick={async () => {
+                            await onceApi.deleteDraft(d.id).catch(() => {});
+                            setUnfinishedDrafts((prev) => prev.filter((item) => item.id !== d.id));
+                            if (localDraftId === d.id) setLocalDraftId(undefined);
+                          }}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => saveDraftNow(false)}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {autoSaveStatus === "saving" ? "Saving..." : "Save progress"}
+                </button>
+              </div>
+            )}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

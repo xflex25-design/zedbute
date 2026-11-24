@@ -174,7 +174,7 @@ const Admin = () => {
           </div>
         </div>
           {banner && (
-          <div className="mb-4 p-4 bg-green-500/10 border border-green-500/30 text-green-600 rounded-lg flex items-center gap-2 animate-fade-in">
+          <div className="mb-4 p-4 bg-muted/50 border border-foreground/30 text-foreground rounded-lg flex items-center gap-2 animate-fade-in">
             <CheckCircle2 className="h-5 w-5 shrink-0" /> <span>{banner}</span>
           </div>
         )}
@@ -185,9 +185,9 @@ const Admin = () => {
                 <CardTitle className="text-base sm:text-lg">{r.title}</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
                   <span className="block sm:inline">{r.artist_name}</span>
-                  <span className="hidden sm:inline"> · </span>
+                  <span className="hidden sm:inline"> | </span>
                   <span className="block sm:inline">{r.profile_email || "no email"}</span>
-                  <span className="hidden sm:inline"> · status: </span>
+                  <span className="hidden sm:inline"> | status: </span>
                   <span className="block sm:inline">{r.status}</span>
                 </CardDescription>
               </CardHeader>
@@ -212,7 +212,7 @@ const Admin = () => {
                   </Button>
                 </div>
                 {r.completion_email_sent_at && (
-                  <p className="text-xs text-green-600 flex items-center gap-1">
+                  <p className="text-xs text-foreground flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" /> Completion email sent
                   </p>
                 )}
@@ -221,7 +221,7 @@ const Admin = () => {
           ))}
           {releases.length === 0 && (
             <div className="text-center py-12">
-              <Disc className="mx-auto h-12 w-12 text-gray-600 mb-3" />
+              <Disc className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
               <p className="text-muted-foreground">No releases yet.</p>
             </div>
           )}

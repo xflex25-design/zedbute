@@ -28,7 +28,7 @@ const PrivacyPolicy = () => (
 
       <Section title="What we collect">
         <p>We only collect the data needed to run the service:</p>
-        <ul className="list-disc pl-5 space-y-1">
+        <ul className="list-none space-y-1.5">
           <li>Account details: your name, email address and password (stored only as a secure hash).</li>
           <li>Release details: track files, cover art, artist name and release metadata you upload for distribution.</li>
           <li>Payment references: mobile money or card transaction references. We never see or store your full card or mobile money PIN.</li>
@@ -37,7 +37,7 @@ const PrivacyPolicy = () => (
       </Section>
 
       <Section title="How we use your data">
-        <ul className="list-disc pl-5 space-y-1">
+        <ul className="list-none space-y-1.5">
           <li>To create and secure your account.</li>
           <li>To deliver your music to streaming platforms and digital stores.</li>
           <li>To process payments and royalty payouts.</li>
@@ -53,7 +53,7 @@ const PrivacyPolicy = () => (
       <Section title="Cookies" >
         <div id="cookies" className="space-y-2">
           <p>ZedBute uses only essential browser storage:</p>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-none space-y-1.5">
             <li>An authentication token (kept in your browser's local storage) so you stay signed in.</li>
             <li>A small record of your cookie consent choice.</li>
           </ul>

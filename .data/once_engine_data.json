@@ -1,0 +1,2017 @@
+{
+  "accounts": {},
+  "releases": {
+    "d66686a7-a917-42b4-bb9b-c85b63b814a3": {
+      "id": "d66686a7-a917-42b4-bb9b-c85b63b814a3",
+      "user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "once_draft_id": "31dfca7f-fe93-4ad2-8894-041b4e5737cb",
+      "title": "I'm lost",
+      "primary_artist": "Flecypm",
+      "release_type": "single",
+      "cover_art_url": "",
+      "metadata": {
+        "release": {
+          "title": "I'm lost",
+          "title_version": "01",
+          "primary_artist_name": "Flecypm",
+          "primary_artists": [
+            {
+              "name": "Flecypm"
+            }
+          ],
+          "type": "single",
+          "genre": "Hip-Hop/Rap",
+          "sub_genre": "Afropop",
+          "release_date": "2026-12-08",
+          "label": "Zedbute",
+          "audio_language": "en",
+          "metadata_language": "en",
+          "distribution_store_ids": [
+            321,
+            334
+          ],
+          "cline_owner": "Ctye",
+          "cline_year": "2026",
+          "pline_owner": "Zedbute",
+          "pline_year": "2026",
+          "cover_art_file_url": "",
+          "cover_art_metadata": {
+            "fileName": "20261124_085022.jpg",
+            "mimeType": "image/jpeg",
+            "fileSizeBytes": 1472356,
+            "width": 1400,
+            "height": 1400,
+            "aspectRatio": 1
+          },
+          "contributors": [
+            {
+              "name": "Dj robot",
+              "role": "Producer"
+            },
+            {
+              "name": "Paul muthali",
+              "role": "Composer"
+            }
+          ]
+        },
+        "tracks": [
+          {
+            "title": "I'm lost",
+            "primary_artist_name": "Flecypm",
+            "audio_file_url": "",
+            "explicit_flag": false,
+            "is_instrumental": false,
+            "track_type": "original",
+            "genre": "Hip-Hop/Rap",
+            "language": "en",
+            "preview_start_seconds": 15,
+            "cline_owner": "Ctye",
+            "cline_year": "2026",
+            "pline_owner": "Zedbute",
+            "pline_year": "2026",
+            "writers": [
+              {
+                "name": "Paul muthali"
+              }
+            ],
+            "contributors": [
+              {
+                "name": "Dj robot",
+                "role": "Producer"
+              },
+              {
+                "name": "Paul muthali",
+                "role": "Composer"
+              }
+            ]
+          }
+        ],
+        "distributionMode": "once_api",
+        "wizardState": {
+          "form": {
+            "primaryArtistName": "Flecypm",
+            "featuredArtistsText": "",
+            "spotifyArtistUrl": "",
+            "appleMusicArtistUrl": "",
+            "composerName": "Paul muthali",
+            "defaultSongwriterName": "Paul muthali",
+            "producerName": "Dj robot",
+            "labelName": "Zedbute",
+            "title": "I'm lost",
+            "titleVersion": "01",
+            "releaseType": "single",
+            "genre": "Hip-Hop/Rap",
+            "subGenre": "Afropop",
+            "languageCode": "en",
+            "description": "",
+            "releaseDate": "2026-12-08",
+            "hasOriginalReleaseDate": false,
+            "originalReleaseDate": "",
+            "clineOwner": "Ctye",
+            "clineYear": "2026",
+            "plineOwner": "Zedbute",
+            "plineYear": "2026",
+            "coverArtFileUrl": "",
+            "coverArtFileName": "",
+            "distributionStoreIds": [
+              321,
+              334
+            ],
+            "distributionMode": "once_api",
+            "rightsConfirmed": true,
+            "submissionConfirmed": true,
+            "coverArtMetadata": {
+              "fileName": "20261124_085022.jpg",
+              "mimeType": "image/jpeg",
+              "fileSizeBytes": 1472356,
+              "width": 1400,
+              "height": 1400,
+              "aspectRatio": 1
+            },
+            "coverUploadTarget": "once"
+          },
+          "tracks": [
+            {
+              "id": "track_1_1795501591294",
+              "title": "I'm lost",
+              "titleVersion": "",
+              "trackType": "original",
+              "explicitFlag": false,
+              "songwriterName": "",
+              "extraWritersText": "",
+              "isrc": "",
+              "lyrics": "",
+              "previewStartSeconds": 15,
+              "audioFileUrl": "",
+              "audioFileName": "",
+              "uploadProgress": 5,
+              "uploading": false
+            }
+          ]
+        },
+        "onceDraftError": null,
+        "onceDraftWarnings": [
+          "Release cover_art_file_url is required.",
+          "Track 1: audio_file_url is required.",
+          "\"01\" is not a valid release version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Deluxe) or leave it empty.",
+          "Track 1: \"01\" is not a valid version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Sped Up) or leave it empty.",
+          "release.genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship.",
+          "tracks[0].genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship."
+        ]
+      },
+      "distribution_store_ids": [
+        321,
+        334
+      ],
+      "store_statuses": [],
+      "artist_profiles": [],
+      "status": "draft",
+      "is_ai_detected": false,
+      "acr_matched": false,
+      "credit_cost": 1,
+      "credits_debited": 0,
+      "validation_errors": [],
+      "current_step": 5,
+      "last_quote": null,
+      "created_at": "2026-11-24T06:53:22.010Z",
+      "updated_at": "2026-11-24T07:44:05.028Z"
+    },
+    "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39": {
+      "id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "once_draft_id": "481adc85-cc16-4d09-a838-7dceb555351b",
+      "title": "I'm lost",
+      "primary_artist": "Flecypm",
+      "release_type": "single",
+      "cover_art_url": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/a28c4478-e676-488e-9232-0329abf34ea2.jpg",
+      "metadata": {
+        "release": {
+          "title": "I'm lost",
+          "title_version": "01",
+          "primary_artist_name": "Flecypm",
+          "primary_artists": [
+            {
+              "name": "Flecypm"
+            }
+          ],
+          "type": "single",
+          "genre": "Hip-Hop/Rap",
+          "sub_genre": "Afropop",
+          "release_date": "2026-12-08",
+          "label": "Zedbute",
+          "audio_language": "en",
+          "metadata_language": "en",
+          "distribution_store_ids": [
+            321,
+            334,
+            371,
+            416,
+            307,
+            310,
+            323,
+            324,
+            315,
+            309,
+            264,
+            130,
+            110,
+            91,
+            85,
+            68,
+            41,
+            45,
+            19,
+            14,
+            17,
+            319,
+            13,
+            9,
+            1
+          ],
+          "cline_owner": "Ctye",
+          "cline_year": "2026",
+          "pline_owner": "Zedbute",
+          "pline_year": "2026",
+          "cover_art_file_url": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/a28c4478-e676-488e-9232-0329abf34ea2.jpg",
+          "cover_art_metadata": {
+            "fileName": "20261124_085022.jpg",
+            "mimeType": "image/jpeg",
+            "fileSizeBytes": 1472356,
+            "width": 1400,
+            "height": 1400,
+            "aspectRatio": 1
+          },
+          "contributors": [
+            {
+              "name": "Dj robot",
+              "role": "Producer"
+            },
+            {
+              "name": "Paul muthali",
+              "role": "Composer"
+            }
+          ]
+        },
+        "tracks": [
+          {
+            "title": "I'm lost",
+            "primary_artist_name": "Flecypm",
+            "audio_file_url": "/api/files/audio/43993270-5b5b-4d4a-82c3-3a150eb6d89d/d7d2540c-23a2-4112-a725-8146f431b246.wav",
+            "explicit_flag": false,
+            "is_instrumental": false,
+            "track_type": "original",
+            "genre": "Hip-Hop/Rap",
+            "language": "en",
+            "preview_start_seconds": 15,
+            "cline_owner": "Ctye",
+            "cline_year": "2026",
+            "pline_owner": "Zedbute",
+            "pline_year": "2026",
+            "writers": [
+              {
+                "name": "Paul muthali"
+              }
+            ],
+            "contributors": [
+              {
+                "name": "Dj robot",
+                "role": "Producer"
+              },
+              {
+                "name": "Paul muthali",
+                "role": "Composer"
+              }
+            ],
+            "audio_metadata": {
+              "fileName": "Flecy_pm-am_lost_official_music_video_(256k).mp3",
+              "mimeType": "audio/mpeg",
+              "fileSizeBytes": 2164268,
+              "format": "MP3",
+              "durationSeconds": 135.24
+            }
+          }
+        ],
+        "distributionMode": "once_api",
+        "wizardState": {
+          "form": {
+            "primaryArtistName": "Flecypm",
+            "featuredArtistsText": "",
+            "spotifyArtistUrl": "",
+            "appleMusicArtistUrl": "",
+            "composerName": "Paul muthali",
+            "defaultSongwriterName": "Paul muthali",
+            "producerName": "Dj robot",
+            "labelName": "Zedbute",
+            "title": "I'm lost",
+            "titleVersion": "01",
+            "releaseType": "single",
+            "genre": "Hip-Hop/Rap",
+            "subGenre": "Afropop",
+            "languageCode": "en",
+            "description": "",
+            "releaseDate": "2026-12-08",
+            "hasOriginalReleaseDate": false,
+            "originalReleaseDate": "",
+            "clineOwner": "Ctye",
+            "clineYear": "2026",
+            "plineOwner": "Zedbute",
+            "plineYear": "2026",
+            "coverArtFileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/a28c4478-e676-488e-9232-0329abf34ea2.jpg",
+            "coverArtFileName": "a28c4478-e676-488e-9232-0329abf34ea2.jpg",
+            "distributionStoreIds": [
+              321,
+              334,
+              371,
+              416,
+              307,
+              310,
+              323,
+              324,
+              315,
+              309,
+              264,
+              130,
+              110,
+              91,
+              85,
+              68,
+              41,
+              45,
+              19,
+              14,
+              17,
+              319,
+              13,
+              9,
+              1
+            ],
+            "distributionMode": "once_api",
+            "rightsConfirmed": true,
+            "submissionConfirmed": true,
+            "coverArtMetadata": {
+              "fileName": "20261124_085022.jpg",
+              "mimeType": "image/jpeg",
+              "fileSizeBytes": 1472356,
+              "width": 1400,
+              "height": 1400,
+              "aspectRatio": 1
+            },
+            "coverUploadTarget": "once"
+          },
+          "tracks": [
+            {
+              "id": "track_1_1795501591294",
+              "title": "I'm lost",
+              "titleVersion": "",
+              "trackType": "original",
+              "explicitFlag": false,
+              "songwriterName": "",
+              "extraWritersText": "",
+              "isrc": "",
+              "lyrics": "",
+              "previewStartSeconds": 15,
+              "audioFileUrl": "/api/files/audio/43993270-5b5b-4d4a-82c3-3a150eb6d89d/d7d2540c-23a2-4112-a725-8146f431b246.wav",
+              "audioFileName": "d7d2540c-23a2-4112-a725-8146f431b246.wav",
+              "uploadProgress": 100,
+              "uploading": false,
+              "audioMetadata": {
+                "fileName": "Flecy_pm-am_lost_official_music_video_(256k).mp3",
+                "mimeType": "audio/mpeg",
+                "fileSizeBytes": 2164268,
+                "format": "MP3",
+                "durationSeconds": 135.24
+              },
+              "uploadTarget": "once"
+            }
+          ]
+        },
+        "onceDraftError": null,
+        "onceDraftWarnings": [
+          "\"01\" is not a valid release version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Deluxe) or leave it empty.",
+          "Track 1: \"01\" is not a valid version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Sped Up) or leave it empty.",
+          "release.genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship.",
+          "tracks[0].genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship."
+        ]
+      },
+      "distribution_store_ids": [
+        321,
+        334,
+        371,
+        416,
+        307,
+        310,
+        323,
+        324,
+        315,
+        309,
+        264,
+        130,
+        110,
+        91,
+        85,
+        68,
+        41,
+        45,
+        19,
+        14,
+        17,
+        319,
+        13,
+        9,
+        1
+      ],
+      "store_statuses": [],
+      "artist_profiles": [],
+      "status": "draft",
+      "is_ai_detected": false,
+      "acr_matched": false,
+      "credit_cost": 1,
+      "credits_debited": 0,
+      "validation_errors": [],
+      "current_step": 5,
+      "last_quote": {
+        "currency": "usd",
+        "cost": {
+          "trackCredits": 1,
+          "tokenOffsetCredits": 0,
+          "totalCredits": 1,
+          "totalUsd": 1
+        },
+        "tracks": [
+          {
+            "trackNumber": 1,
+            "title": "I'm lost",
+            "billable": true,
+            "ai": false,
+            "credits": 1,
+            "reason": "human_track"
+          }
+        ],
+        "summary": {
+          "trackCount": 1,
+          "billableTracks": 1,
+          "humanTracks": 1,
+          "aiTracks": 0,
+          "tracksMissingAudio": 0,
+          "tracksInvalidAudioUrl": 0
+        },
+        "balance": {
+          "available": 0,
+          "required": 1,
+          "covered": false,
+          "shortfallCredits": 1,
+          "shortfallUsd": 1
+        },
+        "purchase": {
+          "credits": 1,
+          "usd": 1,
+          "packageId": "credits_20",
+          "packageCredits": 20,
+          "packageUsd": 19
+        },
+        "submittable": false,
+        "blockers": [
+          "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+        ],
+        "rates": {
+          "creditsPerHumanTrack": 1,
+          "creditsPerAiTrack": 2,
+          "aiSurchargeCredits": 1,
+          "tokenOffsetCredits": 1
+        }
+      },
+      "created_at": "2026-11-24T06:53:32.654Z",
+      "updated_at": "2026-11-24T07:22:10.112Z",
+      "audio_url": "/api/files/audio/43993270-5b5b-4d4a-82c3-3a150eb6d89d/d7d2540c-23a2-4112-a725-8146f431b246.wav"
+    },
+    "5f0c7365-0a38-40bd-8ad0-cd21c3256298": {
+      "id": "5f0c7365-0a38-40bd-8ad0-cd21c3256298",
+      "user_id": "6a381094-321c-47af-bda0-f65f6191c0d7",
+      "title": "I'm lost",
+      "primary_artist": "Flecypm",
+      "release_type": "single",
+      "cover_art_url": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/3ffd9b48-c244-424f-a689-7bf6457d14de.jpg",
+      "metadata": {
+        "release": {
+          "title": "I'm lost",
+          "title_version": "01",
+          "primary_artist_name": "Flecypm",
+          "primary_artists": [
+            {
+              "name": "Flecypm"
+            }
+          ],
+          "type": "single",
+          "genre": "Hip-Hop/Rap",
+          "sub_genre": "Kalindula",
+          "release_date": "2026-12-08",
+          "label": "Zedbute",
+          "audio_language": "ny",
+          "metadata_language": "ny",
+          "distribution_store_ids": [
+            1,
+            9,
+            13,
+            319,
+            17,
+            14,
+            19,
+            41,
+            45,
+            52,
+            68,
+            85,
+            91,
+            110,
+            130,
+            264,
+            309,
+            315,
+            321,
+            323,
+            324,
+            334,
+            371,
+            416,
+            310,
+            307
+          ],
+          "cline_owner": "Zedbute",
+          "cline_year": "2026",
+          "pline_owner": "Pline",
+          "pline_year": "2026",
+          "cover_art_file_url": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/3ffd9b48-c244-424f-a689-7bf6457d14de.jpg",
+          "cover_art_metadata": {
+            "fileName": "20261010_122741.jpg",
+            "mimeType": "image/jpeg",
+            "fileSizeBytes": 2390622,
+            "width": 3000,
+            "height": 3000,
+            "aspectRatio": 1
+          },
+          "contributors": [
+            {
+              "name": "Dj robot",
+              "role": "Producer"
+            },
+            {
+              "name": "Paul muthali",
+              "role": "Composer"
+            }
+          ]
+        },
+        "tracks": [
+          {
+            "title": "I'm lost",
+            "primary_artist_name": "Flecypm",
+            "audio_file_url": "",
+            "explicit_flag": false,
+            "is_instrumental": false,
+            "track_type": "original",
+            "genre": "Hip-Hop/Rap",
+            "language": "ny",
+            "preview_start_seconds": 15,
+            "cline_owner": "Zedbute",
+            "cline_year": "2026",
+            "pline_owner": "Pline",
+            "pline_year": "2026",
+            "writers": [
+              {
+                "name": "Paul muthali"
+              }
+            ],
+            "contributors": [
+              {
+                "name": "Dj robot",
+                "role": "Producer"
+              },
+              {
+                "name": "Paul muthali",
+                "role": "Composer"
+              }
+            ]
+          }
+        ],
+        "distributionMode": "manual_k70",
+        "wizardState": {
+          "form": {
+            "primaryArtistName": "Flecypm",
+            "featuredArtistsText": "",
+            "spotifyArtistUrl": "",
+            "appleMusicArtistUrl": "",
+            "composerName": "Paul muthali",
+            "defaultSongwriterName": "Paul muthali",
+            "producerName": "Dj robot",
+            "labelName": "Zedbute",
+            "title": "I'm lost",
+            "titleVersion": "01",
+            "releaseType": "single",
+            "genre": "Hip-Hop/Rap",
+            "subGenre": "Kalindula",
+            "languageCode": "ny",
+            "description": "",
+            "releaseDate": "2026-12-08",
+            "hasOriginalReleaseDate": false,
+            "originalReleaseDate": "",
+            "clineOwner": "Zedbute",
+            "clineYear": "2026",
+            "plineOwner": "Pline",
+            "plineYear": "2026",
+            "coverArtFileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/3ffd9b48-c244-424f-a689-7bf6457d14de.jpg",
+            "coverArtFileName": "3ffd9b48-c244-424f-a689-7bf6457d14de.jpg",
+            "distributionStoreIds": [
+              1,
+              9,
+              13,
+              319,
+              17,
+              14,
+              19,
+              41,
+              45,
+              52,
+              68,
+              85,
+              91,
+              110,
+              130,
+              264,
+              309,
+              315,
+              321,
+              323,
+              324,
+              334,
+              371,
+              416,
+              310,
+              307
+            ],
+            "distributionMode": "manual_k70",
+            "rightsConfirmed": true,
+            "submissionConfirmed": true,
+            "coverArtMetadata": {
+              "fileName": "20261010_122741.jpg",
+              "mimeType": "image/jpeg",
+              "fileSizeBytes": 2390622,
+              "width": 3000,
+              "height": 3000,
+              "aspectRatio": 1
+            },
+            "coverUploadTarget": "once"
+          },
+          "tracks": [
+            {
+              "id": "track_1_1795506443563",
+              "title": "I'm lost",
+              "titleVersion": "",
+              "trackType": "original",
+              "explicitFlag": false,
+              "songwriterName": "",
+              "extraWritersText": "",
+              "isrc": "",
+              "lyrics": "",
+              "previewStartSeconds": 15,
+              "audioFileUrl": "",
+              "audioFileName": "",
+              "uploadProgress": 0,
+              "uploading": false,
+              "uploadError": "Chunk upload failed with status 404"
+            }
+          ]
+        },
+        "onceDraftError": null,
+        "onceDraftWarnings": [
+          "Track 1: audio_file_url is required.",
+          "\"01\" is not a valid release version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Deluxe) or leave it empty.",
+          "Track 1: \"01\" is not a valid version. Use the field only for a real qualifier (Remix, Remastered, Live, Acoustic, Instrumental, Sped Up) or leave it empty.",
+          "original_release_date 2026-11-24 is not in the past, so it is not sent to stores. original_release_date is the date back-catalog music first came out; the go-live date belongs in release_date. This does not block submission.",
+          "release.genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship.",
+          "tracks[0].genre: \"Hip-Hop/Rap\" is not one of the distributor's genres, so it can't be delivered as typed and would be swapped for the closest genre (often the one this release already has). Pick a genre from the list. Close matches: Chinese Hip-Hop, Christian Rap, Praise & Worship."
+        ]
+      },
+      "distribution_store_ids": [
+        1,
+        9,
+        13,
+        319,
+        17,
+        14,
+        19,
+        41,
+        45,
+        52,
+        68,
+        85,
+        91,
+        110,
+        130,
+        264,
+        309,
+        315,
+        321,
+        323,
+        324,
+        334,
+        371,
+        416,
+        310,
+        307
+      ],
+      "store_statuses": [],
+      "artist_profiles": [],
+      "status": "draft",
+      "is_ai_detected": false,
+      "acr_matched": false,
+      "credit_cost": 1,
+      "credits_debited": 0,
+      "validation_errors": [],
+      "current_step": 1,
+      "last_quote": null,
+      "created_at": "2026-11-24T07:47:40.453Z",
+      "updated_at": "2026-11-24T11:41:17.119Z",
+      "once_draft_id": "34aa05f3-0306-4247-82bc-028509c7ca23"
+    }
+  },
+  "webhooks": [],
+  "auditLogs": [
+    {
+      "id": "f7473e6d-98cc-4946-8ca3-5f5dff7bc696",
+      "actor_user_id": "6a381094-321c-47af-bda0-f65f6191c0d7",
+      "actor_email": "paulpm320@gmail.com",
+      "actor_role": "artist",
+      "action": "asset_uploaded",
+      "release_id": null,
+      "once_release_id": null,
+      "status": "success",
+      "summary": "Uploaded coverArt asset (20261010_122741.jpg) to ONCE",
+      "details": {
+        "type": "coverArt",
+        "fileName": "20261010_122741.jpg",
+        "fileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/3ffd9b48-c244-424f-a689-7bf6457d14de.jpg"
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T10:30:39.102Z"
+    },
+    {
+      "id": "97f9ef38-ea37-4d4e-890f-38b69cda0cde",
+      "actor_user_id": "6a381094-321c-47af-bda0-f65f6191c0d7",
+      "actor_email": "paulpm320@gmail.com",
+      "actor_role": "artist",
+      "action": "asset_uploaded",
+      "release_id": null,
+      "once_release_id": null,
+      "status": "success",
+      "summary": "Uploaded coverArt asset (20261124_085022.jpg) to ONCE",
+      "details": {
+        "type": "coverArt",
+        "fileName": "20261124_085022.jpg",
+        "fileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/63dd17a2-a77b-4eda-9d5b-abc50abad9ad.jpg"
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T09:44:53.021Z"
+    },
+    {
+      "id": "60996d68-4947-4d4b-bc2f-a368bc5e55a3",
+      "actor_user_id": "6a381094-321c-47af-bda0-f65f6191c0d7",
+      "actor_email": "paulpm320@gmail.com",
+      "actor_role": "artist",
+      "action": "asset_uploaded",
+      "release_id": null,
+      "once_release_id": null,
+      "status": "success",
+      "summary": "Uploaded coverArt asset (20261124_085022.jpg) to ONCE",
+      "details": {
+        "type": "coverArt",
+        "fileName": "20261124_085022.jpg",
+        "fileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/acdcf4c5-9d6d-4e73-a628-3ef6cc2575f2.jpg"
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T09:43:50.396Z"
+    },
+    {
+      "id": "e2cce7fc-045c-4b69-9d9b-571b8e46018a",
+      "actor_user_id": "6a381094-321c-47af-bda0-f65f6191c0d7",
+      "actor_email": "paulpm320@gmail.com",
+      "actor_role": "artist",
+      "action": "draft_created",
+      "release_id": "5f0c7365-0a38-40bd-8ad0-cd21c3256298",
+      "once_release_id": null,
+      "status": "info",
+      "summary": "Saved new release draft \"Untitled Draft\"",
+      "details": {
+        "currentStep": 1,
+        "syncedToOnce": false
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:47:40.454Z"
+    },
+    {
+      "id": "bd1e37de-70aa-4161-9d85-6c02bda722b0",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:21:51.609Z"
+    },
+    {
+      "id": "9c6f38bb-7993-4ae0-8e60-8b0926d73ab2",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:21:45.477Z"
+    },
+    {
+      "id": "3edf7cd6-4f40-4c11-89db-24b25d43cfd0",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:21:21.949Z"
+    },
+    {
+      "id": "5ba83261-b1cc-47d0-8b57-16f3fc57af21",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:13:05.422Z"
+    },
+    {
+      "id": "b5bf350f-e6ca-48d0-a720-44a9c9106e88",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:12:59.408Z"
+    },
+    {
+      "id": "5eb0649c-6841-48bc-aa53-14b58ac1418d",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:07:15.337Z"
+    },
+    {
+      "id": "33f49a14-4821-4301-929f-f099f827a5c5",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:07:11.983Z"
+    },
+    {
+      "id": "f153c100-69db-4816-a3b7-ec1d5d373851",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:03:55.111Z"
+    },
+    {
+      "id": "b390977e-57ea-4453-9472-e8149c98fa2a",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:03:51.551Z"
+    },
+    {
+      "id": "dc42da80-1085-4000-a1cf-46c6185c9dcf",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:00:37.679Z"
+    },
+    {
+      "id": "2e70b95d-f18b-4e04-8d96-bae933ba8d69",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:00:30.460Z"
+    },
+    {
+      "id": "67078dfc-c138-4b8c-985b-512ec046657a",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T07:00:22.680Z"
+    },
+    {
+      "id": "f84f447f-9587-4633-b47c-c78b38081955",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:57:34.240Z"
+    },
+    {
+      "id": "85e181bf-ed4b-4efd-afb3-cd6742a078f5",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:56:49.793Z"
+    },
+    {
+      "id": "670cd96a-be95-49e1-8e2a-87c6778d9e06",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "submission_blocked_credits",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Blocked submission due to insufficient ONCE credits (0/1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:56:33.728Z"
+    },
+    {
+      "id": "9fc6e4c0-b043-45ac-9dbc-058af5de82d2",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "quote_generated",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": null,
+      "status": "warning",
+      "summary": "Generated ONCE quote: 1 credits ($1)",
+      "details": {
+        "quote": {
+          "currency": "usd",
+          "cost": {
+            "trackCredits": 1,
+            "tokenOffsetCredits": 0,
+            "totalCredits": 1,
+            "totalUsd": 1
+          },
+          "tracks": [
+            {
+              "trackNumber": 1,
+              "title": "I'm lost",
+              "billable": true,
+              "ai": false,
+              "credits": 1,
+              "reason": "human_track"
+            }
+          ],
+          "summary": {
+            "trackCount": 1,
+            "billableTracks": 1,
+            "humanTracks": 1,
+            "aiTracks": 0,
+            "tracksMissingAudio": 0,
+            "tracksInvalidAudioUrl": 0
+          },
+          "balance": {
+            "available": 0,
+            "required": 1,
+            "covered": false,
+            "shortfallCredits": 1,
+            "shortfallUsd": 1
+          },
+          "purchase": {
+            "credits": 1,
+            "usd": 1,
+            "packageId": "credits_20",
+            "packageCredits": 20,
+            "packageUsd": 19
+          },
+          "submittable": false,
+          "blockers": [
+            "This release costs 1 credit and the balance is 0. Purchase 1 more before submitting."
+          ],
+          "rates": {
+            "creditsPerHumanTrack": 1,
+            "creditsPerAiTrack": 2,
+            "aiSurchargeCredits": 1,
+            "tokenOffsetCredits": 1
+          }
+        },
+        "creditsInfo": {
+          "balance": 0,
+          "updatedAt": null,
+          "transactions": [],
+          "aggregates": {
+            "usedTotal": 0,
+            "purchasedTotal": 0
+          }
+        }
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:56:12.748Z"
+    },
+    {
+      "id": "c944e855-c392-4a41-85bd-ed42a5d4cd7c",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "asset_uploaded",
+      "release_id": null,
+      "once_release_id": null,
+      "status": "success",
+      "summary": "Uploaded audio asset (Flecy_pm-am_lost_official_music_video_(256k).mp3) to ONCE",
+      "details": {
+        "type": "audio",
+        "fileName": "Flecy_pm-am_lost_official_music_video_(256k).mp3",
+        "fileUrl": "/api/files/audio/43993270-5b5b-4d4a-82c3-3a150eb6d89d/d7d2540c-23a2-4112-a725-8146f431b246.wav"
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:54:48.525Z"
+    },
+    {
+      "id": "dd01425f-f296-4c4b-a9b4-ee0365e7192e",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "asset_uploaded",
+      "release_id": null,
+      "once_release_id": null,
+      "status": "success",
+      "summary": "Uploaded coverArt asset (20261124_085022.jpg) to ONCE",
+      "details": {
+        "type": "coverArt",
+        "fileName": "20261124_085022.jpg",
+        "fileUrl": "/api/files/cover-art/43993270-5b5b-4d4a-82c3-3a150eb6d89d/a28c4478-e676-488e-9232-0329abf34ea2.jpg"
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:54:14.356Z"
+    },
+    {
+      "id": "a36453d9-a6a0-456a-a75d-30563b2bb080",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "draft_created",
+      "release_id": "9a4df7e4-9c00-4375-8dd8-e1cae6ddcb39",
+      "once_release_id": "481adc85-cc16-4d09-a838-7dceb555351b",
+      "status": "info",
+      "summary": "Saved new release draft \"I'm lost\"",
+      "details": {
+        "currentStep": 2,
+        "syncedToOnce": true
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:53:32.655Z"
+    },
+    {
+      "id": "3ff247c8-6259-492c-bd2c-09b8d6cb4a93",
+      "actor_user_id": "2bd2baa5-6858-4f03-92e7-3baebc9db77f",
+      "actor_email": "paulmuthali01@gmail.com",
+      "actor_role": "artist",
+      "action": "draft_created",
+      "release_id": "d66686a7-a917-42b4-bb9b-c85b63b814a3",
+      "once_release_id": "31dfca7f-fe93-4ad2-8894-041b4e5737cb",
+      "status": "info",
+      "summary": "Saved new release draft \"I'm lost\"",
+      "details": {
+        "currentStep": 2,
+        "syncedToOnce": true
+      },
+      "error_message": null,
+      "created_at": "2026-11-24T06:53:22.012Z"
+    }
+  ],
+  "settings": {
+    "id": "default",
+    "auto_distribute_default": false,
+    "require_admin_approval": true,
+    "single_upload_price_zmw": 70,
+    "updated_at": "2026-11-24T06:52:16.355Z"
+  },
+  "exchangeRateCache": null,
+  "financialTransactions": []
+}

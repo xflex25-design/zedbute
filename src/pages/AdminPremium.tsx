@@ -31,9 +31,9 @@ const fmtDate = (iso: string) =>
 const statusBadge = (status: string) => {
   switch (status) {
     case "approved":
-      return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Approved</Badge>;
+      return <Badge className="bg-foreground text-background border-foreground">Approved</Badge>;
     case "pending_approval":
-      return <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30">Pending Approval</Badge>;
+      return <Badge variant="secondary" className="border-border">Pending Approval</Badge>;
     default:
       return <Badge className="bg-muted text-muted-foreground border-border">{status}</Badge>;
   }
@@ -154,9 +154,9 @@ const AdminPremium = () => {
           </div>
           <p className="text-sm text-muted-foreground truncate">{sub.email || sub.user_id}</p>
           <p className="text-xs text-muted-foreground">
-            K{Number(sub.amount).toFixed(2)} · {sub.payment_status} · requested {fmtDate(sub.created_at)}
-            {sub.phone_number && ` · ${sub.phone_number}`}
-            {sub.status === "approved" && sub.expires_at && ` · expires ${fmtDate(sub.expires_at)}`}
+            K{Number(sub.amount).toFixed(2)} | {sub.payment_status} | requested {fmtDate(sub.created_at)}
+            {sub.phone_number && ` | ${sub.phone_number}`}
+            {sub.status === "approved" && sub.expires_at && ` | expires ${fmtDate(sub.expires_at)}`}
           </p>
         </div>
         {sub.status === "pending_approval" && (
@@ -187,7 +187,7 @@ const AdminPremium = () => {
 
         <section className="space-y-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Clock className="h-5 w-5 text-amber-500" /> Pending approval ({pending.length})
+            <Clock className="h-5 w-5 text-foreground" /> Pending approval ({pending.length})
           </h2>
           {pending.length === 0 ? (
             <p className="text-sm text-muted-foreground">No pending subscriptions.</p>

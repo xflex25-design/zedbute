@@ -3,10 +3,12 @@ import path from "path";
 import crypto from "crypto";
 import { getSupabaseAdmin } from "./supabaseAdmin";
 import type {
+  ExchangeRateSnapshot,
   OnceDistributionReleaseRecord,
   OnceEngineSettingsRecord,
   OnceAuditLogRecord,
   StoreStatus,
+  ZedbuteFinancialTransactionRecord,
 } from "./types";
 
 const DATA_DIR = path.resolve(process.cwd(), ".data");
@@ -39,6 +41,8 @@ interface OnceStoreData {
   }>;
   auditLogs: OnceAuditLogRecord[];
   settings: OnceEngineSettingsRecord;
+  exchangeRateCache: ExchangeRateSnapshot | null;
+  financialTransactions: ZedbuteFinancialTransactionRecord[];
 }
 
 const defaultData: OnceStoreData = {
@@ -53,6 +57,8 @@ const defaultData: OnceStoreData = {
     single_upload_price_zmw: 70,
     updated_at: new Date().toISOString(),
   },
+  exchangeRateCache: null,
+  financialTransactions: [],
 };
 
 function ensureDataFile(): OnceStoreData {
@@ -72,6 +78,10 @@ function ensureDataFile(): OnceStoreData {
       webhooks: Array.isArray(parsed.webhooks) ? parsed.webhooks : [],
       auditLogs: Array.isArray(parsed.auditLogs) ? parsed.auditLogs : [],
       settings: parsed.settings || defaultData.settings,
+      exchangeRateCache: parsed.exchangeRateCache || null,
+      financialTransactions: Array.isArray(parsed.financialTransactions)
+        ? parsed.financialTransactions
+        : [],
     };
   } catch (err) {
     console.error("[ONCE Store] Error reading data file:", err);
@@ -129,7 +139,9 @@ async function syncReleaseToSupabase(record: OnceDistributionReleaseRecord): Pro
         isrc: record.isrc || null,
         cover_art_url: record.cover_art_url || null,
         audio_url: record.audio_url || null,
-        metadata: record.metadata || {},
+        metadata: record.exchange_rate_snapshot
+          ? { ...(record.metadata || {}), exchangeRateSnapshot: record.exchange_rate_snapshot }
+          : record.metadata || {},
         distribution_store_ids: record.distribution_store_ids || [],
         store_statuses: record.store_statuses || [],
         artist_profiles: record.artist_profiles || [],
@@ -230,6 +242,9 @@ export const onceStore = {
       validation_errors: record.validation_errors || [],
       current_step: record.current_step || 1,
       last_quote: record.last_quote ?? null,
+      exchange_rate_snapshot: record.exchange_rate_snapshot ?? null,
+      amount_zmw: record.amount_zmw,
+      processing_fee_zmw: record.processing_fee_zmw,
       reviewed_by: record.reviewed_by,
       reviewed_at: record.reviewed_at,
       review_notes: record.review_notes,
@@ -438,6 +453,112 @@ export const onceStore = {
     };
     persistData(store);
     return store.settings;
+  },
+
+  // --- Exchange Rate Cache & Financial Ledger ---
+  getExchangeRateCache(): ExchangeRateSnapshot | null {
+    const store = ensureDataFile();
+    return store.exchangeRateCache || null;
+  },
+
+  setExchangeRateCache(snapshot: ExchangeRateSnapshot): ExchangeRateSnapshot {
+    const store = ensureDataFile();
+    store.exchangeRateCache = snapshot;
+    store.settings = {
+      ...store.settings,
+      cached_zmw_to_usd_rate: snapshot.zmwToUsdRate,
+      cached_usd_to_zmw_rate: snapshot.usdToZmwRate,
+      exchange_rate_date: snapshot.rateDate,
+      exchange_rate_source: snapshot.source,
+      exchange_rate_updated_at: snapshot.fetchedAt,
+      updated_at: new Date().toISOString(),
+    };
+    persistData(store);
+    return snapshot;
+  },
+
+  listFinancialTransactions(limit = 500): ZedbuteFinancialTransactionRecord[] {
+    const store = ensureDataFile();
+    return [...(store.financialTransactions || [])]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, limit);
+  },
+
+  upsertFinancialTransaction(
+    tx: Omit<ZedbuteFinancialTransactionRecord, "id" | "created_at" | "updated_at"> & {
+      id?: string;
+      created_at?: string;
+    }
+  ): ZedbuteFinancialTransactionRecord {
+    const store = ensureDataFile();
+    const list = store.financialTransactions || [];
+    const releaseTypes = new Set(["release", "single", "ep", "album"]);
+    const existingIdx = list.findIndex(
+      (item) =>
+        item.transaction_id === tx.transaction_id ||
+        (tx.release_id &&
+          item.release_id === tx.release_id &&
+          (item.payment_type === tx.payment_type ||
+            (releaseTypes.has(item.payment_type) && releaseTypes.has(tx.payment_type))))
+    );
+    const now = new Date().toISOString();
+
+    if (existingIdx >= 0) {
+      const existing = list[existingIdx];
+      // Preserve historical locked exchange rate if already recorded on this transaction
+      const preservedRate = existing.zmw_to_usd_rate !== null ? existing : null;
+      const updated: ZedbuteFinancialTransactionRecord = {
+        ...existing,
+        ...tx,
+        id: existing.id,
+        transaction_id: existing.transaction_id,
+        payment_status:
+          existing.payment_status === "verified" ? "verified" : tx.payment_status,
+        zmw_to_usd_rate: preservedRate ? preservedRate.zmw_to_usd_rate : tx.zmw_to_usd_rate,
+        usd_to_zmw_rate: preservedRate ? preservedRate.usd_to_zmw_rate : tx.usd_to_zmw_rate,
+        exchange_rate_date: preservedRate ? preservedRate.exchange_rate_date : tx.exchange_rate_date,
+        exchange_rate_fetched_at: preservedRate ? preservedRate.exchange_rate_fetched_at : tx.exchange_rate_fetched_at,
+        exchange_rate_source: preservedRate ? preservedRate.exchange_rate_source : tx.exchange_rate_source,
+        exchange_rate_is_stale: preservedRate ? preservedRate.exchange_rate_is_stale : tx.exchange_rate_is_stale,
+        amount_usd: preservedRate ? preservedRate.amount_usd : tx.amount_usd,
+        processing_fee_usd: preservedRate ? preservedRate.processing_fee_usd : tx.processing_fee_usd,
+        once_expense_usd: Math.max(existing.once_expense_usd || 0, tx.once_expense_usd || 0),
+        once_release_id: tx.once_release_id || existing.once_release_id,
+        title: tx.title || existing.title,
+        created_at: existing.created_at,
+        updated_at: now,
+      };
+      if (updated.zmw_to_usd_rate && updated.zmw_to_usd_rate > 0) {
+        const rate = updated.zmw_to_usd_rate;
+        const onceUsd = updated.once_expense_usd || 0;
+        const onceZmw = Math.round((onceUsd / rate) * 100) / 100;
+        updated.once_expense_zmw = onceZmw;
+        updated.net_profit_zmw = Math.round((updated.amount_zmw - updated.processing_fee_zmw - onceZmw) * 100) / 100;
+        updated.net_profit_usd =
+          updated.amount_usd !== null && updated.processing_fee_usd !== null
+            ? Math.round((updated.amount_usd - updated.processing_fee_usd - onceUsd) * 100) / 100
+            : null;
+      }
+      list[existingIdx] = updated;
+      store.financialTransactions = list;
+      persistData(store);
+      return updated;
+    }
+
+    const created: ZedbuteFinancialTransactionRecord = {
+      ...tx,
+      id: tx.id || crypto.randomUUID(),
+      created_at: tx.created_at || now,
+      updated_at: now,
+    };
+    list.unshift(created);
+    if (list.length > 2000) {
+      store.financialTransactions = list.slice(0, 2000);
+    } else {
+      store.financialTransactions = list;
+    }
+    persistData(store);
+    return created;
   },
 
   // --- Metrics ---

@@ -62,11 +62,11 @@ interface Claim {
 }
 
 const statusBadgeClass: Record<ClaimStatus, string> = {
-  New: "bg-slate-500 hover:bg-slate-500 text-white",
-  "Instructions Sent": "bg-primary hover:bg-primary text-primary-foreground",
-  "Awaiting Verification": "bg-amber-500 hover:bg-amber-500 text-white",
-  Claimed: "bg-green-600 hover:bg-green-600 text-white",
-  Rejected: "bg-red-600 hover:bg-red-600 text-white",
+  New: "bg-muted text-foreground border border-border",
+  "Instructions Sent": "bg-secondary text-foreground border border-foreground/40",
+  "Awaiting Verification": "bg-muted/70 text-foreground border border-foreground/30",
+  Claimed: "bg-foreground text-background border border-foreground",
+  Rejected: "bg-destructive text-destructive-foreground border border-destructive",
 };
 
 const AdminSpotifyClaims = () => {
@@ -271,18 +271,14 @@ const AdminSpotifyClaims = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <CardTitle className="text-base sm:text-lg flex items-center gap-2">
                     <Badge
-                      className={
-                        c.platform === "Spotify"
-                          ? "bg-green-600 hover:bg-green-600 text-white"
-                          : "bg-[#F7931E] hover:bg-[#F7931E] text-white"
-                      }
+                      variant={c.platform === "Spotify" ? "default" : "outline"}
                     >
                       {c.platform}
                     </Badge>
                     {c.name}
                   </CardTitle>
                   <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-slate-500 hover:bg-slate-500 text-white">
+                    <Badge variant="outline">
                       Payment: {c.payment_status}
                     </Badge>
                     <Badge className={statusBadgeClass[c.claim_status]}>
@@ -294,13 +290,13 @@ const AdminSpotifyClaims = () => {
                   <span className="block sm:inline">{c.email}</span>
                   {c.distributor && (
                     <>
-                      <span className="hidden sm:inline"> · </span>
+                      <span className="hidden sm:inline"> | </span>
                       <span className="block sm:inline">{c.distributor}</span>
                     </>
                   )}
                   {c.payment_amount != null && (
                     <>
-                      <span className="hidden sm:inline"> · </span>
+                      <span className="hidden sm:inline"> | </span>
                       <span className="block sm:inline">K{c.payment_amount}</span>
                     </>
                   )}
@@ -338,7 +334,7 @@ const AdminSpotifyClaims = () => {
                       <p className="text-muted-foreground">
                         <span className="font-medium">Mobile:</span>{" "}
                         {[c.country_code, c.mobile_number].filter(Boolean).join(" ")}
-                        {c.email_verified ? " · email verified" : ""}
+                        {c.email_verified ? " | email verified" : ""}
                       </p>
                     )}
                     {!c.country_code && !c.mobile_number && c.email_verified && (

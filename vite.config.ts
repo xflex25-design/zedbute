@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    entries: ["index.html"],
+    exclude: ["@playwright/test", "playwright", "playwright-core", "kerberos"],
+  },
   build: {
     rollupOptions: {
       output: {

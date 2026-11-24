@@ -23,7 +23,7 @@ export function FieldValidationMessage({ issue, id }: FieldValidationMessageProp
       className={`mt-1 flex items-start gap-1.5 text-[11px] leading-snug ${
         isError
           ? "text-destructive font-medium"
-          : "text-amber-600 dark:text-amber-400"
+          : "text-muted-foreground font-medium"
       }`}
     >
       {isError ? (

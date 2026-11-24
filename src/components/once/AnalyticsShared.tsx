@@ -234,14 +234,14 @@ export function AnalyticsKpiCards({
           <CardTitle className="text-2xl font-bold tracking-tight flex items-center gap-1.5">
             {hasGrowth ? (
               <>
-                <span className={isPositive ? "text-emerald-500" : "text-red-500"}>
+                <span className={isPositive ? "text-foreground" : "text-muted-foreground"}>
                   {isPositive ? "+" : ""}
                   {growth.toFixed(1)}%
                 </span>
                 {isPositive ? (
-                  <TrendingUp className="h-4 w-4 text-emerald-500" />
+                  <TrendingUp className="h-4 w-4 text-foreground" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-red-500" />
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 )}
               </>
             ) : (

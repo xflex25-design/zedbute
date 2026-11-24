@@ -292,7 +292,7 @@ const BoomplayClaim = () => {
         <div className="max-w-xl mx-auto">
           <div className="mb-6 text-center">
             <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-              <Music2 className="h-7 w-7 text-[#F7931E]" />
+              <Music2 className="h-7 w-7 text-foreground" />
               Claim Your Boomplay Artist Profile
             </h1>
             <p className="text-muted-foreground">
@@ -334,9 +334,9 @@ const BoomplayClaim = () => {
 
           {/* NOT ELIGIBLE */}
           {stage === "no-song" && (
-            <Card className="shadow-card border-amber-300">
+            <Card className="shadow-card border-foreground/40">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-700">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <AlertTriangle className="h-5 w-5" />
                   You need a song live on Boomplay first
                 </CardTitle>
@@ -395,7 +395,7 @@ const BoomplayClaim = () => {
 
                   <div className="space-y-2">
                     <Label>
-                      Full Name <span className="text-red-500">*</span>
+                      Full Name <span className="text-foreground">*</span>
                     </Label>
                     <Input
                       value={fullName}
@@ -406,7 +406,7 @@ const BoomplayClaim = () => {
 
                   <div className="space-y-2">
                     <Label>
-                      Email Address <span className="text-red-500">*</span>
+                      Email Address <span className="text-foreground">*</span>
                     </Label>
                     <Input
                       type="email"
@@ -433,7 +433,7 @@ const BoomplayClaim = () => {
 
                   <div className="space-y-2">
                     <Label>
-                      Mobile Number <span className="text-red-500">*</span>
+                      Mobile Number <span className="text-foreground">*</span>
                     </Label>
                     <div className="flex gap-2">
                       <Select value={countryCode} onValueChange={setCountryCode}>
@@ -470,11 +470,11 @@ const BoomplayClaim = () => {
 
                 {/* SECTION: Artist Identity Proof */}
                 <div className="space-y-4">
-                  <div className="rounded-lg bg-purple-100 border border-purple-200 p-4 space-y-1">
-                    <p className="font-bold text-purple-900">
+                  <div className="rounded-lg bg-muted/50 border border-border p-4 space-y-1">
+                    <p className="font-bold text-foreground">
                       Provide As Much Identity Proof As Possible.
                     </p>
-                    <p className="font-bold text-red-600 text-sm">
+                    <p className="font-semibold text-foreground text-sm">
                       Upload at least one screenshot from any proof type below.
                     </p>
                     <p className="text-xs text-muted-foreground italic">
@@ -500,15 +500,15 @@ const BoomplayClaim = () => {
                           Upload a screenshot from the artist account owner's
                           main profile page
                         </p>
-                        <p className="italic text-blue-600">
+                        <p className="italic text-muted-foreground">
                           Size: Maximum 5MB
                         </p>
-                        <p className="italic text-blue-600">
+                        <p className="italic text-muted-foreground">
                           Format: jpg/png/jpeg
                         </p>
                       </div>
                     </div>
-                    <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-1">
+                    <ul className="text-xs text-muted-foreground list-none space-y-1.5">
                       <li>Artist or profile name is visible.</li>
                       <li>Username, handle, or profile URL is visible.</li>
                       <li>
@@ -563,10 +563,10 @@ const BoomplayClaim = () => {
                           If your music is managed through a distributor, label,
                           or agent, add content management backend proof
                         </p>
-                        <p className="italic text-blue-600">
+                        <p className="italic text-muted-foreground">
                           Size: Maximum 5MB
                         </p>
-                        <p className="italic text-blue-600">
+                        <p className="italic text-muted-foreground">
                           Format: jpg/png/jpeg
                         </p>
                       </div>
@@ -631,9 +631,9 @@ const BoomplayClaim = () => {
 
           {/* DONE / STATUS */}
           {stage === "done" && (
-            <Card className="shadow-card border-green-300">
+            <Card className="shadow-card border-foreground/40">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-green-700">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <CheckCircle2 className="h-5 w-5" />
                   Claim request received
                 </CardTitle>
@@ -643,16 +643,16 @@ const BoomplayClaim = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-green-600 hover:bg-green-600 text-white">
+                  <Badge className="bg-foreground text-background border-foreground">
                     Payment: {existing?.payment_status ?? "paid"}
                   </Badge>
-                  <Badge className="bg-primary hover:bg-primary text-primary-foreground">
+                  <Badge variant="secondary" className="border-border">
                     Status: {existing?.claim_status ?? "New"}
                   </Badge>
                 </div>
 
                 {existing?.claim_status === "Instructions Sent" && (
-                  <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-700 flex items-start gap-2">
+                  <div className="rounded-lg bg-muted/50 border border-border p-3 text-sm text-foreground flex items-start gap-2">
                     <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
                     <span>
                       We've emailed you the steps to claim your profile on

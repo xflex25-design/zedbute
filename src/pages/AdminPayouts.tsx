@@ -42,11 +42,11 @@ type Payout = {
 const statusBadge = (status: string) => {
   switch (status) {
     case "completed":
-      return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Completed</Badge>;
+      return <Badge className="bg-foreground text-background border-foreground">Completed</Badge>;
     case "pending":
-      return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>;
+      return <Badge variant="secondary" className="border-border">Pending</Badge>;
     case "rejected":
-      return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Rejected</Badge>;
+      return <Badge variant="destructive">Rejected</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -250,28 +250,28 @@ const AdminPayouts = () => {
 
           {/* Summary + credit wallet */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <Card className="bg-[#0f0f1a]/80 border-white/10">
+            <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2 text-white">
+                <CardTitle className="text-base flex items-center gap-2 text-foreground">
                   <Wallet className="h-5 w-5 text-primary" />
                   Pending Payouts
                 </CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardDescription>
                   {payouts.filter((p) => p.status === "pending").length} awaiting payment
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-white">K{pendingTotal.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-foreground">K{pendingTotal.toFixed(2)}</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-[#0f0f1a]/80 border-white/10">
+            <Card className="bg-card border-border">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2 text-white">
+                <CardTitle className="text-base flex items-center gap-2 text-foreground">
                   <Coins className="h-5 w-5 text-primary" />
                   Credit Artist Wallet
                 </CardTitle>
-                <CardDescription className="text-gray-400">
+                <CardDescription>
                   Load earned royalties into an artist's balance (ZMK)
                 </CardDescription>
               </CardHeader>
@@ -281,7 +281,7 @@ const AdminPayouts = () => {
                     placeholder="artist@email.com"
                     value={creditEmail}
                     onChange={(e) => setCreditEmail(e.target.value)}
-                    className="h-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600"
+                    className="h-10"
                   />
                   <Input
                     type="number"
@@ -290,13 +290,13 @@ const AdminPayouts = () => {
                     placeholder="Amount (K)"
                     value={creditAmount}
                     onChange={(e) => setCreditAmount(e.target.value)}
-                    className="h-10 bg-white/5 border-white/10 text-white placeholder:text-gray-600"
+                    className="h-10"
                   />
                 </div>
                 <Button
                   onClick={creditWallet}
                   disabled={crediting}
-                  className="w-full h-10 bg-white text-black hover:bg-gray-100 font-semibold"
+                  className="w-full h-10 font-semibold"
                 >
                   {crediting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Coins className="h-4 w-4 mr-2" />}
                   Credit Wallet
@@ -315,15 +315,15 @@ const AdminPayouts = () => {
           ) : (
             <div className="space-y-4">
               {visible.map((p) => (
-                <Card key={p.id} className="bg-[#0f0f1a]/80 border-white/10 shadow-card">
+                <Card key={p.id} className="bg-card border-border shadow-card">
                   <CardHeader className="pb-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <CardTitle className="text-base text-white">
+                        <CardTitle className="text-base text-foreground">
                           {p.account_name}
                         </CardTitle>
-                        <CardDescription className="text-gray-400">
-                          {p.profiles?.email ?? "Unknown email"} ·{" "}
+                        <CardDescription>
+                          {p.profiles?.email ?? "Unknown email"} |{" "}
                           {new Date(p.created_at).toLocaleString()}
                         </CardDescription>
                       </div>
@@ -333,28 +333,28 @@ const AdminPayouts = () => {
                   <CardContent className="space-y-3">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                       <div>
-                        <p className="text-gray-500 text-xs">Amount</p>
-                        <p className="font-semibold text-white">K{p.amount.toFixed(2)}</p>
+                        <p className="text-muted-foreground text-xs">Amount</p>
+                        <p className="font-semibold text-foreground">K{p.amount.toFixed(2)}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs">Method</p>
-                        <p className="text-white flex items-center gap-1">
+                        <p className="text-muted-foreground text-xs">Method</p>
+                        <p className="text-foreground flex items-center gap-1">
                           <Smartphone className="h-4 w-4" />
                           {p.payment_method === "MTN_MOMO" ? "MTN MoMo" : "Airtel Money"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs">Phone</p>
-                        <p className="text-white">{p.phone_number}</p>
+                        <p className="text-muted-foreground text-xs">Phone</p>
+                        <p className="text-foreground">{p.phone_number}</p>
                       </div>
                       <div>
-                        <p className="text-gray-500 text-xs">SIM Name</p>
-                        <p className="text-white">{p.account_name}</p>
+                        <p className="text-muted-foreground text-xs">SIM Name</p>
+                        <p className="text-foreground">{p.account_name}</p>
                       </div>
                     </div>
 
                     {p.rejection_reason && (
-                      <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+                      <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
                         Reason: {p.rejection_reason}
                       </p>
                     )}
@@ -364,7 +364,7 @@ const AdminPayouts = () => {
                         <Button
                           onClick={() => markPaid(p)}
                           disabled={processing === p.id}
-                          className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white"
+                          className="flex-1 h-10"
                         >
                           {processing === p.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -375,10 +375,10 @@ const AdminPayouts = () => {
                           )}
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           onClick={() => rejectPayout(p)}
                           disabled={processing === p.id}
-                          className="flex-1 h-10 border-red-500/30 text-red-300 hover:bg-red-500/10"
+                          className="flex-1 h-10"
                         >
                           <XCircle className="h-4 w-4 mr-1" /> Reject
                         </Button>

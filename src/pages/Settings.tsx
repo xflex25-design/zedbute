@@ -84,13 +84,13 @@ const Settings = () => {
   const royaltyStatusBadge = (status: string) => {
     switch (status) {
       case "cleared":
-        return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Cleared</Badge>;
+        return <Badge className="bg-foreground text-background border-foreground">Cleared</Badge>;
       case "paid":
-        return <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Paid</Badge>;
+        return <Badge className="bg-foreground text-background border-foreground">Paid</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>;
+        return <Badge variant="secondary" className="border border-border">Pending</Badge>;
       case "disputed":
-        return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Disputed</Badge>;
+        return <Badge variant="destructive">Disputed</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -99,13 +99,13 @@ const Settings = () => {
   const withdrawalStatusBadge = (status: string) => {
     switch (status) {
       case "paid":
-        return <Badge className="bg-green-500/15 text-green-600 border-green-500/30">Paid</Badge>;
+        return <Badge className="bg-foreground text-background border-foreground">Paid</Badge>;
       case "approved":
-        return <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30">Approved</Badge>;
+        return <Badge variant="secondary" className="border border-foreground/30">Approved</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/30">Pending</Badge>;
+        return <Badge variant="outline">Pending</Badge>;
       case "rejected":
-        return <Badge className="bg-red-500/15 text-red-600 border-red-500/30">Rejected</Badge>;
+        return <Badge variant="destructive">Rejected</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -214,7 +214,7 @@ const Settings = () => {
                         <p className="text-xs text-muted-foreground">Available Balance</p>
                         <Wallet className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <p className={`text-2xl font-bold ${availableBalance >= 100 ? "text-green-600" : "text-foreground"}`}>
+                      <p className="text-2xl font-bold text-foreground">
                         ${availableBalance.toFixed(2)}
                       </p>
                       {availableBalance >= 100 ? (

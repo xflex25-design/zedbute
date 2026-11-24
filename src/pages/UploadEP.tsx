@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader as Loader2, Upload, Music, CircleAlert as AlertCircle, Calendar as CalendarIcon, Info, Plus, Minus } from "lucide-react";
+import { Loader2, Upload, Calendar as CalendarIcon, Plus, Minus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addWeeks } from "date-fns";
@@ -393,7 +394,7 @@ const UploadEP = () => {
 
       setUploadProgress(40);
 
-      const trackUrls: { title: string; url: string }[] = [];
+      const trackUrls: { title: string; url: string; trackNumber: number }[] = [];
       for (let i = 0; i < tracks.length; i++) {
         const track = tracks[i];
         if (!track.file) continue;
@@ -489,387 +490,408 @@ const UploadEP = () => {
   const uploadedTracksCount = tracks.filter(t => t.file).length;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="max-w-3xl mx-auto px-4 pt-24 pb-12">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Music className="h-6 w-6" />
+      <main className="container mx-auto max-w-3xl px-4 pt-24 pb-16">
+        <div className="space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-balance">
               Upload EP
-            </CardTitle>
-            <CardDescription>
-              Submit your EP for distribution to Spotify, Apple Music, Boomplay, TikTok, and 150+ platforms.
-            </CardDescription>
-            <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
-              <p className="text-sm text-amber-600 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Your EP will be saved as <strong>unpaid</strong> and you'll be redirected to complete the <strong>K{EP_PRICE}</strong> payment.</span>
-              </p>
-            </div>
-            <div className="mt-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-              <p className="text-xs text-blue-600">
-                <strong>EP Requirements:</strong> {EP_MIN_TRACKS}-{EP_MAX_TRACKS} tracks required. Current: {uploadedTracksCount} tracks
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <FormProgress
-              steps={[
-                { label: "Title", completed: formData.title.trim().length > 0 },
-                { label: "Language", completed: selectedLanguages.length > 0 },
-                { label: "Tracks", completed: uploadedTracksCount >= EP_MIN_TRACKS },
-                { label: "Genre", completed: !!formData.genre },
-                { label: "Release Date", completed: !!formData.releaseDate },
-                { label: "Cover Art", completed: !!formData.coverArt },
-                { label: "Rights Confirmed", completed: formData.rightsConfirmed },
-              ]}
-            />
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Artist Name */}
-              <div className="space-y-2">
-                <Label htmlFor="artistName">Artist Name *</Label>
-                <Input
-                  id="artistName"
-                  value={formData.artistName}
-                  onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
-                  placeholder="Your artist/band name"
-                  required
-                  maxLength={100}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Submit {EP_MIN_TRACKS} to {EP_MAX_TRACKS} tracks for global distribution. One-time K{EP_PRICE} fee upon checkout.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Card className="hover:translate-y-0 hover:shadow-card">
+              <CardContent className="p-6 sm:p-8 space-y-8">
+                <FormProgress
+                  steps={[
+                    { label: "Title", completed: formData.title.trim().length > 0 },
+                    { label: "Language", completed: selectedLanguages.length > 0 },
+                    { label: "Tracks", completed: uploadedTracksCount >= EP_MIN_TRACKS },
+                    { label: "Genre", completed: !!formData.genre },
+                    { label: "Release Date", completed: !!formData.releaseDate },
+                    { label: "Cover Art", completed: !!formData.coverArt },
+                    { label: "Rights Confirmed", completed: formData.rightsConfirmed },
+                  ]}
                 />
-              </div>
 
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title">EP Title *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Enter your EP title"
-                  required
-                />
-              </div>
+                <Separator />
 
-              {/* Producer Name - Optional */}
-              <div className="space-y-2">
-                <Label htmlFor="producerName">Producer Name (Optional)</Label>
-                <Input
-                  id="producerName"
-                  value={formData.producerName}
-                  onChange={(e) => setFormData({ ...formData, producerName: e.target.value })}
-                  placeholder="Name of the producer"
-                  maxLength={100}
-                />
-              </div>
-
-              {/* Legal Name - Optional */}
-              <div className="space-y-2">
-                <Label htmlFor="legalName">Full Legal Name (Optional)</Label>
-                <Input
-                  id="legalName"
-                  value={formData.legalName}
-                  onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
-                  placeholder="Your full legal name for royalty payments"
-                  maxLength={150}
-                />
-              </div>
-
-              {/* Language Selection */}
-              <div className="space-y-3">
-                <Label>Language(s) *</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {LANGUAGES.map((language) => (
-                    <div key={language} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={language}
-                        checked={selectedLanguages.includes(language)}
-                        onCheckedChange={() => handleLanguageToggle(language)}
-                      />
-                      <Label htmlFor={language} className="cursor-pointer font-normal">
-                        {language}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Track List */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Tracks * ({EP_MIN_TRACKS}-{EP_MAX_TRACKS} required)</Label>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addTrack}
-                      disabled={tracks.length >= EP_MAX_TRACKS}
-                    >
-                      <Plus className="h-3 w-3 mr-1" /> Add
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeTrack(tracks[tracks.length - 1].id)}
-                      disabled={tracks.length <= EP_MIN_TRACKS}
-                    >
-                      <Minus className="h-3 w-3 mr-1" /> Remove
-                    </Button>
+                {/* Section 1: Artist & Release Details */}
+                <div className="space-y-5">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold tracking-tight">EP details</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Enter your artist credits, genre, and target release date.
+                    </p>
                   </div>
-                </div>
 
-                {tracks.map((track, index) => (
-                  <div key={track.id} className="border border-border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label className="font-medium">Track {track.trackNumber}</Label>
-                      {track.file && (
-                        <span className="text-xs text-muted-foreground">
-                          {(track.file.size / 1024 / 1024).toFixed(2)} MB
-                        </span>
-                      )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="artistName">Artist Name *</Label>
+                      <Input
+                        id="artistName"
+                        value={formData.artistName}
+                        onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
+                        placeholder="Artist or band name"
+                        required
+                        maxLength={100}
+                      />
                     </div>
-                    <Input
-                      value={track.title}
-                      onChange={(e) => handleTrackTitleChange(track.id, e.target.value)}
-                      placeholder={`Track ${track.trackNumber} title`}
-                      maxLength={100}
-                    />
-                    <div className="border-2 border-dashed border-border rounded-lg p-4 text-center">
-                      {track.file ? (
-                        <div className="space-y-2">
-                          <Music className="mx-auto h-8 w-8 text-primary" />
-                          <p className="text-sm font-medium truncate">{track.file.name}</p>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="title">EP Title *</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="Enter your EP title"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="producerName">Producer Name</Label>
+                      <Input
+                        id="producerName"
+                        value={formData.producerName}
+                        onChange={(e) => setFormData({ ...formData, producerName: e.target.value })}
+                        placeholder="Optional producer name"
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="legalName">Full Legal Name</Label>
+                      <Input
+                        id="legalName"
+                        value={formData.legalName}
+                        onChange={(e) => setFormData({ ...formData, legalName: e.target.value })}
+                        placeholder="For royalty payouts"
+                        maxLength={150}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="genre">Genre *</Label>
+                      <Select
+                        value={formData.genre}
+                        onValueChange={(value) => setFormData({ ...formData, genre: value })}
+                      >
+                        <SelectTrigger id="genre">
+                          <SelectValue placeholder="Select a genre" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GENRES.map((genre) => (
+                            <SelectItem key={genre} value={genre}>
+                              {genre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Release Date *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <Button
                             type="button"
                             variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setTracks(tracks.map((t, i) => 
-                                i === index ? { ...t, file: null } : t
-                              ));
-                              if (audioFileRefs.current[index]) {
-                                audioFileRefs.current[index]!.value = "";
-                              }
-                            }}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !formData.releaseDate && "text-muted-foreground"
+                            )}
                           >
-                            Remove
+                            <CalendarIcon className="h-4 w-4" />
+                            {formData.releaseDate ? format(formData.releaseDate, "PPP") : <span>Pick a release date</span>}
                           </Button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                          <div className="text-sm text-muted-foreground">
-                            <Label
-                              htmlFor={`track-audio-${index}`}
-                              className="cursor-pointer text-primary hover:underline"
-                            >
-                              Click to upload
-                            </Label>
-                          </div>
-                          <Input
-                            id={`track-audio-${index}`}
-                            type="file"
-                            accept="audio/*"
-                            onChange={(e) => handleTrackAudioChange(index, e)}
-                            className="hidden"
-                            ref={el => audioFileRefs.current[index] = el}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={formData.releaseDate}
+                            onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
+                            disabled={(date) => date < addWeeks(new Date(), 2)}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
                           />
-                        </div>
+                        </PopoverContent>
+                      </Popover>
+                      {formData.releaseDate && (
+                        <p className="text-xs text-muted-foreground">
+                          Estimated live date: {format(addWeeks(formData.releaseDate, 2), "PPP")}
+                        </p>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Genre */}
-              <div className="space-y-2">
-                <Label htmlFor="genre">Genre *</Label>
-                <Select
-                  value={formData.genre}
-                  onValueChange={(value) => setFormData({ ...formData, genre: value })}
-                >
-                  <SelectTrigger className="w-full bg-background">
-                    <SelectValue placeholder="Select a genre" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover text-popover-foreground border border-border shadow-lg z-50">
-                    {GENRES.map((genre) => (
-                      <SelectItem key={genre} value={genre}>
-                        {genre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Release Date */}
-              <div className="space-y-2">
-                <Label>Release Date *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !formData.releaseDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.releaseDate ? format(formData.releaseDate, "PPP") : <span>Pick a release date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={formData.releaseDate}
-                      onSelect={(date) => setFormData({ ...formData, releaseDate: date })}
-                      disabled={(date) => date < addWeeks(new Date(), 2)}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border">
-                  <Info className="h-4 w-4 text-accent mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Your music will be processed and distributed within <strong className="text-foreground">2 weeks</strong> from submission.
-                    {formData.releaseDate && (
-                      <span> Estimated live date: <strong className="text-primary">{format(addWeeks(formData.releaseDate, 2), "PPP")}</strong></span>
-                    )}
-                  </p>
                 </div>
-              </div>
 
-              {/* Cover Art */}
-              <div className="space-y-3">
-                <Label htmlFor="coverArt" className="flex items-center gap-2">
-                  Cover Art *
-                  <span className="text-xs text-muted-foreground font-normal">(Square, at least 1000 x 1000 px)</span>
-                </Label>
-                <div ref={coverScrollRef} className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                  {imagePreview ? (
-                    <div className="space-y-4">
-                      <img
-                        src={imagePreview}
-                        alt="Cover preview"
-                        className="mx-auto max-w-xs rounded-lg"
-                      />
+                <Separator />
+
+                {/* Section 2: Languages */}
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold tracking-tight">Languages *</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Select all languages featured on this EP.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {LANGUAGES.map((language) => (
+                      <label
+                        key={language}
+                        htmlFor={language}
+                        className="flex items-center space-x-2 rounded-md border border-border px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors"
+                      >
+                        <Checkbox
+                          id={language}
+                          checked={selectedLanguages.includes(language)}
+                          onCheckedChange={() => handleLanguageToggle(language)}
+                        />
+                        <span className="text-sm font-normal">{language}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Section 3: Tracklist */}
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-1">
+                      <h2 className="text-lg font-semibold tracking-tight">
+                        Tracklist * ({uploadedTracksCount} of {tracks.length})
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Attach {EP_MIN_TRACKS} to {EP_MAX_TRACKS} audio files.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setFormData({ ...formData, coverArt: null });
-                          sessionStorage.removeItem("pendingCoverArtName");
-                        }}
+                        size="sm"
+                        onClick={addTrack}
+                        disabled={tracks.length >= EP_MAX_TRACKS}
                       >
-                        Remove Image
+                        <Plus className="h-3.5 w-3.5" />
+                        Add
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeTrack(tracks[tracks.length - 1].id)}
+                        disabled={tracks.length <= EP_MIN_TRACKS}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                        Remove
                       </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {showReattachPrompt && previousFileName && (
-                        <p className="text-sm text-primary font-medium">
-                          Please re-attach: {previousFileName}
-                        </p>
-                      )}
-                      <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                      <div className="text-sm text-muted-foreground">
-                        <Label
-                          htmlFor="coverArt"
-                          className="cursor-pointer text-primary hover:underline"
-                        >
-                          Click to upload
-                        </Label>
+                  </div>
+
+                  <div className="space-y-4">
+                    {tracks.map((track, index) => (
+                      <div key={track.id} className="rounded-lg border border-border p-4 space-y-3 bg-background">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-xs font-medium text-muted-foreground">
+                            Track {track.trackNumber}
+                          </Label>
+                          {track.file && (
+                            <span className="text-xs text-muted-foreground">
+                              {(track.file.size / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                          <Input
+                            value={track.title}
+                            onChange={(e) => handleTrackTitleChange(track.id, e.target.value)}
+                            placeholder={`Track ${track.trackNumber} title`}
+                            maxLength={100}
+                          />
+                          <div className="flex items-center gap-2">
+                            {track.file ? (
+                              <>
+                                <span className="text-xs text-foreground truncate flex-1 border border-border rounded-md h-10 px-3 flex items-center bg-muted/30">
+                                  {track.file.name}
+                                </span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setTracks(tracks.map((t, i) =>
+                                      i === index ? { ...t, file: null } : t
+                                    ));
+                                    if (audioFileRefs.current[index]) {
+                                      audioFileRefs.current[index]!.value = "";
+                                    }
+                                  }}
+                                >
+                                  Remove
+                                </Button>
+                              </>
+                            ) : (
+                              <Button type="button" variant="outline" className="flex-1 w-full" asChild>
+                                <label htmlFor={`track-audio-${index}`} className="cursor-pointer">
+                                  <Upload className="h-4 w-4 text-muted-foreground" />
+                                  Upload audio file
+                                </label>
+                              </Button>
+                            )}
+                            <Input
+                              id={`track-audio-${index}`}
+                              type="file"
+                              accept="audio/*"
+                              onChange={(e) => handleTrackAudioChange(index, e)}
+                              className="hidden"
+                              ref={el => audioFileRefs.current[index] = el}
+                            />
+                          </div>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Section 4: Cover Artwork */}
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <h2 className="text-lg font-semibold tracking-tight">Cover Artwork *</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Square image, minimum 1000 x 1000 px.
+                    </p>
+                  </div>
+                  <div ref={coverScrollRef} className="rounded-lg border border-dashed border-border p-6 text-center bg-muted/20">
+                    {imagePreview ? (
+                      <div className="space-y-3">
+                        <img
+                          src={imagePreview}
+                          alt="Cover preview"
+                          className="mx-auto w-44 h-44 object-cover rounded-lg border border-border"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setFormData({ ...formData, coverArt: null });
+                            sessionStorage.removeItem("pendingCoverArtName");
+                            if (coverArtRef.current) coverArtRef.current.value = "";
+                          }}
+                        >
+                          Remove artwork
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 py-2">
+                        {showReattachPrompt && previousFileName && (
+                          <p className="text-xs text-primary font-medium">
+                            Please re-attach: {previousFileName}
+                          </p>
+                        )}
+                        <Upload className="mx-auto h-7 w-7 text-muted-foreground" />
+                        <div>
+                          <Button type="button" variant="outline" size="sm" asChild>
+                            <label htmlFor="coverArt" className="cursor-pointer">
+                              Select square image
+                            </label>
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          JPG or PNG, 1:1 aspect ratio
+                        </p>
+                      </div>
+                    )}
+                    <Input
+                      id="coverArt"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                      ref={coverArtRef}
+                      disabled={validatingImage}
+                    />
+                  </div>
+                  {validatingImage && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Validating image dimensions...
+                    </p>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Section 5: Rights Confirmation */}
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
+                    <Checkbox
+                      id="rights"
+                      checked={formData.rightsConfirmed}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, rightsConfirmed: checked as boolean })
+                      }
+                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="rights" className="cursor-pointer font-medium text-sm">
+                        I own the rights to this music *
+                      </Label>
                       <p className="text-xs text-muted-foreground">
-                        Square image, at least 1000 x 1000 px
+                        By checking this box, you confirm that you have all necessary rights,
+                        licenses, and permissions to distribute this music.
                       </p>
                     </div>
-                  )}
-                  <Input
-                    id="coverArt"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    ref={coverArtRef}
-                    disabled={validatingImage}
-                  />
-                </div>
-                {validatingImage && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Validating image dimensions...
-                  </p>
-                )}
-              </div>
-
-              {/* Rights Confirmation */}
-              <div className="flex items-start space-x-3 rounded-lg border border-border p-4 bg-muted/50">
-                <Checkbox
-                  id="rights"
-                  checked={formData.rightsConfirmed}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, rightsConfirmed: checked as boolean })
-                  }
-                />
-                <div className="space-y-1">
-                  <Label htmlFor="rights" className="cursor-pointer flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    I own the rights to this music *
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    By checking this box, you confirm that you have all necessary rights,
-                    licenses, and permissions to distribute this music.
-                  </p>
-                </div>
-              </div>
-
-              {/* Upload Progress */}
-              {isUploading && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {uploadingTrackIndex !== null 
-                        ? `Uploading track ${uploadingTrackIndex + 1}...`
-                        : "Uploading..."
-                      }
-                    </span>
-                    <span className="font-medium">{uploadProgress}%</span>
                   </div>
-                  <Progress value={uploadProgress} className="h-2" />
-                </div>
-              )}
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || validatingImage}
-              >
+                  {isUploading && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                          {uploadingTrackIndex !== null
+                            ? `Uploading track ${uploadingTrackIndex + 1} (${audioUploadProgress}%)`
+                            : "Uploading..."}
+                        </span>
+                        <span className="font-medium">{Math.round(uploadProgress)}%</span>
+                      </div>
+                      <Progress value={uploadProgress} className="h-1.5" />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center justify-between gap-4">
+              <Button type="button" variant="outline" onClick={() => navigate("/dashboard")}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading || validatingImage}>
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Saving EP...
                   </>
                 ) : validatingImage ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Validating image...
                   </>
                 ) : (
                   `Save & Pay K${EP_PRICE}`
                 )}
               </Button>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Your EP will be saved as unpaid before you're redirected to payment
-              </p>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </form>
+        </div>
+      </main>
     </div>
   );
 };

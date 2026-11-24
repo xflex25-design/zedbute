@@ -83,7 +83,7 @@ export const PwaExperience = () => {
         >
           <img src="/logo.png" alt="ZedBute logo" className="h-24 w-24 rounded-3xl shadow-glow mb-6" />
           <h1 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight mb-2">
-            Welcome to <span className="text-green-500">zed</span><span className="text-red-500">B</span>ute
+            Welcome to zed<span className="text-muted-foreground">B</span>ute
           </h1>
           <p className="text-muted-foreground mb-8 max-w-xs">
             Music distribution for independent artists, right from your pocket.

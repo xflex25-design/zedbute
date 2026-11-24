@@ -23,8 +23,7 @@ const EMAILJS = {
 
 const SectionLabel = ({ index, children }: { index: string; children: React.ReactNode }) => (
   <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-muted-foreground mb-4">
-    <span className="h-2 w-2 rounded-full bg-primary" />
-    {index} · {children}
+    {index} — {children}
   </p>
 );
 
@@ -158,9 +157,9 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
 
-        {/* Hero Section — live video background */}
+        {/* Hero Section — high-end structured grid */}
         <section
-          className="relative pt-24 sm:pt-28 md:pt-32 lg:pt-40 pb-16 sm:pb-20 lg:pb-28 px-4 overflow-hidden"
+          className="relative pt-28 sm:pt-36 lg:pt-44 pb-20 sm:pb-28 lg:pb-36 px-6 sm:px-12 overflow-hidden"
         >
           <video
             className="absolute inset-0 h-full w-full object-cover"
@@ -173,38 +172,50 @@ const Index = () => {
           >
             <source src="/hero-video.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-br from-black/85 via-black/65 to-primary/50" />
-          <div className="container mx-auto text-center relative z-10 animate-fade-in">
-            <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-white/70 mb-6">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              Music distribution · Zambia to the world
-            </p>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold uppercase tracking-tighter leading-[0.95] mb-6 text-white drop-shadow-lg text-balance">
-              Distribute your music
-              <span className="block text-amber-300 drop-shadow-lg">
-                To The World
-              </span>
-            </h1>
-            <p className="text-base xs:text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto px-2 drop-shadow text-balance">
-              Get your music on Spotify, Apple Music, TikTok, and 150+ platforms. Keep 100% of your royalties.
-            </p>
-            <div className="flex gap-3 sm:gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                variant="hero"
-                className="rounded-full px-8"
-                onClick={() => user ? navigate('/dashboard') : navigate('/auth')}
-              >
-                {user ? "Go to Dashboard" : "Start Distributing"}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/pricing")}
-                className="rounded-full px-8 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20"
-              >
-                View Pricing
-              </Button>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-black/60 to-black/45" />
+          
+          <div className="container mx-auto max-w-6xl relative z-10 animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+              <div className="lg:col-span-8 text-left space-y-8">
+                
+                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.92] text-white text-balance">
+                  Distribute your music.
+                  <span className="block text-white/70 mt-2">
+                    Keep 100% royalties.
+                  </span>
+                </h1>
+
+                <p className="text-lg sm:text-xl text-white/80 max-w-2xl leading-relaxed text-balance font-normal">
+                  Professional global music distribution to Spotify, Apple Music, TikTok, and 150+ stores. Pay securely in Kwacha via mobile money or card.
+                </p>
+
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <Button
+                    size="lg"
+                    className="rounded-none px-9 py-6 text-base font-bold tracking-wider bg-white text-black hover:bg-white/95 shadow-xl transition-all duration-300 hover:scale-105"
+                    onClick={() => user ? navigate('/dashboard') : navigate('/auth')}
+                  >
+                    {user ? "Go to Dashboard" : "Start Distributing"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate("/pricing")}
+                    className="rounded-none px-9 py-6 text-base font-bold tracking-wider border-white/40 bg-transparent text-white hover:bg-white hover:text-black hover:border-white transition-all duration-300"
+                  >
+                    View Pricing
+                  </Button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 hidden lg:flex flex-col items-center justify-center p-8 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl">
+                <div className="w-24 h-24 mb-6 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-4 shadow-inner">
+                  <img src="/logo.png" alt="ZedBute Emblem" className="w-full h-full object-contain filter drop-shadow-lg bg-transparent" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.25em] text-white/60 mb-2">Global Reach</p>
+                <p className="text-2xl font-bold text-white mb-1">150+ Stores</p>
+                <p className="text-xs text-white/50 text-center">Spotify, Apple Music, YouTube, TikTok & more</p>
+              </div>
             </div>
           </div>
         </section>
@@ -325,10 +336,10 @@ const Index = () => {
                   <Button
                     data-testid={`${plan.testid}-cta`}
                     onClick={() => navigate(user ? plan.path : "/auth")}
-                    className={`mt-6 w-full h-12 rounded-full font-bold tracking-widest text-sm ${
+                    className={`mt-6 w-full h-12 rounded-none font-bold tracking-widest text-sm ${
                       plan.highlight
-                        ? "bg-black text-white hover:bg-black/85"
-                        : "bg-foreground text-background hover:opacity-90"
+                        ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
                     }`}
                   >
                     {plan.cta}
@@ -338,9 +349,9 @@ const Index = () => {
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
                         <span className={`h-5 w-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
-                          plan.highlight ? "bg-black" : "bg-green-500"
+                          plan.highlight ? "bg-primary-foreground" : "bg-foreground"
                         }`}>
-                          <Check className={`h-3 w-3 ${plan.highlight ? "text-primary" : "text-white"}`} strokeWidth={3.5} />
+                          <Check className={`h-3 w-3 ${plan.highlight ? "text-primary" : "text-background"}`} strokeWidth={3.5} />
                         </span>
                         <span className="text-sm font-medium">{feature}</span>
                       </li>
@@ -495,7 +506,7 @@ const Index = () => {
                   <Button
                     type="submit"
                     variant="hero"
-                    className="w-full sm:w-auto rounded-full px-8"
+                    className="w-full sm:w-auto rounded-none px-8"
                     data-testid="home-contact-submit"
                     disabled={sendingContact}
                   >
@@ -510,20 +521,20 @@ const Index = () => {
 
         {/* CTA Section */}
         <section
-          className="py-20 sm:py-24 lg:py-32 px-4 bg-gradient-to-br from-primary via-red-600 to-secondary relative overflow-hidden"
+          className="py-20 sm:py-24 lg:py-32 px-4 bg-foreground text-background relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(128,128,128,0.12)_0%,transparent_70%)]" />
           <div className="container mx-auto text-center relative z-10">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase tracking-tighter leading-[0.95] mb-6 text-primary-foreground text-balance">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold uppercase tracking-tighter leading-[0.95] mb-6 text-background text-balance">
               Ready to share your music?
             </h2>
-            <p className="text-lg sm:text-xl lg:text-2xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl lg:text-2xl text-background/80 mb-8 max-w-2xl mx-auto">
               Join ZedBute today and start distributing your music to millions of listeners worldwide
             </p>
             <Button
               size="lg"
-              variant="secondary"
-              className="rounded-full px-10"
+              variant="default"
+              className="rounded-none px-10 bg-background text-foreground border border-background hover:bg-background/90 shadow-lg"
               onClick={() => navigate(user ? "/dashboard" : "/auth")}
             >
               {user ? "Go to Dashboard" : "Get Started"}
@@ -532,15 +543,15 @@ const Index = () => {
         </section>
 
         {/* Footer — black, Ditto style */}
-        <footer className="bg-black text-white py-14 sm:py-16 px-4">
+        <footer className="bg-black text-white py-14 sm:py-16 px-4 border-t border-white/10">
           <div className="container mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
               <div className="space-y-5">
                 <div className="flex items-center gap-2">
                   <img src="/logo.png" alt="ZedBute logo" className="h-10 w-10 rounded-lg" />
-                  <span className="text-2xl font-bold">
-                    <span className="text-green-500">zed</span>
-                    <span className="text-red-500">B</span>
+                  <span className="text-2xl font-bold tracking-tight">
+                    <span className="text-white">zed</span>
+                    <span className="text-white/60">B</span>
                     <span className="text-white">ute</span>
                   </span>
                 </div>

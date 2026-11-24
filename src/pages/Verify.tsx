@@ -14,7 +14,7 @@ import { CheckCircle2, Loader2, Youtube } from "lucide-react";
 type Platform = "youtube";
 
 const PLATFORM_CONFIG: Record<Platform, { label: string; amount: number; accent: string }> = {
-  youtube: { label: "YouTube OAC", amount: 260, accent: "bg-red-600 hover:bg-red-700 text-white" },
+  youtube: { label: "YouTube OAC", amount: 260, accent: "bg-primary hover:bg-primary/90 text-primary-foreground" },
 };
 
 interface YouTubeForm {
@@ -170,16 +170,16 @@ const Verify = () => {
           <Card className="shadow-card">
             <CardHeader>
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <CardTitle className="flex items-center gap-2 text-red-600">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Youtube className="h-5 w-5" /> YouTube Official Artist Channel
                 </CardTitle>
-                 <Badge className="bg-red-600 hover:bg-red-600 text-white">Processing Fee: K260 Kwacha (~$10.40 USD)</Badge>
+                 <Badge className="bg-foreground text-background hover:bg-foreground/90">Processing Fee: K260 Kwacha (~$10.40 USD)</Badge>
               </div>
               <CardDescription>Apply for a YouTube Official Artist Channel (OAC).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {verifiedPlatforms.has("youtube") && (
-                <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+                <div className="flex items-center gap-2 rounded-lg bg-muted border border-border p-3 text-foreground text-sm">
                   <CheckCircle2 className="h-4 w-4" /> Submitted — in review
                 </div>
               )}
@@ -231,7 +231,7 @@ const Verify = () => {
                 onClick={goToPayment}
               >
                 {loadingPlatform === "youtube" ? (
-                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing…</>
+                  <><Loader2 className="mr-2 h-5 w-5 animate-spin" />Processing</>
                 ) : (
                   <>Pay K{PLATFORM_CONFIG.youtube.amount} (${(PLATFORM_CONFIG.youtube.amount / 25).toFixed(2)} USD) — Pesapal or Card</>
                 )}

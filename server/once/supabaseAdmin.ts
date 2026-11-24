@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { mergeStoreStatuses } from "./store";
 import type { ArtistProfile, StoreStatus } from "./types";
+import { notifyReleaseStatusChange } from "./notifications";
 
 let adminClient: SupabaseClient | null | undefined = undefined;
 
@@ -165,7 +166,7 @@ export async function syncReleaseWebhookUpdateToSupabase(params: {
   try {
     const { data: existing, error: fetchError } = await client
       .from("once_distribution_releases")
-      .select("id, release_id, status, store_statuses, artist_profiles, metadata, upc, isrc, approved_at, distributed_at")
+      .select("id, release_id, user_id, title, status, store_statuses, artist_profiles, metadata, upc, isrc, approved_at, distributed_at")
       .eq("once_release_id", params.onceReleaseId)
       .maybeSingle();
 
@@ -244,6 +245,20 @@ export async function syncReleaseWebhookUpdateToSupabase(params: {
 
       if (mrError) {
         console.warn("[ONCE Supabase] Failed updating music_releases:", mrError.message);
+      }
+    }
+
+    // Alert artist about release status update (e.g. approved, rejected, live, etc.)
+    if (existing.user_id && nextStatus && nextStatus !== existing.status) {
+      try {
+        await notifyReleaseStatusChange({
+          userId: existing.user_id,
+          releaseId: existing.release_id || existing.id,
+          releaseTitle: existing.title || "Music Release",
+          status: nextStatus,
+        });
+      } catch (notifErr) {
+        console.warn("[ONCE Supabase] Failed to dispatch artist notification:", notifErr);
       }
     }
 

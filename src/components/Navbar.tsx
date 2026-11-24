@@ -67,10 +67,8 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2 shrink-0" onClick={closeMobile}>
             <img src="/logo.png" alt="ZedBute logo" className="h-9 w-9 rounded-lg shrink-0" />
-            <span className="text-xl font-bold whitespace-nowrap">
-              <span className="text-green-500">zed</span>
-              <span className="text-red-500">B</span>
-              <span className="text-foreground">ute</span>
+            <span className="text-xl font-bold whitespace-nowrap tracking-tight text-foreground">
+              zed<span className="text-muted-foreground">B</span>ute
             </span>
           </Link>
 

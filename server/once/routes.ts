@@ -44,7 +44,22 @@ import {
   AudioFileInspection,
   CoverArtInspection,
 } from "./types";
-import { calculateZedbuteFinancialSummary } from "./currency";
+import {
+  calculateZedbuteFinancialSummary,
+  getZmwUsdExchangeRate,
+  recordFinancialTransactionSnapshot,
+  resolveReleaseZmwPrice,
+  ZEDBUTE_SINGLE_PRICE_ZMW,
+} from "./currency";
+import {
+  getUserNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  notifyOnceSubmission,
+  notifyPaymentConfirmation,
+  notifyReleaseStatusChange,
+  sendNotification,
+} from "./notifications";
 
 const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 },
@@ -1165,8 +1180,29 @@ onceRouter.post("/releases", async (req: Request, res: Response) => {
       ? submitPayload.release.distribution_store_ids
       : ONCE_FALLBACK_STORES.defaultStoreIds;
 
+    const existingLocalRecord = local_release_id ? onceStore.getRelease(local_release_id) : null;
+    const lockedExchangeRate = existingLocalRecord?.exchange_rate_snapshot
+      ? existingLocalRecord.exchange_rate_snapshot
+      : (() => null)();
+    const resolvedExchange = lockedExchangeRate
+      ? { available: true as const, ...lockedExchangeRate }
+      : await getZmwUsdExchangeRate();
+    const snapshotToStore = resolvedExchange.available
+      ? {
+          baseCurrency: "ZMW" as const,
+          targetCurrency: "USD" as const,
+          zmwToUsdRate: resolvedExchange.zmwToUsdRate,
+          usdToZmwRate: resolvedExchange.usdToZmwRate,
+          rateDate: resolvedExchange.rateDate,
+          fetchedAt: resolvedExchange.fetchedAt,
+          source: resolvedExchange.source,
+          isStale: resolvedExchange.isStale,
+          staleReason: resolvedExchange.staleReason,
+        }
+      : null;
+
     let savedRecord;
-    if (local_release_id && onceStore.getRelease(local_release_id)) {
+    if (local_release_id && existingLocalRecord) {
       savedRecord = onceStore.updateRelease(local_release_id, {
         release_id,
         once_release_id: onceResult.releaseId,
@@ -1184,6 +1220,7 @@ onceRouter.post("/releases", async (req: Request, res: Response) => {
         credit_cost: totalCost,
         credits_debited: totalCost,
         last_quote: quote,
+        exchange_rate_snapshot: snapshotToStore,
         validation_errors: [],
         submission_error: undefined,
         submitted_at: new Date().toISOString(),
@@ -1207,10 +1244,24 @@ onceRouter.post("/releases", async (req: Request, res: Response) => {
         credit_cost: totalCost,
         credits_debited: totalCost,
         last_quote: quote,
+        exchange_rate_snapshot: snapshotToStore,
         validation_errors: [],
         submitted_at: new Date().toISOString(),
       });
     }
+
+    await recordFinancialTransactionSnapshot({
+      transactionId: `once_rel_${savedRecord?.id || onceResult.releaseId}`,
+      userId: authUser.id,
+      releaseId: release_id || savedRecord?.id || null,
+      onceReleaseId: onceResult.releaseId,
+      title: release.title,
+      paymentType: (release.type || "single").toLowerCase(),
+      paymentGateway: "lenco",
+      paymentStatus: "recorded",
+      amountZmw: resolveReleaseZmwPrice({ release_type: release.type || "single" }),
+      onceExpenseUsd: totalCost,
+    }).catch(() => {});
 
     // Update linked music_releases status if present
     const adminDb = getSupabaseAdmin();
@@ -1237,6 +1288,12 @@ onceRouter.post("/releases", async (req: Request, res: Response) => {
         tracksCount: preparedTracks.length,
       },
     });
+
+    await notifyOnceSubmission({
+      userId: authUser.id,
+      releaseTitle: release.title,
+      onceReleaseId: onceResult.releaseId,
+    }).catch(() => {});
 
     res.status(201).json({
       success: true,
@@ -1433,6 +1490,100 @@ onceRouter.get("/webhooks", async (req: Request, res: Response) => {
 // 7. Admin Dashboard, Submission Review & Audit Logs
 // -------------------------------------------------------------
 
+// Record Lenco ZMW payment + snapshot live/cached ZMW->USD exchange rate for accounting
+onceRouter.post("/financial/transactions", async (req: Request, res: Response) => {
+  const authUser = await requireAuthenticatedUser(req, res);
+  if (!authUser) return;
+
+  try {
+    const body = req.body as {
+      transaction_id?: string;
+      payment_type?: string;
+      amount_zmw?: number;
+      release_id?: string | null;
+      title?: string;
+      payment_status?: "verified" | "pending" | "recorded";
+      processing_fee_zmw?: number;
+    };
+
+    const transactionId = typeof body.transaction_id === "string" ? body.transaction_id.trim() : "";
+    const paymentType = typeof body.payment_type === "string" ? body.payment_type.trim().toLowerCase() : "release";
+
+    if (!transactionId) {
+      return res.status(400).json({ error: "transaction_id is required" });
+    }
+
+    const settings = onceStore.getSettings();
+    const standardSingleZmw =
+      typeof settings.single_upload_price_zmw === "number" && settings.single_upload_price_zmw > 0
+        ? settings.single_upload_price_zmw
+        : ZEDBUTE_SINGLE_PRICE_ZMW;
+
+    // Preserve K70 single-song upload price for single release payments
+    const resolvedAmountZmw =
+      paymentType === "release"
+        ? standardSingleZmw
+        : typeof body.amount_zmw === "number" && Number.isFinite(body.amount_zmw) && body.amount_zmw > 0
+        ? body.amount_zmw
+        : 0;
+
+    if (resolvedAmountZmw <= 0) {
+      return res.status(400).json({ error: "amount_zmw must be a positive number" });
+    }
+
+    const status =
+      body.payment_status === "pending" || body.payment_status === "recorded"
+        ? body.payment_status
+        : "verified";
+
+    const tx = await recordFinancialTransactionSnapshot({
+      transactionId,
+      userId: authUser.id,
+      releaseId: body.release_id || null,
+      title: typeof body.title === "string" ? body.title.trim() : undefined,
+      paymentType,
+      paymentGateway: "lenco",
+      paymentStatus: status,
+      amountZmw: resolvedAmountZmw,
+      processingFeeZmw: body.processing_fee_zmw,
+      onceExpenseUsd: 0,
+    });
+
+    onceStore.logAudit({
+      actor_user_id: authUser.id,
+      actor_email: authUser.email,
+      actor_role: authUser.isAdmin ? "admin" : "artist",
+      action: "financial_transaction_recorded",
+      release_id: body.release_id || null,
+      status: tx.exchange_rate_is_stale ? "warning" : "success",
+      summary: `Recorded Lenco ZMW payment K${tx.amount_zmw}${tx.amount_usd !== null ? ` ($${tx.amount_usd} USD)` : " (USD rate unavailable)"}`,
+      details: {
+        transactionId: tx.transaction_id,
+        paymentType: tx.payment_type,
+        amountZmw: tx.amount_zmw,
+        amountUsd: tx.amount_usd,
+        zmwToUsdRate: tx.zmw_to_usd_rate,
+        exchangeRateSource: tx.exchange_rate_source,
+        isStale: tx.exchange_rate_is_stale,
+      },
+    });
+
+    await notifyPaymentConfirmation({
+      userId: authUser.id,
+      transactionId: tx.transaction_id,
+      paymentType: tx.payment_type,
+      amountZmw: tx.amount_zmw,
+      amountUsd: tx.amount_usd !== null ? tx.amount_usd : undefined,
+      releaseTitle: typeof body.title === "string" ? body.title.trim() : undefined,
+    }).catch(() => {});
+
+    res.status(201).json({ success: true, transaction: tx });
+  } catch (err: any) {
+    console.error("[ONCE Financial Transaction] Error:", err);
+    res.status(500).json({ error: err?.message || "Failed to record financial transaction" });
+  }
+});
+
 onceRouter.get("/admin/metrics", async (req: Request, res: Response) => {
   const adminUser = await requireAdminUser(req, res);
   if (!adminUser) return;
@@ -1455,8 +1606,16 @@ onceRouter.get("/admin/metrics", async (req: Request, res: Response) => {
       }
     }
 
-    const allReleases = Object.values(onceStore.getAllReleases?.() || onceStore.listReleases() || {});
-    const financialSummary = await calculateZedbuteFinancialSummary(allReleases, creditBalance);
+    const forceRefreshRate =
+      req.query.refreshRate === "1" || req.query.refreshRate === "true";
+    const allReleases = await getAllManagedReleases(adminUser);
+    const recordedTransactions = onceStore.listFinancialTransactions(500);
+    const financialSummary = await calculateZedbuteFinancialSummary(
+      allReleases,
+      creditBalance,
+      recordedTransactions,
+      forceRefreshRate
+    );
 
     if (financialSummary.lowCreditWarning) {
       onceStore.logAudit({
@@ -1592,6 +1751,16 @@ onceRouter.post("/admin/review/:id", async (req: Request, res: Response) => {
         details: { notes: reason },
       });
 
+      if (record.user_id) {
+        await notifyReleaseStatusChange({
+          userId: record.user_id,
+          releaseId: record.release_id || record.id,
+          releaseTitle: record.title,
+          status: "rejected",
+          reason,
+        }).catch(() => {});
+      }
+
       return res.json({ success: true, message: "Release marked as rejected", release: updated });
     }
 
@@ -1616,6 +1785,15 @@ onceRouter.post("/admin/review/:id", async (req: Request, res: Response) => {
         summary: `Approved "${record.title}"`,
         details: { notes },
       });
+
+      if (record.user_id) {
+        await notifyReleaseStatusChange({
+          userId: record.user_id,
+          releaseId: record.release_id || record.id,
+          releaseTitle: record.title,
+          status: "approved",
+        }).catch(() => {});
+      }
 
       return res.json({ success: true, message: "Release approved", release: updated });
     }
@@ -1708,10 +1886,32 @@ onceRouter.post("/admin/review/:id", async (req: Request, res: Response) => {
         token
       );
 
+      const snapshotToKeep = record.exchange_rate_snapshot
+        ? record.exchange_rate_snapshot
+        : await (async () => {
+            const ex = await getZmwUsdExchangeRate();
+            return ex.available
+              ? {
+                  baseCurrency: "ZMW" as const,
+                  targetCurrency: "USD" as const,
+                  zmwToUsdRate: ex.zmwToUsdRate,
+                  usdToZmwRate: ex.usdToZmwRate,
+                  rateDate: ex.rateDate,
+                  fetchedAt: ex.fetchedAt,
+                  source: ex.source,
+                  isStale: ex.isStale,
+                  staleReason: ex.staleReason,
+                }
+              : null;
+          })();
+
+      const onceExpenseCredits = record.credit_cost || cleanTracks.length || 1;
       const updated = onceStore.updateRelease(record.id, {
         once_release_id: onceResult.releaseId,
         status: onceResult.status || "processing",
         upc: onceResult.upc || record.upc,
+        credits_debited: onceExpenseCredits,
+        exchange_rate_snapshot: snapshotToKeep,
         submission_error: undefined,
         validation_errors: [],
         review_notes: notes || "Reviewed and dispatched to ONCE by admin",
@@ -1719,6 +1919,19 @@ onceRouter.post("/admin/review/:id", async (req: Request, res: Response) => {
         reviewed_at: new Date().toISOString(),
         submitted_at: new Date().toISOString(),
       });
+
+      await recordFinancialTransactionSnapshot({
+        transactionId: `once_rel_${record.id}`,
+        userId: record.user_id,
+        releaseId: record.release_id || record.id,
+        onceReleaseId: onceResult.releaseId,
+        title: record.title,
+        paymentType: (record.release_type || "single").toLowerCase(),
+        paymentGateway: "lenco",
+        paymentStatus: "recorded",
+        amountZmw: resolveReleaseZmwPrice(record),
+        onceExpenseUsd: onceExpenseCredits,
+      }).catch(() => {});
 
       onceStore.logAudit({
         actor_user_id: adminUser.id,
@@ -1731,6 +1944,20 @@ onceRouter.post("/admin/review/:id", async (req: Request, res: Response) => {
         summary: `Admin approved and submitted "${record.title}" to ONCE (${onceResult.releaseId})`,
         details: { notes, status: onceResult.status },
       });
+
+      if (record.user_id) {
+        await notifyReleaseStatusChange({
+          userId: record.user_id,
+          releaseId: record.release_id || record.id,
+          releaseTitle: record.title,
+          status: "approved",
+        }).catch(() => {});
+        await notifyOnceSubmission({
+          userId: record.user_id,
+          releaseTitle: record.title,
+          onceReleaseId: onceResult.releaseId,
+        }).catch(() => {});
+      }
 
       return res.json({ success: true, message: "Release approved and submitted to ONCE", release: updated });
     }
@@ -1845,12 +2072,27 @@ onceRouter.post("/admin/retry/:id", async (req: Request, res: Response) => {
 
     const onceResult = await onceClient.submitRelease(retryPayload, token);
 
+    const retryExpenseCredits = record.credits_debited || record.credit_cost || retryTracks.length || 1;
     const updated = onceStore.updateRelease(record.id, {
       once_release_id: onceResult.releaseId,
       status: onceResult.status || "processing",
+      credits_debited: retryExpenseCredits,
       submission_error: undefined,
       submitted_at: new Date().toISOString(),
     });
+
+    await recordFinancialTransactionSnapshot({
+      transactionId: `once_rel_${record.id}`,
+      userId: record.user_id,
+      releaseId: record.release_id || record.id,
+      onceReleaseId: onceResult.releaseId,
+      title: record.title,
+      paymentType: (record.release_type || "single").toLowerCase(),
+      paymentGateway: "lenco",
+      paymentStatus: "recorded",
+      amountZmw: resolveReleaseZmwPrice(record),
+      onceExpenseUsd: retryExpenseCredits,
+    }).catch(() => {});
 
     onceStore.logAudit({
       actor_user_id: adminUser.id,
@@ -1969,3 +2211,68 @@ onceRouter.get("/analytics/admin/summary", async (req: Request, res: Response) =
     res.status(500).json({ error: message });
   }
 });
+
+// ==========================================
+// ARTIST NOTIFICATIONS SYSTEM ENDPOINTS
+// ==========================================
+
+onceRouter.get("/notifications", async (req: Request, res: Response) => {
+  const authUser = await requireAuthenticatedUser(req, res);
+  if (!authUser) return;
+
+  try {
+    const list = await getUserNotifications(authUser.id);
+    res.json({ notifications: list });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to load notifications" });
+  }
+});
+
+onceRouter.post("/notifications/:id/read", async (req: Request, res: Response) => {
+  const authUser = await requireAuthenticatedUser(req, res);
+  if (!authUser) return;
+
+  try {
+    const ok = await markNotificationRead(String(req.params.id), authUser.id);
+    res.json({ success: ok });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to update notification" });
+  }
+});
+
+onceRouter.post("/notifications/read-all", async (req: Request, res: Response) => {
+  const authUser = await requireAuthenticatedUser(req, res);
+  if (!authUser) return;
+
+  try {
+    const ok = await markAllNotificationsRead(authUser.id);
+    res.json({ success: ok });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to update notifications" });
+  }
+});
+
+onceRouter.post("/notifications", async (req: Request, res: Response) => {
+  const authUser = await requireAuthenticatedUser(req, res);
+  if (!authUser) return;
+
+  try {
+    const { title, message, type, metadata } = req.body || {};
+    if (!title || !message) {
+      return res.status(400).json({ error: "Missing required title or message" });
+    }
+
+    const created = await sendNotification({
+      userId: authUser.id,
+      title: String(title),
+      message: String(message),
+      type: type || "general",
+      metadata: metadata || {},
+    });
+
+    res.status(201).json({ success: true, notification: created });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Failed to create notification" });
+  }
+});
+

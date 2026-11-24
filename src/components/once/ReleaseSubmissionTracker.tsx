@@ -161,17 +161,17 @@ function classifyStatus(raw: string | null | undefined): {
 function getStageBadgeClass(stage: CanonicalSubmissionStage, rawStatus: string): string {
   const normalized = rawStatus.toLowerCase();
   if (normalized === "unpaid") {
-    return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30";
+    return "bg-muted text-foreground border-border";
   }
   switch (stage) {
     case "pending":
-      return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30";
+      return "bg-muted text-foreground border-border";
     case "in_review":
-      return "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30";
+      return "bg-secondary text-secondary-foreground border-foreground/30";
     case "delivered":
-      return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30";
+      return "bg-foreground text-background border-foreground";
     case "rejected":
-      return "bg-destructive/15 text-destructive border-destructive/30";
+      return "bg-destructive text-destructive-foreground border-destructive";
   }
 }
 
@@ -369,17 +369,16 @@ export function ReleaseSubmissionTracker({
               <h2 className="text-base font-semibold">Release Submission Progress</h2>
               {hasActiveProgress && (
                 <span
-                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400"
+                  className="inline-flex items-center rounded-md bg-foreground text-background border border-foreground px-2 py-0.5 text-[11px] font-medium"
                   title="Automatically updates when release statuses change"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live
                 </span>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Real-time status tracking from submission through review to store delivery
-              {lastSyncedAt ? ` · Synced ${formatSyncTime(lastSyncedAt)}` : ""}
+              {lastSyncedAt ? ` — Synced ${formatSyncTime(lastSyncedAt)}` : ""}
             </p>
           </div>
 
@@ -467,7 +466,7 @@ export function ReleaseSubmissionTracker({
                     item.stage === "rejected"
                       ? "border-destructive/40"
                       : item.isManualUnpaid
-                        ? "border-amber-500/40"
+                        ? "border-foreground/40"
                         : "border-border"
                   }`}
                 >
@@ -494,7 +493,7 @@ export function ReleaseSubmissionTracker({
                         </div>
                         <p className="text-xs text-muted-foreground truncate">
                           {item.artistName}
-                          {item.updatedAt ? ` · Updated ${formatRelativeDate(item.updatedAt)}` : ""}
+                          {item.updatedAt ? ` — Updated ${formatRelativeDate(item.updatedAt)}` : ""}
                         </p>
                       </div>
                     </div>
@@ -534,15 +533,15 @@ export function ReleaseSubmissionTracker({
                                 <div
                                   className={`h-1.5 rounded-full transition-all ${
                                     isCompleted
-                                      ? "bg-emerald-500"
+                                      ? "bg-foreground"
                                       : isCurrent
-                                        ? "bg-primary animate-pulse"
+                                        ? "bg-foreground/50 animate-pulse"
                                         : "bg-muted"
                                   }`}
                                 />
                                 <div className="flex items-center gap-1 text-[11px]">
                                   {isCompleted ? (
-                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-foreground shrink-0" />
                                   ) : (
                                     <StepIcon
                                       className={`h-3.5 w-3.5 shrink-0 ${
@@ -553,7 +552,7 @@ export function ReleaseSubmissionTracker({
                                   <span
                                     className={`truncate font-medium ${
                                       isCompleted
-                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        ? "text-foreground font-semibold"
                                         : isCurrent
                                           ? "text-foreground"
                                           : "text-muted-foreground/70"
@@ -587,7 +586,7 @@ export function ReleaseSubmissionTracker({
                                 className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/40 px-1.5 py-0.5 text-[10px]"
                               >
                                 <span className="font-medium">{st.storeName}</span>
-                                <span className="text-muted-foreground">· {st.statusText || "Pending"}</span>
+                                <span className="text-muted-foreground">— {st.statusText || "Pending"}</span>
                                 {st.urlInStore && (
                                   <a
                                     href={st.urlInStore}
@@ -624,7 +623,7 @@ export function ReleaseSubmissionTracker({
                           <Button
                             type="button"
                             size="sm"
-                            className="h-7 px-2.5 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                            className="h-7 px-2.5 text-xs"
                             onClick={() => onPayNow(item.musicReleaseId!)}
                           >
                             <Smartphone className="h-3 w-3 mr-1" />
